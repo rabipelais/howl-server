@@ -1,6 +1,7 @@
 module Main where
 
-import Lib
+import App
+--------------------------------------------------
 
 main :: IO ()
-main = someFunc
+main = run "sqlite.db"
