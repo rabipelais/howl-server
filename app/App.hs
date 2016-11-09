@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module App where
 
 import           Control.Monad.IO.Class
@@ -21,22 +23,26 @@ import           Models
 
 server :: ConnectionPool -> Server Api
 server pool =
-  userAddH :<|> userGetH
+  postUserH :<|> getUserGetH
   where
-    userAddH newUser = liftIO $ userAdd newUser
-    userGetH name    = liftIO $ userGet name
+    postUserH newUser = do
+      mResult <- liftIO $ postUser pool newUser
+      case mResult of
+        Just k -> return $ Just k
+        Nothing -> throwError err409
+    getUserGetH userID = liftIO $ getUserGet pool userID
 
-    userAdd :: User -> IO (Maybe (Key User))
-    userAdd newUser = flip runSqlPersistMPool pool $ do
-      exists <- selectFirst [UserName ==. (userName newUser)] []
-      case exists of
-        Nothing -> Just <$> insert newUser
-        Just _ -> return Nothing
+postUser :: ConnectionPool -> User -> IO (Maybe (Key User))
+postUser pool newUser = flip liftSqlPersistMPool pool $ do
+  exists <- selectFirst [UserID ==. (userID newUser)] []
+  case exists of
+    Nothing -> Just <$> insert newUser
+    Just _ -> return Nothing
 
-    userGet :: Text -> IO (Maybe User)
-    userGet name = flip runSqlPersistMPool pool $ do
-      mUser <- selectFirst [UserName ==. name] []
-      return $ entityVal <$> mUser
+getUserGet :: ConnectionPool -> Int -> IO (Maybe User)
+getUserGet pool userID = flip runSqlPersistMPool pool $ do
+  mUser <- selectFirst [UserID ==. userID] []
+  return $ entityVal <$> mUser
 
 app :: ConnectionPool -> Application
 app pool = serve api $ server pool
