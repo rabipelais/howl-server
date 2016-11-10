@@ -18,9 +18,11 @@ import Control.Applicative
 
 import Database.Persist.TH
 
+type IDType = Text
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User json
-  iD Int
+  iD IDType
   firstName Text
   lastName Text
   email String

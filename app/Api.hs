@@ -18,7 +18,7 @@ import Servant.API
 
 type Api =
        "user" :> ReqBody '[JSON] User :> Post '[JSON] (Maybe (Key User))
-  :<|> "user" :> Capture "userID" Int  :> Get  '[JSON] (Maybe User)
+  :<|> "user" :> Capture "userID" IDType  :> Get  '[JSON] (Maybe User)
 
 api :: Proxy Api
 api = Proxy

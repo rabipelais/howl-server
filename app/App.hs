@@ -39,7 +39,7 @@ postUser pool newUser = flip liftSqlPersistMPool pool $ do
     Nothing -> Just <$> insert newUser
     Just _ -> return Nothing
 
-getUserGet :: ConnectionPool -> Int -> IO (Maybe User)
+getUserGet :: ConnectionPool -> IDType -> IO (Maybe User)
 getUserGet pool userID = flip runSqlPersistMPool pool $ do
   mUser <- selectFirst [UserID ==. userID] []
   return $ entityVal <$> mUser
