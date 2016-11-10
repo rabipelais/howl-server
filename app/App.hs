@@ -34,14 +34,14 @@ server pool =
 
 postUser :: ConnectionPool -> User -> IO (Maybe (Key User))
 postUser pool newUser = flip liftSqlPersistMPool pool $ do
-  exists <- selectFirst [UserID ==. (userID newUser)] []
+  exists <- selectFirst [UserFbID ==. (userFbID newUser)] []
   case exists of
     Nothing -> Just <$> insert newUser
     Just _ -> return Nothing
 
 getUserGet :: ConnectionPool -> IDType -> IO (Maybe User)
 getUserGet pool userID = flip runSqlPersistMPool pool $ do
-  mUser <- selectFirst [UserID ==. userID] []
+  mUser <- selectFirst [UserFbID ==. userID] []
   return $ entityVal <$> mUser
 
 app :: ConnectionPool -> Application

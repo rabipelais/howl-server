@@ -4,4 +4,4 @@ import App
 --------------------------------------------------
 
 main :: IO ()
-main = run "sqlite.db"
+main = run ":memory:"

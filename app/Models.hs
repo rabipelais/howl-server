@@ -15,17 +15,36 @@ import Data.Aeson
 import Data.Text
 
 import Control.Applicative
+import Data.Time.Clock
 
 import Database.Persist.TH
 
+import Types
+
 type IDType = Text
 
+-- UserEvent models many-to-many relationship
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User json
-  iD IDType
+  fbID IDType
   firstName Text
   lastName Text
   email String
-  UniqueID iD
+  UniqueUserID fbID
   deriving Eq Read Show
+
+Event json
+  fbID IDType
+  description Text
+  name Text
+  startTime UTCTime
+  endTime UTCTime
+  rsvp RSVP
+  UniqueEventID fbID
+  deriving Eq Read Show
+
+UserEvent json
+  userFbID IDType
+  eventFbID IDType
+  UniqueUserEvent userFbID eventFbID
 |]
