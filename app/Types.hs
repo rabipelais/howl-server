@@ -21,3 +21,15 @@ instance ToJSON RSVP where
 
 instance FromJSON RSVP
 derivePersistField "RSVP"
+
+
+
+
+data FriendshipStatus = Pending | Accepted | Ignored | Blocked
+          deriving (Show, Read, Eq, Generic)
+
+instance ToJSON FriendshipStatus where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON FriendshipStatus
+derivePersistField "FriendshipStatus"

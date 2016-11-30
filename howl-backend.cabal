@@ -23,8 +23,18 @@ executable howl-backend
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  other-modules:       Utils
+                     , App
+                     , Api
+                     , Models
+                     , Types
   build-depends:       base
                      , howl-backend
+                     , fb
+                     , cereal
+                     , http-conduit
+                     , configurator
+                     , directory
                      , servant
                      , servant-server
                      , transformers
@@ -33,6 +43,7 @@ executable howl-backend
                      , persistent
                      , persistent-template
                      , persistent-sqlite
+                     , resourcet
                      , aeson
                      , bytestring
                      , text
