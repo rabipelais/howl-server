@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module App where
+module Howl.App where
 
 import           Control.Monad.IO.Class
 import           Control.Monad.Logger (runStderrLoggingT)
@@ -21,9 +21,9 @@ import           Servant
 
 import           Data.Text
 
-import           Api
-import           Models
-import           Utils
+import           Howl.Api
+import           Howl.Models
+import           Howl.Utils
 
 server :: ConnectionPool -> Manager -> Fb.Credentials -> Server Api
 server pool manager fbCredentials =

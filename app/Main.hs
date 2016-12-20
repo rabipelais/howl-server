@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
-import App
+import Howl
 import qualified Facebook as Fb
 import Data.Configurator as C
 
@@ -18,6 +18,7 @@ getCredentials filePath = do
 main :: IO ()
 main = do
   mCreds <- getCredentials "app.cfg"
+  print "Starting server."
   case mCreds of
     Nothing -> print "ERROR reading config file"
     Just creds -> run "sqlitetest.db" creds

@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Api where
+module Howl.Api where
 
 import Data.Proxy
 import Data.Text
@@ -12,7 +12,7 @@ import Data.Text
 import qualified Facebook as FB
 import Database.Persist
 
-import Models
+import Howl.Models
 
 import Servant.API
 

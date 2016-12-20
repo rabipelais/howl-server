@@ -2,14 +2,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Utils where
+module Howl.Utils where
 
 import qualified Facebook as Fb
 import Network.HTTP.Conduit (Manager)
 import Data.Maybe
 import Control.Monad.Trans.Resource
+import Data.Monoid ((<>))
+import Data.Serialize
 
-import Models
+import Howl.Models
 
 
 -- | Get the user ID of an user access token.

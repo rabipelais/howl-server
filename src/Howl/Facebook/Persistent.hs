@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings, GADTs #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- | This package is meant to be imported as
 --
@@ -13,7 +14,7 @@
 -- instance 'PersistField' 'AppAccessToken'  -- since 0.1.3
 -- instance 'PersistField' 'UserAccessToken' -- since 0.1.3
 -- @
-module Facebook.Persistent () where
+module Howl.Facebook.Persistent () where
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (liftM)
@@ -23,11 +24,15 @@ import Data.Int (Int64)
 import Data.Word (Word8)
 import Database.Persist
 import Database.Persist.Sql
+import Database.Persist.TH
 import Facebook
+import Howl.Facebook.Object.Event
 import qualified Data.Serialize as S
 import qualified Data.Text.Encoding as TE
 import qualified Data.Time.Clock as T
 import qualified Data.Time.Clock.POSIX as T
+
+derivePersistField "RSVP"
 
 -- | From @fb-persistent@.  Since 0.1.
 instance PersistField Action where
@@ -54,7 +59,8 @@ instance PersistField Id where
 
 -- | From @fb-persistent@.  Since 0.3.
 instance PersistFieldSql Id where
-    sqlType = sqlType . liftM (TE.encodeUtf8 . idCode)
+
+  sqlType = sqlType . liftM (TE.encodeUtf8 . idCode)
 
 
 -- | From @fb-persistent@.  Since 0.1.3.  Note that your fields

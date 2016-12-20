@@ -15,30 +15,24 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
-  build-depends:       base >= 4.7 && < 5
-  default-language:    Haskell2010
-
-executable howl-backend
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  other-modules:       Utils
-                     , App
-                     , Api
-                     , Models
-                     , Types
+  exposed-modules:     Howl
+                     , Howl.Api
+                     , Howl.App
+                     , Howl.Facebook.Object.Event
+                     , Howl.Facebook.Persistent
+                     , Howl.Models
+                     , Howl.Types
+                     , Howl.Utils
   build-depends:       base
-                     , howl-backend
                      , fb
                      , cereal
                      , http-conduit
-                     , configurator
                      , directory
                      , servant
                      , servant-server
                      , transformers
                      , monad-logger
+                     , monad-control
                      , string-conversions
                      , persistent
                      , persistent-template
@@ -50,6 +44,17 @@ executable howl-backend
                      , time
                      , wai
                      , warp
+  default-language:    Haskell2010
+
+executable howl-backend
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  other-modules:
+  build-depends:       base
+                     , howl-backend
+                     , configurator
+                     , fb
   default-language:    Haskell2010
 
 test-suite howl-backend-test

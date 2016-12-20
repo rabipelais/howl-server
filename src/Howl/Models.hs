@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleInstances          #-}
 
-module Models where
+module Howl.Models where
 
 import Data.Aeson
 import Data.Text
@@ -20,9 +20,10 @@ import System.Directory
 
 import Database.Persist.TH
 import qualified  Facebook as Fb
-import Facebook.Persistent ()
+import Howl.Facebook.Persistent ()
+import Howl.Facebook.Object.Event (RSVP)
 
-import Types
+import Howl.Types
 
 type IDType = Fb.Id
 
