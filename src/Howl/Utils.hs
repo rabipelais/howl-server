@@ -4,7 +4,7 @@
 
 module Howl.Utils where
 
-import qualified Facebook as Fb
+import qualified Howl.Facebook as Fb
 import Network.HTTP.Conduit (Manager)
 import Data.Maybe
 import Control.Monad.Trans.Resource

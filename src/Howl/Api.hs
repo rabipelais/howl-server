@@ -9,7 +9,7 @@ module Howl.Api where
 import Data.Proxy
 import Data.Text
 
-import qualified Facebook as FB
+import qualified Howl.Facebook as FB
 import Database.Persist
 
 import Howl.Models

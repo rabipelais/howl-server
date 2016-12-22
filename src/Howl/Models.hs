@@ -19,7 +19,7 @@ import Data.Time.Clock
 import System.Directory
 
 import Database.Persist.TH
-import qualified  Facebook as Fb
+import qualified Howl.Facebook as Fb
 import Howl.Facebook.Persistent ()
 import Howl.Facebook.Object.Event (RSVP)
 

@@ -15,7 +15,7 @@ import           Network.Wai
 import           Network.Wai.Handler.Warp as Warp
 import Network.HTTP.Conduit (Manager, newManager, tlsManagerSettings)
 
-import qualified Facebook as Fb
+import qualified Howl.Facebook as Fb
 
 import           Servant
 

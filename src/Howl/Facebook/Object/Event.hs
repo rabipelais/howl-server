@@ -15,7 +15,11 @@ import GHC.Generics
 import qualified Control.Monad.Trans.Resource as R
 import Data.Aeson as A
 
-import Facebook
+import Howl.Facebook.Types
+import Howl.Facebook.Monad
+import Howl.Facebook.Graph
+import Howl.Facebook.Pager
+import Howl.Facebook.Object.Checkin
 
 type EventId = Id
 

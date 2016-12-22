@@ -3,7 +3,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -- | This package is meant to be imported as
 --
--- > import Facebook.Persistent ()
+-- > import Howl.Facebook.Persistent ()
 --
 -- because it doesn't export any symbols.  However, it exports
 -- the following orphan instances:
@@ -25,7 +25,7 @@ import Data.Word (Word8)
 import Database.Persist
 import Database.Persist.Sql
 import Database.Persist.TH
-import Facebook
+import Howl.Facebook
 import Howl.Facebook.Object.Event
 import qualified Data.Serialize as S
 import qualified Data.Text.Encoding as TE

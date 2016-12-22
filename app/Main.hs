@@ -2,7 +2,7 @@
 module Main where
 
 import Howl
-import qualified Facebook as Fb
+import qualified Howl.Facebook as Fb
 import Data.Configurator as C
 
 --------------------------------------------------
