@@ -7,9 +7,10 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Howl
-import qualified Facebook as Fb
+import qualified Howl.Facebook as Fb
 
 import Data.Text
+import Data.Monoid ((<>))
 import Data.Time.Clock
 import Network.HTTP.Conduit (Manager, newManager, tlsManagerSettings)
 import Control.Monad.Trans.Resource
@@ -39,11 +40,10 @@ main = do
   creds <- getCreds config token
   defaultMain (suite creds testCfg)
 
-suite creds testCfg = testGroup "Test Suite" [
-    (userTests creds testCfg) ]
+suite creds testCfg = testGroup "Test Suite"
+  [ (userTests creds testCfg)
+  , (eventsTests creds testCfg)]
 
--- TODO: This should be better, the data of the user in the config,
--- not hardcoded
 userTests (m, u, c) testCfg =
     testGroup "User tests"
     [ testCase "Getting user" $ do
@@ -73,3 +73,11 @@ instance Configured (Maybe Text) where
 instance Configured IDType where
   convert (String v) = Just (Fb.Id v)
   convert _ = Nothing
+
+
+eventsTests (m, u, c) testCfg =
+  testGroup "Events tsts"
+  [ testCase "Get events" $ do
+      (fbEvents :: Fb.Pager Fb.Event) <- runResourceT $ Fb.runFacebookT c m $ Fb.getObject ("/v2.8/" <> "10155182179270463" <> "/" <> "events") [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner")] (Just u)
+      print fbEvents
+  ]
