@@ -7,6 +7,7 @@
 
 module Howl.Api.Users where
 
+import Control.Lens
 import Data.Proxy
 import Data.Text
 import qualified Data.ByteString.Lazy.Char8 as BL8
@@ -36,27 +37,17 @@ type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken :> Post '[JSON] (
 type UsersIdGet = "users" :> Capture "userID" IDType  :> Get  '[JSON] (Maybe User)
 
 
-instance ToSchema User
+instance ToSchema User where
+  declareNamedSchema proxy = do
+    return $ NamedSchema (Just "User") $
+      (sketchSchema
+       (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com")))
+      & required .~ ["fbId", "username", "firstName"]
 
-instance ToSchema IDType
 instance ToParamSchema IDType
 
-instance ToSchema (FB.AccessToken FB.UserKind)
-instance Generic (FB.AccessToken FB.UserKind) where
-  type Rep (FB.AccessToken FB.UserKind) =
-    D1 ('MetaData "AccessToken" "Users" "howl-backend" 'False)
-    (C1 ('MetaCons "UserAccessToken" 'PrefixI 'False)
-                    (S1 ('MetaSel 'Nothing
-                         'NoSourceUnpackedness
-                         'NoSourceStrictness
-                         'DecidedLazy) (Rec0 FB.UserId) :*:
-                     (S1 ('MetaSel 'Nothing
-                         'NoSourceUnpackedness
-                         'NoSourceStrictness
-                         'DecidedLazy) (Rec0 FB.AccessTokenData)) :*:
-                      (S1 ('MetaSel 'Nothing
-                         'NoSourceUnpackedness
-                         'NoSourceStrictness
-                         'DecidedLazy) (Rec0 UTCTime))))
-  from (FB.UserAccessToken ui atd t) = (M1 (M1 (M1 (K1 ui) :*: M1 (K1 atd) :*: M1 (K1 t))))
-  to (M1 (M1 (M1 (K1 ui) :*: M1 (K1 atd) :*: M1 (K1 t)))) = FB.UserAccessToken ui atd t
+instance ToSchema (FB.UserAccessToken) where
+  declareNamedSchema proxy = do
+    return $ NamedSchema (Just "UserAccessToken") $
+      (sketchSchema (FB.UserAccessToken "10155182179270463" "EAACEdEose0cBAIM1ZBWcOfQl3Gw03XZCY1yxzQZAZCA1HUuaqfaIUmhWRWfZCtDafrX0n6VaU8dGUggn7H0dpGe93eFUfVg5Ew4HxDdjb5jbNuFFuqcMbiKpMPdZAeoZATBVF1j8R5xTrWjiFnDJYLcjuhZCTccZCPqMIwUXZBm0lPNwZDZD" (UTCTime (fromGregorian 2015 12 31) 0)))
+      & description ?~ "`id` is the FB app user ID, `token` the user access token, and `expires` is the token expiration date in `%FT%T%z` format"

@@ -56,11 +56,10 @@ userTests (m, u, c) testCfg =
     getUserCfg config = do
       (Just fbID) <- C.lookup config "test.sebas.fbID"
       (Just username) <- C.lookup config "test.sebas.username"
-      let profilePicPath = Nothing
       (Just firstName) <- C.lookup config "test.sebas.firstName"
       (Just lastName) <- C.lookup config "test.sebas.lastName"
       (Just email) <- C.lookup config "test.sebas.email"
-      return $ User fbID username profilePicPath firstName lastName email
+      return $ User fbID username firstName lastName email
 
 
 instance Configured (Maybe Text) where

@@ -8,6 +8,7 @@ license-file:        LICENSE
 author:              Sebastian Mendez Siem
 maintainer:          sebas.chinoir@gmail.com
 -- copyright:
+data-files: swagger.json
 category:            Web
 build-type:          Simple
 -- extra-source-files:

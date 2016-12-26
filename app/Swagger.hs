@@ -24,6 +24,6 @@ howlSwagger = toSwagger api
   & info.description ?~ "This is an API that tests swagger integration"
   & schemes ?~ [Https]
 
-writeSwaggerJSON = BL8.writeFile "swagger.json" (encodePretty howlSwagger)
+writeSwaggerJSON = BL8.writeFile "swagger-generated.json" (encodePretty howlSwagger)
 
 main = writeSwaggerJSON
