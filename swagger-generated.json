@@ -48,7 +48,7 @@
                 "firstName": "Jean-Luc"
             },
             "required": [
-                "fbId",
+                "fbID",
                 "username",
                 "firstName"
             ],

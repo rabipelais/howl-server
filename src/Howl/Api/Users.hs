@@ -32,9 +32,9 @@ instance FromHttpApiData FB.Id where
 
 type UsersAPI = UsersPost :<|> UsersIdGet
 
-type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken :> Post '[JSON] (Maybe User)
+type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken :> Post '[JSON] User
 
-type UsersIdGet = "users" :> Capture "userID" IDType  :> Get  '[JSON] (Maybe User)
+type UsersIdGet = "users" :> Capture "userID" IDType  :> Get  '[JSON] User
 
 
 instance ToSchema User where
@@ -42,7 +42,7 @@ instance ToSchema User where
     return $ NamedSchema (Just "User") $
       (sketchSchema
        (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com")))
-      & required .~ ["fbId", "username", "firstName"]
+      & required .~ ["fbID", "username", "firstName"]
 
 instance ToParamSchema IDType
 

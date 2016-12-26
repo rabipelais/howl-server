@@ -32,9 +32,13 @@ server pool manager fbCredentials =
     postUserH userAT = do
       mResult <- liftIO $ postUser pool manager fbCredentials userAT
       case mResult of
-        Just k -> return $ Just k
+        Just u -> return u
         Nothing -> throwError err409
-    getUserGetH userID = liftIO $ getUserGet pool userID
+    getUserGetH userID = do
+      mResult <- liftIO $ getUserGet pool userID
+      case mResult of
+        Just u -> return u
+        Nothing -> throwError err404
 
 postUser :: ConnectionPool -> Manager -> Fb.Credentials -> Fb.UserAccessToken -> IO (Maybe User)
 postUser pool manager creds userAT = flip liftSqlPersistMPool pool $ do
