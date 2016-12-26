@@ -36,11 +36,14 @@ server pool manager fbCredentials =
         Nothing -> throwError err409
     getUserGetH userID = liftIO $ getUserGet pool userID
 
-postUser :: ConnectionPool -> Manager -> Fb.Credentials -> Fb.UserAccessToken -> IO (Maybe (Key User))
+postUser :: ConnectionPool -> Manager -> Fb.Credentials -> Fb.UserAccessToken -> IO (Maybe User)
 postUser pool manager creds userAT = flip liftSqlPersistMPool pool $ do
   exists <- selectFirst [UserFbID ==. (accessTokenUserId userAT)] []
   case exists of
-    Nothing -> Just <$> (insert =<< (getNewUser userAT creds manager))
+    Nothing -> Just <$> (do
+                           u <- (getNewUser userAT creds manager)
+                           insert u
+                           return u)
     Just _ -> return Nothing
 
 getUserGet :: ConnectionPool -> IDType -> IO (Maybe User)

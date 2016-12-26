@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, GADTs, StandaloneDeriving #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveGeneric #-}
 module Howl.Facebook.Types
     ( Credentials(..)
     , appIdBS
@@ -29,6 +29,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime, parseTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Typeable (Typeable, Typeable1)
+import GHC.Generics
 #if MIN_VERSION_time(1,5,0)
 import Data.Time (defaultTimeLocale)
 #else
@@ -102,7 +103,7 @@ type AccessTokenData = Text
 
 -- | The identification code of an object.
 newtype Id = Id { idCode :: Text }
-    deriving (Eq, Ord, Show, Read, Typeable, IsString)
+    deriving (Eq, Ord, Show, Read, Typeable, IsString, Generic)
 
 instance A.FromJSON Id where
     parseJSON (A.Object v) = v A..: "id"

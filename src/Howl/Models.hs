@@ -8,6 +8,9 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Howl.Models where
 
@@ -17,6 +20,7 @@ import Data.Text
 import Control.Applicative
 import Data.Time.Clock
 import System.Directory
+import GHC.Generics
 
 import Database.Persist.TH
 import qualified Howl.Facebook as Fb
@@ -37,7 +41,7 @@ User json
   email Text Maybe
   UniqueUserID fbID
   UniqueUsername username
-  deriving Eq Read Show
+  deriving Eq Read Show Generic
 
 Friendship json
   userSourceId UserId

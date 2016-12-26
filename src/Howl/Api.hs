@@ -13,18 +13,12 @@ import qualified Howl.Facebook as FB
 import Database.Persist
 
 import Howl.Models
+import Howl.Api.Users
 
 import Servant.API
 
-instance ToHttpApiData FB.Id where
-  toUrlPiece = FB.idCode
-
-instance FromHttpApiData FB.Id where
-  parseUrlPiece = Right . FB.Id
-
-type Api =
-       "user" :> ReqBody '[JSON] FB.UserAccessToken :> Post '[JSON] (Maybe (Key User))
-  :<|> "user" :> Capture "userID" IDType  :> Get  '[JSON] (Maybe User)
+type ApiV1 = "v1" :> UsersAPI
+type Api = ApiV1
 
 api :: Proxy Api
 api = Proxy
