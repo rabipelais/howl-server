@@ -20,6 +20,7 @@ import Servant.Swagger
 import qualified Howl.Facebook as FB
 import Database.Persist
 
+import Howl.Types
 import Howl.Models
 
 import Servant.API
@@ -30,11 +31,18 @@ instance ToHttpApiData FB.Id where
 instance FromHttpApiData FB.Id where
   parseUrlPiece = Right . FB.Id
 
-type UsersAPI = UsersPost :<|> UsersIdGet
+type UsersAPI = UsersPost :<|> UsersIdGet :<|> UsersIdPut
 
-type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken :> Post '[JSON] User
+type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken
+                         :> Post '[JSON] User
 
-type UsersIdGet = "users" :> Capture "userID" IDType  :> Get  '[JSON] User
+type UsersIdGet = "users" :> Capture "userID" IDType
+                          :> ReqBody '[JSON] FB.UserAccessToken
+                          :> Get '[JSON] User
+
+type UsersIdPut = "users" :> Capture "userID" IDType
+                          :> ReqBody '[JSON] (Authenticated User)
+                          :> Put '[JSON] User
 
 
 instance ToSchema User where
@@ -45,6 +53,8 @@ instance ToSchema User where
       & required .~ ["fbID", "username", "firstName"]
 
 instance ToParamSchema IDType
+
+instance (ToSchema a) => ToSchema (Authenticated a)
 
 instance ToSchema (FB.UserAccessToken) where
   declareNamedSchema proxy = do

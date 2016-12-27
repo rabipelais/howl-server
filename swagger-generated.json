@@ -70,6 +70,21 @@
                     "type": "string"
                 }
             }
+        },
+        "Authenticated": {
+            "required": [
+                "auth",
+                "content"
+            ],
+            "type": "object",
+            "properties": {
+                "auth": {
+                    "$ref": "#/definitions/UserAccessToken"
+                },
+                "content": {
+                    "$ref": "#/definitions/User"
+                }
+            }
         }
     },
     "paths": {
@@ -106,9 +121,15 @@
         },
         "/v1/users/{userID}": {
             "get": {
+                "consumes": [
+                    "application/json"
+                ],
                 "responses": {
                     "404": {
                         "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `body`"
                     },
                     "200": {
                         "schema": {
@@ -126,6 +147,52 @@
                         "in": "path",
                         "name": "userID",
                         "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserAccessToken"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Authenticated"
+                        },
+                        "in": "body",
+                        "name": "body"
                     }
                 ]
             }

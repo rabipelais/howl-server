@@ -27,18 +27,19 @@ import           Howl.Utils
 
 server :: ConnectionPool -> Manager -> Fb.Credentials -> Server Api
 server pool manager fbCredentials =
-  postUserH :<|> getUserGetH
+  postUserH :<|> getUserIdH :<|> putUserIdH
   where
     postUserH userAT = do
       mResult <- liftIO $ postUser pool manager fbCredentials userAT
       case mResult of
         Just u -> return u
         Nothing -> throwError err409
-    getUserGetH userID = do
-      mResult <- liftIO $ getUserGet pool userID
+    getUserIdH userID userAT = do
+      mResult <- liftIO $ getUserId pool userID userAT
       case mResult of
         Just u -> return u
         Nothing -> throwError err404
+    putUserIdH = undefined
 
 postUser :: ConnectionPool -> Manager -> Fb.Credentials -> Fb.UserAccessToken -> IO (Maybe User)
 postUser pool manager creds userAT = flip liftSqlPersistMPool pool $ do
@@ -50,8 +51,8 @@ postUser pool manager creds userAT = flip liftSqlPersistMPool pool $ do
                            return u)
     Just _ -> return Nothing
 
-getUserGet :: ConnectionPool -> IDType -> IO (Maybe User)
-getUserGet pool userID = flip runSqlPersistMPool pool $ do
+getUserId :: ConnectionPool -> IDType -> Fb.UserAccessToken -> IO (Maybe User)
+getUserId pool userID userAT = flip runSqlPersistMPool pool $ do
   mUser <- selectFirst [UserFbID ==. userID] []
   return $ entityVal <$> mUser
 
