@@ -6,7 +6,7 @@
     "info": {
         "version": "1.0",
         "title": "Howl Server API",
-        "description": "This is an API that tests swagger integration"
+        "description": "This is an API for the **Howl** server."
     },
     "definitions": {
         "UserAccessToken": {
@@ -23,16 +23,18 @@
                 "id"
             ],
             "type": "object",
-            "description": "`id` is the FB app user ID, `token` the user access token, and `expires` is the token expiration date in `%FT%T%z` format",
+            "description": "'`id` is the FB app user ID, `token` the user access token, and `expires` is the token expiration date in `%FT%T%z` format. `kind` should only be `user`'",
             "properties": {
                 "kind": {
                     "type": "string"
                 },
                 "expires": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "token": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "password"
                 },
                 "id": {
                     "type": "string"
@@ -48,14 +50,15 @@
                 "firstName": "Jean-Luc"
             },
             "required": [
-                "fbId",
+                "fbID",
                 "username",
                 "firstName"
             ],
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "email"
                 },
                 "lastName": {
                     "type": "string"
@@ -70,23 +73,63 @@
                     "type": "string"
                 }
             }
+        },
+        "Event": {
+            "required": [
+                "fbID",
+                "description",
+                "name",
+                "startTime",
+                "endTime",
+                "venueId"
+            ],
+            "type": "object",
+            "properties": {
+                "fbID": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "endTime": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "venueId": {
+                    "type": "string"
+                }
+            }
         }
     },
     "paths": {
         "/v1/users": {
             "post": {
+                "summary": "Create a new user pulling the data from Facebook",
                 "consumes": [
                     "application/json"
                 ],
                 "responses": {
-                    "400": {
-                        "description": "Invalid `body`"
-                    },
-                    "200": {
+                    "201": {
                         "schema": {
                             "$ref": "#/definitions/User"
                         },
-                        "description": ""
+                        "description": "User created successfully"
+                    },
+                    "400": {
+                        "description": "Invalid `body`"
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "409": {
+                        "description": "User already exists"
                     }
                 },
                 "produces": [
@@ -106,15 +149,22 @@
         },
         "/v1/users/{userID}": {
             "get": {
+                "description": "Get the user data from user `userID`",
+                "consumes": [
+                    "application/json"
+                ],
                 "responses": {
-                    "404": {
-                        "description": "`userID` not found"
-                    },
                     "200": {
                         "schema": {
                             "$ref": "#/definitions/User"
                         },
                         "description": ""
+                    },
+                    "403": {
+                        "description": "Could not validate `token`"
+                    },
+                    "404": {
+                        "description": "`userID` not found"
                     }
                 },
                 "produces": [
@@ -126,6 +176,402 @@
                         "in": "path",
                         "name": "userID",
                         "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "description": "Update the data of user `userID`",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `body`"
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "`userID` not found"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    }
+                ]
+            },
+            "delete": {
+                "description": "Delete the user `userID` permanently",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User successfully deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "`userID` not found"
+                    }
+                },
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/friends": {
+            "get": {
+                "description": "Get the list of friends of user `userID`",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "`userID` not found"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "post": {
+                "description": "Create a friend request from `userID` to `friendID`",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Friend request posted successfully"
+                    },
+                    "400": {
+                        "description": "Invalid `friendID` or `friendID` is not a valid user"
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "409": {
+                        "description": "Users are already friends or the request is pending"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "type": "string",
+                        "name": "token"
+                    },
+                    {
+                        "required": true,
+                        "in": "body",
+                        "name": "friendID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/friends/events": {
+            "get": {
+                "description": "Get the list of events the friends of `userID` are attending",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "`userID` not found"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/friends/{friendID}": {
+            "delete": {
+                "description": "Unfriend `friendID` from `userID`, or remove friend request",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Friend request deleted successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "`userID` not found or users were not friends"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/events": {
+            "get": {
+                "description": "Get a list of the user's marked events. If `nearby` is set, filter the events around `location` within `distance`",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `userID` or `token`, or invalid query parameters."
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "`userID` not found"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": false,
+                        "description": "Filter for nearby events. If set, then `location` MUST be set",
+                        "in": "query",
+                        "name": "nearby",
+                        "type": "boolean"
+                    },
+                    {
+                        "required": false,
+                        "in": "query",
+                        "name": "location",
+                        "description": "Geolocation in lat/long format. Example: `location=40.4234,-30.443`",
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                    },
+                    {
+                        "required": false,
+                        "in": "query",
+                        "name": "distance",
+                        "description": "Distance around `location` for query. Only meaningful if `nearby` is set. In metres, default value is 1km.",
+                        "type": "number",
+                        "default": 1000
+                    },
+                    {
+                        "required": true,
+                        "type": "string",
+                        "in": "header",
+                        "name": "token"
+                    }
+                ]
+            }
+        },
+        "/v1/events/nearby": {
+            "get": {
+                "description": "Get a list of all public events around `location`",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `location` or `token`"
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "query",
+                        "name": "location",
+                        "description": "Geolocation in lat/long format. Example: `location=40.4234,-30.443`",
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        },
+                        "minItems": 2,
+                        "maxItems": 2
+                    },
+                    {
+                        "required": true,
+                        "type": "string",
+                        "in": "header",
+                        "name": "token"
+                    },
+                    {
+                        "required": false,
+                        "in": "query",
+                        "name": "distance",
+                        "description": "Distance around `location` for query. Only meaningful if `nearby` is set. In metres, default value is 1km.",
+                        "type": "number",
+                        "default": 1000
                     }
                 ]
             }

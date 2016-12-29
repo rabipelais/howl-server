@@ -11,12 +11,12 @@ import Control.Lens
 import Data.Proxy
 import Data.Text
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.Swagger
+import           Data.Swagger hiding (Header)
 import           Data.Typeable              (Typeable)
 import GHC.Generics
 import Data.Time
 
-import Servant.Swagger
+import Servant.Swagger hiding (Header)
 import qualified Howl.Facebook as FB
 import Database.Persist
 
@@ -31,18 +31,52 @@ instance ToHttpApiData FB.Id where
 instance FromHttpApiData FB.Id where
   parseUrlPiece = Right . FB.Id
 
-type UsersAPI = UsersPost :<|> UsersIdGet :<|> UsersIdPut
+type UsersAPI = UsersPost
+                :<|> UsersIdGet
+                :<|> UsersIdPut
+                :<|> UsersIdDelete
+                :<|> UsersIdFriendsGet
+                :<|> UsersIdFriendsPost
+                :<|> UsersIdFriendsIdDelete
+                :<|> UsersIdEventsGet
 
 type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken
-                         :> Post '[JSON] User
+                         :> PostCreated '[JSON] User
 
 type UsersIdGet = "users" :> Capture "userID" IDType
-                          :> ReqBody '[JSON] FB.UserAccessToken
+                          :> Header "token" Token
                           :> Get '[JSON] User
 
 type UsersIdPut = "users" :> Capture "userID" IDType
-                          :> ReqBody '[JSON] (Authenticated User)
+                          :> ReqBody '[JSON] User
+                          :> Header "token" Token
                           :> Put '[JSON] User
+
+type UsersIdDelete = "users" :> Capture "userID" IDType
+                          :> Header "token" Token
+                          :> Delete '[JSON] IDType
+
+type UsersIdFriendsGet = "users" :> Capture "userID" IDType
+                          :> "friends"
+                          :> Header "token" Text
+                          :> Get '[JSON] [User]
+
+type UsersIdFriendsPost = "users" :> Capture "userID" IDType
+                          :> "friends"
+                          :> ReqBody '[JSON] IDType
+                          :> Header "token" Text
+                          :> PostAccepted '[JSON] IDType
+
+type UsersIdFriendsIdDelete = "users" :> Capture "userID" IDType
+                              :> "friends"
+                              :> Capture "friendID" IDType
+                              :> Header "token" Text
+                              :> Delete '[JSON] IDType
+
+type UsersIdEventsGet = "users" :> Capture "userID" IDType
+                        :> "events"
+                        :> Header "token" Text
+                        :> Get '[JSON] [Event]
 
 
 instance ToSchema User where
@@ -51,6 +85,18 @@ instance ToSchema User where
       (sketchSchema
        (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com")))
       & required .~ ["fbID", "username", "firstName"]
+
+instance ToSchema Event where
+  declareNamedSchema proxy = do
+    return $ NamedSchema (Just "Event") $
+      (sketchSchema
+       (Event (FB.Id "10155182179270463") "Fun swaggy party." "All You Can Swag" (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463")))
+      & required .~ ["fbID", "description", "name", "startTime", "endTime", "venueId"]
+
+instance ToSchema IDType where
+  declareNamedSchema proxy = do
+    return $ NamedSchema Nothing $ mempty
+      & type_ .~ SwaggerString
 
 instance ToParamSchema IDType
 

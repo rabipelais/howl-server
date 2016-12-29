@@ -57,19 +57,24 @@ Friendship json
 
 Event json
   fbID IDType
-  coverPicPath FilePath
   description Text
   name Text
   startTime UTCTime
   endTime UTCTime
-  rsvp RSVP
-  venueId VenueId
+  venueId IDType
   UniqueEventID fbID
+  deriving Eq Read Show
+
+EventCoverPic
+  eventId EventId
+  coverPicPath FilePath
+  UniqueEventCoverPic eventId coverPicPath
   deriving Eq Read Show
 
 UserEvent json
   userId UserId
   eventId EventId
+  rsvp RSVP
   UniqueUserEvent userId eventId
   deriving Eq Read Show
 

@@ -6,6 +6,7 @@ module Howl.Types where
 
 import Database.Persist.TH
 import Data.Aeson
+import Data.Text
 import GHC.Generics
 import qualified Howl.Facebook as FB
 import Prelude
@@ -28,3 +29,5 @@ instance (ToJSON a) => ToJSON (Authenticated a) where
     toEncoding = genericToEncoding defaultOptions
 
 instance (FromJSON a) => FromJSON (Authenticated a)
+
+type Token = Text

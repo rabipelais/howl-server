@@ -9,6 +9,45 @@
         "description": "This is an API that tests swagger integration"
     },
     "definitions": {
+        "Event": {
+            "example": {
+                "startTime": "2015-12-31T00:00:00Z",
+                "fbID": "10155182179270463",
+                "name": "All You Can Swag",
+                "endTime": "2515-12-31T00:00:00Z",
+                "venueId": "901579654279270463",
+                "description": "Fun swaggy party."
+            },
+            "required": [
+                "fbID",
+                "description",
+                "name",
+                "startTime",
+                "endTime",
+                "venueId"
+            ],
+            "type": "object",
+            "properties": {
+                "startTime": {
+                    "type": "string"
+                },
+                "fbID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "venueId": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
         "UserAccessToken": {
             "example": {
                 "kind": "user",
@@ -70,24 +109,49 @@
                     "type": "string"
                 }
             }
-        },
-        "Authenticated": {
-            "required": [
-                "auth",
-                "content"
-            ],
-            "type": "object",
-            "properties": {
-                "auth": {
-                    "$ref": "#/definitions/UserAccessToken"
-                },
-                "content": {
-                    "$ref": "#/definitions/User"
-                }
-            }
         }
     },
     "paths": {
+        "/v1/users/{userID}/friends/{friendID}": {
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` or `friendID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
         "/v1/users": {
             "post": {
                 "consumes": [
@@ -97,7 +161,7 @@
                     "400": {
                         "description": "Invalid `body`"
                     },
-                    "200": {
+                    "201": {
                         "schema": {
                             "$ref": "#/definitions/User"
                         },
@@ -119,17 +183,51 @@
                 ]
             }
         },
-        "/v1/users/{userID}": {
+        "/v1/users/{userID}/events": {
             "get": {
-                "consumes": [
-                    "application/json"
-                ],
                 "responses": {
                     "404": {
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `body`"
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
                     },
                     "200": {
                         "schema": {
@@ -149,12 +247,41 @@
                         "type": "string"
                     },
                     {
-                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
                         "schema": {
-                            "$ref": "#/definitions/UserAccessToken"
+                            "type": "string"
                         },
-                        "in": "body",
-                        "name": "body"
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
                     }
                 ]
             },
@@ -167,7 +294,7 @@
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `body`"
+                        "description": "Invalid `token` or `body`"
                     },
                     "200": {
                         "schema": {
@@ -189,10 +316,95 @@
                     {
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/Authenticated"
+                            "$ref": "#/definitions/User"
                         },
                         "in": "body",
                         "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/friends": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "202": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
                     }
                 ]
             }

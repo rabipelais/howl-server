@@ -41,3 +41,6 @@ instance Arbitrary User where
 
 instance Arbitrary Fb.Id where
   arbitrary = Fb.Id <$> arbitrary
+
+instance Arbitrary Event where
+  arbitrary = Event <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
