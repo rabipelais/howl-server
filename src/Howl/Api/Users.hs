@@ -25,9 +25,11 @@ import Howl.Models
 
 import Servant.API
 
-type UsersAPI = UsersPost
-                :<|> UsersIdGet
-                -- :<|> UsersIdPut
+type UsersAPI =
+  UsersGet
+  :<|> UsersPost
+  :<|> UsersIdGet
+  :<|> UsersIdPut
                 -- :<|> UsersIdDelete
                 -- :<|> UsersIdConnectGet
                 -- :<|> UsersIdFriendsGet
@@ -35,6 +37,10 @@ type UsersAPI = UsersPost
                 -- :<|> UsersIdFriendsEventsGet
                 -- :<|> UsersIdFriendsIdDelete
                 -- :<|> UsersIdEventsGet
+
+
+type UsersGet = "users" :> Header "token" Token
+                        :> Get '[JSON] [User]
 
 type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken
                          :> PostCreated '[JSON] User

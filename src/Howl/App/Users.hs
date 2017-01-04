@@ -7,7 +7,7 @@ import           Data.String.Conversions
 
 import           Database.Persist
 import           Database.Persist.Sql
-import           Database.Persist.Sqlite
+import           Database.Persist.Sqlite as Sql
 
 import           Network.Wai
 import           Network.Wai.Handler.Warp as Warp
@@ -17,7 +17,7 @@ import qualified Howl.Facebook as Fb
 
 import           Servant
 
-import           Data.Text
+import           Data.Text hiding (map)
 
 import           Howl.Api.Users
 import           Howl.Models
@@ -28,9 +28,10 @@ type Resources = (ConnectionPool, Manager, Fb.Credentials)
 
 usersHandlers :: Resources -> Server UsersAPI
 usersHandlers s@(p, m, c) =
-  (postUsersH s)
+  (getUsersH s)
+  :<|> (postUsersH s)
   :<|> (getUsersIdH s)
-  -- :<|> putUsersIdH
+  :<|> (putUsersIdH s)
   -- :<|> deleteUsersIdH
   -- :<|> getUsersIdConnectH
   -- :<|> getUsersIdFriendsH
@@ -38,6 +39,14 @@ usersHandlers s@(p, m, c) =
   -- :<|> getUsersIdFriendsEventsH
   -- :<|> deleteUsersIdFriendsIdH
   -- :<|> getUsersIdEventsH
+
+
+getUsersH :: Resources -> Maybe Token -> Handler [User]
+getUsersH (p, m, c) mToken = do
+  liftIO $ print "GET Users"
+  liftIO $ flip liftSqlPersistMPool p $ do
+    userEntities <- selectList [] []
+    return $ map (\(Entity _ u) -> u) userEntities
 
 postUsersH :: Resources -> Fb.UserAccessToken -> Handler User
 postUsersH (pool, manager, fbCredentials) userAT = do
@@ -57,7 +66,7 @@ postUsers pool manager creds userAT = flip liftSqlPersistMPool pool $ do
     Just _ -> return Nothing
 
 getUsersIdH :: Resources -> IDType -> Maybe Token -> Handler User
-getUsersIdH (p, m, c) i (Just t) = do
+getUsersIdH (p, m, c) i mToken = do
   mResult <- liftIO $ getUsersId p i
   case mResult of
     Just u -> return u
@@ -68,8 +77,27 @@ getUsersId pool userID = flip runSqlPersistMPool pool $ do
   mUser <- selectFirst [UserFbID ==. userID] []
   return $ entityVal <$> mUser
 
---putUsersIdH :: IDType -> User -> Maybe Token -> Server User
-putUsersIdH = undefined
+putUsersIdH :: Resources -> IDType -> User -> Maybe Token -> Handler User
+putUsersIdH (p, m, c) i u mToken = do
+  liftIO $ print "PUT {userID}"
+  if (userFbID u /= i)
+    then (liftIO $ print "id doesn't match") >> throwError err400
+    else do
+      liftIO $ print "Fb ID and User dataload match"
+      eRep <- liftIO $ putUserId p i u
+      case eRep of
+        Left e -> throwError e
+        Right u -> return u
+
+putUserId :: ConnectionPool -> IDType -> User -> IO (Either ServantErr User)
+putUserId pool i u = flip runSqlPersistMPool pool $ do
+  mUser <- getBy $ UniqueUserID i
+  case mUser of
+    Nothing -> return $ Left err404
+    Just (Entity k _) -> do
+      liftIO $ print "User found"
+      Sql.replace k u --TODO Check username uniqueness
+      return $ Right u
 
 getUsersIdConnectH = undefined
 --deleteUsersIdH :: IDType -> Maybe Token -> Server ()
