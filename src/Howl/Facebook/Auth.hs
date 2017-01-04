@@ -246,7 +246,7 @@ isValid token = do
     then return False
     else
       let page = case token of
-                   UserAccessToken _ _ _ -> "/me"
+                   UserAccessToken i _ _ -> "/" <> (idCode i)
                    -- Documented way of checking if the token is valid,
                    -- see <https://developers.facebook.com/blog/post/500/>.
                    AppAccessToken _ -> "/19292868552"
