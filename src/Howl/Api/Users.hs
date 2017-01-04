@@ -27,14 +27,14 @@ import Servant.API
 
 type UsersAPI = UsersPost
                 :<|> UsersIdGet
-                :<|> UsersIdPut
-                :<|> UsersIdDelete
-                :<|> UsersIdConnectGet
-                :<|> UsersIdFriendsGet
-                :<|> UsersIdFriendsPost
-                :<|> UsersIdFriendsEventsGet
-                :<|> UsersIdFriendsIdDelete
-                :<|> UsersIdEventsGet
+                -- :<|> UsersIdPut
+                -- :<|> UsersIdDelete
+                -- :<|> UsersIdConnectGet
+                -- :<|> UsersIdFriendsGet
+                -- :<|> UsersIdFriendsPost
+                -- :<|> UsersIdFriendsEventsGet
+                -- :<|> UsersIdFriendsIdDelete
+                -- :<|> UsersIdEventsGet
 
 type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken
                          :> PostCreated '[JSON] User

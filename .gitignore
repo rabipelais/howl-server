@@ -3,3 +3,4 @@ sqlite.*
 *.db
 /app.cfg
 *.cfg
+sqlite*

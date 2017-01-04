@@ -7,6 +7,7 @@ module Howl.Utils where
 import qualified Howl.Facebook as Fb
 import Network.HTTP.Conduit (Manager)
 import Data.Maybe
+import Data.Time
 import Control.Monad.Trans.Resource
 import Data.Monoid ((<>))
 import Data.Serialize
@@ -17,6 +18,11 @@ import Howl.Models
 -- | Get the user ID of an user access token.
 accessTokenUserId :: Fb.UserAccessToken -> Fb.UserId
 accessTokenUserId (Fb.UserAccessToken uid _ _) = uid
+
+laterToken i t = do
+  now <- getCurrentTime
+  let later = addUTCTime 3600 now
+  return $ Fb.UserAccessToken i t later
 
 getNewUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
 getNewUser userAT creds manager =  do

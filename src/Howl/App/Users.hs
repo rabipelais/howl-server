@@ -19,28 +19,27 @@ import           Servant
 
 import           Data.Text
 
-import           Howl.Api
+import           Howl.Api.Users
 import           Howl.Models
 import           Howl.Utils
 import Howl.Types
 
 type Resources = (ConnectionPool, Manager, Fb.Credentials)
 
-usersHandlers :: Resources -> Server Api
+usersHandlers :: Resources -> Server UsersAPI
 usersHandlers s@(p, m, c) =
   (postUsersH s)
   :<|> (getUsersIdH s)
-  :<|> putUsersIdH
-  :<|> deleteUsersIdH
-  :<|> getUsersIdConnectH
-  :<|> getUsersIdFriendsH
-  :<|> postUsersIdFriendsH
-  :<|> getUsersIdFriendsEventsH
-  :<|> deleteUsersIdFriendsIdH
-  :<|> getUsersEventsH
+  -- :<|> putUsersIdH
+  -- :<|> deleteUsersIdH
+  -- :<|> getUsersIdConnectH
+  -- :<|> getUsersIdFriendsH
+  -- :<|> postUsersIdFriendsH
+  -- :<|> getUsersIdFriendsEventsH
+  -- :<|> deleteUsersIdFriendsIdH
+  -- :<|> getUsersIdEventsH
 
-
-postUsersH :: Resources -> Fb.UserAccessToken -> Server User
+postUsersH :: Resources -> Fb.UserAccessToken -> Handler User
 postUsersH (pool, manager, fbCredentials) userAT = do
   mResult <- liftIO $ postUsers pool manager fbCredentials userAT
   case mResult of
@@ -57,21 +56,22 @@ postUsers pool manager creds userAT = flip liftSqlPersistMPool pool $ do
                            return u)
     Just _ -> return Nothing
 
-
-getUsersIdH :: Resources -> IDType -> Maybe Token -> Server User
-getUsersIdH (p, m, c) = do
-  mResult <- liftIO $ getUsersId pool userID userAT
+getUsersIdH :: Resources -> IDType -> Maybe Token -> Handler User
+getUsersIdH (p, m, c) i (Just t) = do
+  mResult <- liftIO $ getUsersId p i
   case mResult of
     Just u -> return u
     Nothing -> throwError err404
 
-getUsersId :: ConnectionPool -> IDType -> Fb.UserAccessToken -> IO (Maybe User)
-getUsersId pool userID userAT = flip runSqlPersistMPool pool $ do
+getUsersId :: ConnectionPool -> IDType -> IO (Maybe User)
+getUsersId pool userID = flip runSqlPersistMPool pool $ do
   mUser <- selectFirst [UserFbID ==. userID] []
   return $ entityVal <$> mUser
 
 --putUsersIdH :: IDType -> User -> Maybe Token -> Server User
 putUsersIdH = undefined
+
+getUsersIdConnectH = undefined
 --deleteUsersIdH :: IDType -> Maybe Token -> Server ()
 deleteUsersIdH = undefined
 --getUsersIdFriendsH :: IDType -> Maybe Token -> Server [User]
@@ -80,5 +80,7 @@ getUsersIdFriendsH = undefined
 postUsersIdFriendsH = undefined
 --deleteUsersIdFriendsIdH :: IDType -> IDType -> Maybe Token -> Server ()
 deleteUsersIdFriendsIdH = undefined
+
+getUsersIdFriendsEventsH = undefined
 --getUsersEventsH :: IDType -> Maybe Token -> Server [Event]
-getUsersEventsH = undefined
+getUsersIdEventsH = undefined
