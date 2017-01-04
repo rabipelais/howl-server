@@ -36,3 +36,14 @@ getNewUser userAT creds manager =  do
     profilePicPath = Nothing
     user = User fbID username firstName lastName email profilePicPath
   return user
+
+
+isUserTokenValid :: (MonadBaseControl IO m, MonadResource m) => Fb.Credentials -> Fb.UserAccessToken -> Fb.FacebookT Fb.Auth m Bool
+isUserTokenValid c@(Fb.Credentials name ai secret) u@(Fb.UserAccessToken ui t _) = do
+  at <- Fb.getAppAccessToken
+  dt <- Fb.debugToken at t
+  return $ and $ map ($ dt) [ maybeTrue (\x -> ai == x) . Fb.dtAppId
+                            , maybeTrue id . Fb.dtIsValid
+                            , maybeTrue (\x -> ui == x) . Fb.dtUserId]
+  where
+    maybeTrue = maybe False
