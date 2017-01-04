@@ -27,8 +27,8 @@ import           Howl.Utils
 
 import           Howl.App.Users
 
-server :: ConnectionPool -> Manager -> Fb.Credentials -> Server Api
-server = usersHandlers
+server :: (ConnectionPool, Manager, Fb.Credentials) -> Server Api
+server p m c = usersHandlers (p, m, c)
 
 app :: ConnectionPool -> Manager -> Fb.Credentials -> Application
 app pool manager fbCredentials = serve api $ server pool manager fbCredentials

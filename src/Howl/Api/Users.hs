@@ -25,18 +25,14 @@ import Howl.Models
 
 import Servant.API
 
-instance ToHttpApiData FB.Id where
-  toUrlPiece = FB.idCode
-
-instance FromHttpApiData FB.Id where
-  parseUrlPiece = Right . FB.Id
-
 type UsersAPI = UsersPost
                 :<|> UsersIdGet
                 :<|> UsersIdPut
                 :<|> UsersIdDelete
+                :<|> UsersIdConnectGet
                 :<|> UsersIdFriendsGet
                 :<|> UsersIdFriendsPost
+                :<|> UsersIdFriendsEventsGet
                 :<|> UsersIdFriendsIdDelete
                 :<|> UsersIdEventsGet
 
@@ -52,6 +48,11 @@ type UsersIdPut = "users" :> Capture "userID" IDType
                           :> Header "token" Token
                           :> Put '[JSON] User
 
+type UsersIdConnectGet = "users" :> Capture "userID" IDType
+                       :> "connect"
+                       :> Header "token" Token
+                       :> Get '[JSON] [User]
+
 type UsersIdDelete = "users" :> Capture "userID" IDType
                           :> Header "token" Token
                           :> Delete '[JSON] IDType
@@ -66,6 +67,11 @@ type UsersIdFriendsPost = "users" :> Capture "userID" IDType
                           :> ReqBody '[JSON] IDType
                           :> Header "token" Text
                           :> PostAccepted '[JSON] IDType
+
+type UsersIdFriendsEventsGet = "users" :> Capture "userID" IDType
+                          :> "friends" :> "events"
+                          :> Header "token" Text
+                          :> Get '[JSON] [Event]
 
 type UsersIdFriendsIdDelete = "users" :> Capture "userID" IDType
                               :> "friends"
@@ -83,7 +89,7 @@ instance ToSchema User where
   declareNamedSchema proxy = do
     return $ NamedSchema (Just "User") $
       (sketchSchema
-       (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com")))
+       (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing))
       & required .~ ["fbID", "username", "firstName"]
 
 instance ToSchema Event where

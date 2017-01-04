@@ -59,7 +59,7 @@ userTests (m, u, c) testCfg =
       (Just firstName) <- C.lookup config "test.sebas.firstName"
       (Just lastName) <- C.lookup config "test.sebas.lastName"
       (Just email) <- C.lookup config "test.sebas.email"
-      return $ User fbID username firstName lastName email
+      return $ User fbID username firstName lastName email Nothing
 
 
 instance Configured (Maybe Text) where

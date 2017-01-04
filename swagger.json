@@ -106,6 +106,17 @@
                     "type": "string"
                 }
             }
+        },
+        "RSVP": {
+            "type": "string",
+            "enum": [
+                "attending",
+                "maybe",
+                "created",
+                "declined",
+                "unsure",
+                "not_replied"
+            ]
         }
     },
     "paths": {
@@ -510,6 +521,241 @@
                         "description": "Distance around `location` for query. Only meaningful if `nearby` is set. In metres, default value is 1km.",
                         "type": "number",
                         "default": 1000
+                    },
+                    {
+                        "required": true,
+                        "type": "string",
+                        "in": "header",
+                        "name": "token"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}": {
+            "get": {
+                "description": "Get the details of `eventID` if the `token` gives enough access permissions",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Event"
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `eventID` or `token`"
+                    },
+                    "403": {
+                        "description": "Could not validate `token` or `token` doesn't give permission to view this event"
+                    },
+                    "404": {
+                        "description": "`eventID` not found"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/invite": {
+            "post": {
+                "description": "Invite `friendID` to `eventID` if the `token` gives enough access permissions",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Friend invite accepted on system",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `eventID` or `token`"
+                    },
+                    "403": {
+                        "description": "Could not validate `token` or `token` doesn't give permission to view this event, or `friendID` is not allowed to get invites from `token` user"
+                    },
+                    "404": {
+                        "description": "`eventID` or `friendID` not found"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "body",
+                        "name": "friendID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "description": "Remove invitation to `friendID` to `eventID` if the `token` gives enough access permissions",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Request accepted on system",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid `eventID` or `token`"
+                    },
+                    "403": {
+                        "description": "Could not validate `token` or `token` doesn't give permission to view this event, or `friendID` is not allowed to get invites from `token` user"
+                    },
+                    "404": {
+                        "description": "`eventID` or `friendID` not found, or user did not invite `friendID`"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "body",
+                        "name": "friendID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "required": true,
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/rsvp": {
+            "post": {
+                "description": "Change the RSVP status the user to `eventID`",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "description": "Could not validate token, or user not invited to this event"
+                    },
+                    "404": {
+                        "description": "Could not find `eventID`"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "body",
+                        "name": "body",
+                        "schema": {
+                            "$ref": "#/definitions/RSVP"
+                        }
+                    },
+                    {
+                        "required": true,
+                        "type": "string",
+                        "in": "header",
+                        "name": "token"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/rsvp/{userID}": {
+            "get": {
+                "description": "Get the RSVP status of `userID` to `eventID`",
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/RSVP"
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "403": {
+                        "description": "Could not validate token"
+                    },
+                    "404": {
+                        "description": "Could not find `eventID` or `userID`"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
                     },
                     {
                         "required": true,

@@ -11,6 +11,7 @@ import GHC.Generics
 import qualified Howl.Facebook as FB
 import Prelude
 
+import Servant.API
 
 data FriendshipStatus = Pending | Accepted | Ignored | Blocked
   deriving (Show, Read, Eq, Generic)
@@ -31,3 +32,10 @@ instance (ToJSON a) => ToJSON (Authenticated a) where
 instance (FromJSON a) => FromJSON (Authenticated a)
 
 type Token = Text
+
+
+instance ToHttpApiData FB.Id where
+  toUrlPiece = FB.idCode
+
+instance FromHttpApiData FB.Id where
+  parseUrlPiece = Right . FB.Id

@@ -37,7 +37,7 @@ instance Arbitrary Fb.UserAccessToken where
   arbitrary = Fb.UserAccessToken <$> arbitrary <*> arbitrary <*> arbitrary
 
 instance Arbitrary User where
-  arbitrary = User <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+  arbitrary = User <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
 instance Arbitrary Fb.Id where
   arbitrary = Fb.Id <$> arbitrary

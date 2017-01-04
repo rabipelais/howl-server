@@ -38,15 +38,10 @@ User json
   firstName Text
   lastName Text Maybe
   email Text Maybe
+  profilePicPath FilePath Maybe
   UniqueUserID fbID
   UniqueUsername username
   deriving Eq Read Show Generic
-
-UserProfilePics
-  userId UserId
-  profilePicPath FilePath
-  UniqueUserProfilePic userId profilePicPath
-  deriving Eq Read Show
 
 Friendship json
   userSourceId UserId

@@ -27,5 +27,6 @@ getNewUser userAT creds manager =  do
     firstName = fromMaybe username (Fb.userFirstName fbUser)
     lastName = Fb.userLastName fbUser
     email = Fb.userEmail fbUser
-    user = User fbID username firstName lastName email
+    profilePicPath = Nothing
+    user = User fbID username firstName lastName email profilePicPath
   return user
