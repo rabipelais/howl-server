@@ -32,7 +32,7 @@ usersHandlers s@(p, m, c) =
   :<|> (postUsersH s)
   :<|> (getUsersIdH s)
   :<|> (putUsersIdH s)
-  -- :<|> deleteUsersIdH
+  :<|> (deleteUsersIdH s)
   -- :<|> getUsersIdConnectH
   -- :<|> getUsersIdFriendsH
   -- :<|> postUsersIdFriendsH
@@ -99,9 +99,23 @@ putUserId pool i u = flip runSqlPersistMPool pool $ do
       Sql.replace k u --TODO Check username uniqueness
       return $ Right u
 
+deleteUsersIdH :: Resources -> IDType -> Maybe Token -> Handler IDType
+deleteUsersIdH (p, m, c) i mToken = do
+  eRep <- liftIO $ deleteUserId p i
+  case eRep of
+    Left e -> throwError e
+    Right _ -> return i
+
+deleteUserId pool i = flip runSqlPersistMPool pool $ do
+  mUser <- getBy $ UniqueUserID i
+  case mUser of
+    Nothing -> return $ Left err404
+    Just (Entity k u) -> do
+      Sql.delete k
+      return $ Right u
+
 getUsersIdConnectH = undefined
---deleteUsersIdH :: IDType -> Maybe Token -> Server ()
-deleteUsersIdH = undefined
+
 --getUsersIdFriendsH :: IDType -> Maybe Token -> Server [User]
 getUsersIdFriendsH = undefined
 --postUsersIdFriendsH :: IDType -> IDType -> Maybe Token -> Server IDType

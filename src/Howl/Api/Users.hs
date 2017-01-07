@@ -30,7 +30,7 @@ type UsersAPI =
   :<|> UsersPost
   :<|> UsersIdGet
   :<|> UsersIdPut
-                -- :<|> UsersIdDelete
+  :<|> UsersIdDelete
                 -- :<|> UsersIdConnectGet
                 -- :<|> UsersIdFriendsGet
                 -- :<|> UsersIdFriendsPost
