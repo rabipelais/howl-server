@@ -43,10 +43,10 @@ User json
   UniqueUsername username
   deriving Eq Read Show Generic
 
-Friendship json
+Followship json
   userSourceId UserId
   userTargetId UserId
-  status FriendshipStatus
+  status FollowStatus
   UniqueFriendshipID userSourceId userTargetId
   deriving Eq Read Show
 

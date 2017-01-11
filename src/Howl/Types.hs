@@ -13,14 +13,14 @@ import Prelude
 
 import Servant.API
 
-data FriendshipStatus = Pending | Accepted | Ignored | Blocked
+data FollowStatus = Pending | Accepted | Ignored | Blocked
   deriving (Show, Read, Eq, Generic)
 
-instance ToJSON FriendshipStatus where
+instance ToJSON FollowStatus where
   toEncoding = genericToEncoding defaultOptions
 
-instance FromJSON FriendshipStatus
-derivePersistField "FriendshipStatus"
+instance FromJSON FollowStatus
+derivePersistField "FollowStatus"
 
 data Authenticated a = Authenticated { auth :: FB.UserAccessToken
                                      , content :: a}

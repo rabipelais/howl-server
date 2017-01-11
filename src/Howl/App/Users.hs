@@ -34,7 +34,7 @@ usersHandlers s@(p, m, c) =
   :<|> (putUsersIdH s)
   :<|> (deleteUsersIdH s)
   -- :<|> getUsersIdConnectH
-  -- :<|> getUsersIdFriendsH
+  :<|> (getUsersIdFollowingH s)
   -- :<|> postUsersIdFriendsH
   -- :<|> getUsersIdFriendsEventsH
   -- :<|> deleteUsersIdFriendsIdH
@@ -116,8 +116,9 @@ deleteUserId pool i = flip runSqlPersistMPool pool $ do
 
 getUsersIdConnectH = undefined
 
---getUsersIdFriendsH :: IDType -> Maybe Token -> Server [User]
-getUsersIdFriendsH = undefined
+getUsersIdFollowingH :: Resources -> IDType -> Maybe Token -> Handler [User]
+getUsersIdFollowingH = undefined
+
 --postUsersIdFriendsH :: IDType -> IDType -> Maybe Token -> Server IDType
 postUsersIdFriendsH = undefined
 --deleteUsersIdFriendsIdH :: IDType -> IDType -> Maybe Token -> Server ()

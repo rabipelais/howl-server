@@ -32,7 +32,7 @@ type UsersAPI =
   :<|> UsersIdPut
   :<|> UsersIdDelete
                 -- :<|> UsersIdConnectGet
-                -- :<|> UsersIdFriendsGet
+  :<|> UsersIdFollowingGet
                 -- :<|> UsersIdFriendsPost
                 -- :<|> UsersIdFriendsEventsGet
                 -- :<|> UsersIdFriendsIdDelete
@@ -63,24 +63,24 @@ type UsersIdDelete = "users" :> Capture "userID" IDType
                           :> Header "token" Token
                           :> Delete '[JSON] IDType
 
-type UsersIdFriendsGet = "users" :> Capture "userID" IDType
-                          :> "friends"
+type UsersIdFollowingGet = "users" :> Capture "userID" IDType
+                          :> "follows"
                           :> Header "token" Text
                           :> Get '[JSON] [User]
 
-type UsersIdFriendsPost = "users" :> Capture "userID" IDType
-                          :> "friends"
+type UsersIdFollowingPost = "users" :> Capture "userID" IDType
+                          :> "follows"
                           :> ReqBody '[JSON] IDType
                           :> Header "token" Text
                           :> PostAccepted '[JSON] IDType
 
-type UsersIdFriendsEventsGet = "users" :> Capture "userID" IDType
-                          :> "friends" :> "events"
+type UsersIdFollowingEventsGet = "users" :> Capture "userID" IDType
+                          :> "follows" :> "events"
                           :> Header "token" Text
                           :> Get '[JSON] [Event]
 
-type UsersIdFriendsIdDelete = "users" :> Capture "userID" IDType
-                              :> "friends"
+type UsersIdFollowingIdDelete = "users" :> Capture "userID" IDType
+                              :> "follows"
                               :> Capture "friendID" IDType
                               :> Header "token" Text
                               :> Delete '[JSON] IDType
