@@ -13,8 +13,5 @@ howl_test:
   script:
     - mkdir -p `pwd`/___restore
     - ln -s `pwd`/___restore /root/.stack
-<<<<<<< HEAD
     - stack --no-terminal build howl-backend
-=======
     - stack --no-terminal build howl-backend
->>>>>>> 1e012220d93ffb08036f90e53f1eda37ab5e49a2
