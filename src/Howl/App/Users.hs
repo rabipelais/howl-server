@@ -1,28 +1,31 @@
 module Howl.App.Users where
 
 import           Control.Monad.IO.Class
-import           Control.Monad.Logger (runStderrLoggingT)
+import           Control.Monad.Logger     (runStderrLoggingT)
 
 import           Data.String.Conversions
 
+import           Database.Esqueleto       ((^.))
+import qualified Database.Esqueleto       as E
 import           Database.Persist
 import           Database.Persist.Sql
-import           Database.Persist.Sqlite as Sql
+import           Database.Persist.Sqlite  as Sql
 
+import           Network.HTTP.Conduit     (Manager, newManager,
+                                           tlsManagerSettings)
 import           Network.Wai
 import           Network.Wai.Handler.Warp as Warp
-import Network.HTTP.Conduit (Manager, newManager, tlsManagerSettings)
 
-import qualified Howl.Facebook as Fb
+import qualified Howl.Facebook            as Fb
 
 import           Servant
 
-import           Data.Text hiding (map)
+import           Data.Text                hiding (map)
 
 import           Howl.Api.Users
 import           Howl.Models
+import           Howl.Types
 import           Howl.Utils
-import Howl.Types
 
 type Resources = (ConnectionPool, Manager, Fb.Credentials)
 

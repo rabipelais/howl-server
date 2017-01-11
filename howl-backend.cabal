@@ -51,6 +51,7 @@ library
                      , conduit-extra
                      , crypto-api
                      , cryptohash-cryptoapi
+                     , esqueleto
                      , http-types
                      , lifted-base
                      , attoparsec

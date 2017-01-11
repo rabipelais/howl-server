@@ -1,7 +1,8 @@
 flags: {}
 packages:
 - '.'
-extra-deps: [
-
-]
+- location:
+    git: https://github.com/mrkkrp/esqueleto.git
+    commit: eaa7c1057f7586acd252c7eac2ae62f04a34f33
+extra-deps: []
 resolver: lts-7.8
