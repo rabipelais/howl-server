@@ -128,11 +128,8 @@ getUsersIdFollowing (pool, _, _) i = flip runSqlPersistMPool pool $ do
   userEntities <- E.select
     $ E.from
     $ \(user `E.InnerJoin` follow) -> do
-    E.on ((user^.UserFbID E.==. follow^.FollowshipTargetId
-           E.&&. follow^.FollowshipSourceId E.==. E.val i)
-           E.||.
-          (user^.UserFbID E.==. follow^.FollowshipSourceId
-           E.&&. follow^.FollowshipTargetId E.==. E.val i))
+    E.on (user^.UserFbID E.==. follow^.FollowshipTargetId
+          E.&&. follow^.FollowshipSourceId E.==. E.val i)
     E.where_ (follow^.FollowshipStatus E.==. E.val Accepted)
     return user
   return $ map entityVal userEntities
