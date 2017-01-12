@@ -111,8 +111,6 @@ instance ToSchema IDType where
 
 instance ToParamSchema IDType
 
-instance (ToSchema a) => ToSchema (Authenticated a)
-
 instance ToSchema (FB.UserAccessToken) where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "UserAccessToken") $

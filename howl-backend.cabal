@@ -42,7 +42,9 @@ library
                      , Howl.Models
                      , Howl.Types
                      , Howl.Utils
+                     , Howl.Logger
   build-depends:       base
+                     , ansi-terminal
                      , base64-bytestring
                      , base16-bytestring
                      , cereal
@@ -51,7 +53,9 @@ library
                      , conduit-extra
                      , crypto-api
                      , cryptohash-cryptoapi
+                     , either
                      , esqueleto
+                     , fast-logger
                      , http-types
                      , lifted-base
                      , attoparsec
@@ -62,6 +66,7 @@ library
                      , transformers
                      , monad-logger
                      , monad-control
+                     , mtl
                      , string-conversions
                      , persistent
                      , persistent-template
