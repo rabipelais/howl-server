@@ -1,19 +1,18 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Howl.Utils where
 
-import qualified Howl.Facebook as Fb
-import Network.HTTP.Conduit (Manager)
-import Data.Maybe
-import Data.Time
-import Control.Monad.Trans.Resource
-import Data.Monoid ((<>))
-import Data.Serialize
+import           Control.Monad.Trans.Resource
+import           Data.Maybe
+import           Data.Monoid                  ((<>))
+import           Data.Serialize
+import           Data.Time
+import qualified Howl.Facebook                as Fb
+import           Network.HTTP.Conduit         (Manager)
 
-import Howl.Models
-
+import           Howl.Models
 
 -- | Get the user ID of an user access token.
 accessTokenUserId :: Fb.UserAccessToken -> Fb.UserId

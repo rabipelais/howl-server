@@ -17,19 +17,19 @@ module Howl.Facebook (
   module Howl.Facebook.TestUsers
   ) where
 
-import Howl.Facebook.Object.Event
-import Howl.Facebook.Monad
-import Howl.Facebook.Types
-import Howl.Facebook.Base
-import Howl.Facebook.Auth
-import Howl.Facebook.Pager
-import Howl.Facebook.Graph
-import Howl.Facebook.Object.Page
-import Howl.Facebook.Object.User
-import Howl.Facebook.Object.Action
-import Howl.Facebook.Object.Checkin
-import Howl.Facebook.Object.Order hiding (appId, appName)
-import Howl.Facebook.Object.FriendList
-import Howl.Facebook.RealTime
-import Howl.Facebook.FQL
-import Howl.Facebook.TestUsers
+import           Howl.Facebook.Auth
+import           Howl.Facebook.Base
+import           Howl.Facebook.FQL
+import           Howl.Facebook.Graph
+import           Howl.Facebook.Monad
+import           Howl.Facebook.Object.Action
+import           Howl.Facebook.Object.Checkin
+import           Howl.Facebook.Object.Event
+import           Howl.Facebook.Object.FriendList
+import           Howl.Facebook.Object.Order      hiding (appId, appName)
+import           Howl.Facebook.Object.Page
+import           Howl.Facebook.Object.User
+import           Howl.Facebook.Pager
+import           Howl.Facebook.RealTime
+import           Howl.Facebook.TestUsers
+import           Howl.Facebook.Types

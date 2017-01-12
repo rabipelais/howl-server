@@ -3,7 +3,7 @@
 module Howl.App where
 
 import           Control.Monad.IO.Class
-import           Control.Monad.Logger (runStderrLoggingT)
+import           Control.Monad.Logger     (runStderrLoggingT)
 
 import           Data.String.Conversions
 
@@ -11,11 +11,12 @@ import           Database.Persist
 import           Database.Persist.Sql
 import           Database.Persist.Sqlite
 
+import           Network.HTTP.Conduit     (Manager, newManager,
+                                           tlsManagerSettings)
 import           Network.Wai
 import           Network.Wai.Handler.Warp as Warp
-import Network.HTTP.Conduit (Manager, newManager, tlsManagerSettings)
 
-import qualified Howl.Facebook as Fb
+import qualified Howl.Facebook            as Fb
 
 import           Servant
 

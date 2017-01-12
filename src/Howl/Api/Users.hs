@@ -1,29 +1,29 @@
 {-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
 module Howl.Api.Users where
 
-import Control.Lens
-import Data.Proxy
-import Data.Text
+import           Control.Lens
 import qualified Data.ByteString.Lazy.Char8 as BL8
-import           Data.Swagger hiding (Header)
+import           Data.Proxy
+import           Data.Swagger               hiding (Header)
+import           Data.Text
+import           Data.Time
 import           Data.Typeable              (Typeable)
-import GHC.Generics
-import Data.Time
+import           GHC.Generics
 
-import Servant.Swagger hiding (Header)
-import qualified Howl.Facebook as FB
-import Database.Persist
+import           Database.Persist
+import qualified Howl.Facebook              as FB
+import           Servant.Swagger            hiding (Header)
 
-import Howl.Types
-import Howl.Models
+import           Howl.Models
+import           Howl.Types
 
-import Servant.API
+import           Servant.API
 
 type UsersAPI =
   UsersGet
