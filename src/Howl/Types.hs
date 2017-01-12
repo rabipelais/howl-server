@@ -10,6 +10,8 @@ import           Data.Text
 import           Database.Persist.TH
 import           GHC.Generics
 import           Prelude
+import           Network.HTTP.Conduit     (Manager)
+import           Database.Persist.Sql (ConnectionPool)
 
 import           Control.Monad.Base          (MonadBase)
 import           Control.Monad.Except        (MonadError, catchError,
@@ -55,6 +57,11 @@ instance FromHttpApiData FB.Id where
   parseUrlPiece = Right . FB.Id
 
 
+data HandlerEnv = HandlerEnv
+  { db :: ConnectionPool
+  , manager :: Manager
+  , creds :: FB.Credentials
+  }
 
 -- Diener
 data LogEnv r = LogEnv

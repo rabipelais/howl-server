@@ -105,7 +105,14 @@ executable howl-backend
   build-depends:       base
                      , howl-backend
                      , configurator
-                     , fb
+                     , conduit
+                     , http-conduit
+                     , monad-logger
+                     , persistent
+                     , persistent-sqlite
+                     , string-conversions
+                     , wai
+                     , warp
   default-language:    Haskell2010
 
 
