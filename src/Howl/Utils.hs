@@ -41,8 +41,8 @@ isUserTokenValid :: (MonadBaseControl IO m, MonadResource m) => Fb.Credentials -
 isUserTokenValid c@(Fb.Credentials name ai secret) u@(Fb.UserAccessToken ui t _) = do
   at <- Fb.getAppAccessToken
   dt <- Fb.debugToken at t
-  return $ and $ map ($ dt) [ maybeTrue (\x -> ai == x) . Fb.dtAppId
-                            , maybeTrue id . Fb.dtIsValid
-                            , maybeTrue (\x -> ui == x) . Fb.dtUserId]
+  return $ all ($ dt) [ maybeTrue (\x -> ai == x) . Fb.dtAppId
+                      , maybeTrue id . Fb.dtIsValid
+                      , maybeTrue (\x -> ui == x) . Fb.dtUserId]
   where
     maybeTrue = maybe False

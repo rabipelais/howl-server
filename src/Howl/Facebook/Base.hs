@@ -171,7 +171,7 @@ fbhttpHelper manager req = do
       val <- E.try $ asJsonHelper response
       case val :: Either E.SomeException FacebookException of
         Right fbexc -> E.throw fbexc
-        Left _ -> do
+        Left _ ->
           case AT.parse wwwAuthenticateParser <$>
                lookup "WWW-Authenticate" headers of
             Just (AT.Done _ fbexc) -> E.throwIO fbexc

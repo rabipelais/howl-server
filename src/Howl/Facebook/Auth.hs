@@ -178,7 +178,7 @@ getUserLogoutUrl :: Monad m =>
                     -- @https:\/\/www.facebook.com\/@ (or on
                     -- @https:\/\/www.beta.facebook.com\/@ when
                     -- using the beta tier).
-getUserLogoutUrl (UserAccessToken _ data_ _) next = do
+getUserLogoutUrl (UserAccessToken _ data_ _) next =
   withTier $ \tier ->
     let urlBase = case tier of
                     Production -> "https://www.facebook.com/logout.php?"
@@ -246,7 +246,7 @@ isValid token = do
     then return False
     else
       let page = case token of
-                   UserAccessToken i _ _ -> "/" <> (idCode i)
+                   UserAccessToken i _ _ -> "/" <> idCode i
                    -- Documented way of checking if the token is valid,
                    -- see <https://developers.facebook.com/blog/post/500/>.
                    AppAccessToken _ -> "/19292868552"
@@ -360,7 +360,7 @@ debugToken :: (MonadBaseControl IO m, R.MonadResource m) =>
            -> AccessTokenData -- ^ The access token you want to debug.
            -> FacebookT Auth m DebugToken
 debugToken appToken userTokenData  = do
-  req <- fbreq "/debug_token" (Just appToken) $
+  req <- fbreq "/debug_token" (Just appToken)
            [ ("input_token", TE.encodeUtf8 userTokenData) ]
   ret <- undata <$> (asJson =<< fbhttp req)
   let muserToken = UserAccessToken <$> dtUserId ret

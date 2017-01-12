@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies      #-}
@@ -92,21 +91,21 @@ type UsersIdEventsGet = "users" :> Capture "userID" IDType
 
 
 instance ToSchema User where
-  declareNamedSchema proxy = do
+  declareNamedSchema proxy =
     return $ NamedSchema (Just "User") $
-      (sketchSchema
-       (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing))
+      sketchSchema
+       (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing)
       & required .~ ["fbID", "username", "firstName"]
 
 instance ToSchema Event where
-  declareNamedSchema proxy = do
+  declareNamedSchema proxy =
     return $ NamedSchema (Just "Event") $
-      (sketchSchema
-       (Event (FB.Id "10155182179270463") "Fun swaggy party." "All You Can Swag" (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463")))
+      sketchSchema
+       (Event (FB.Id "10155182179270463") "Fun swaggy party." "All You Can Swag" (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463"))
       & required .~ ["fbID", "description", "name", "startTime", "endTime", "venueId"]
 
 instance ToSchema IDType where
-  declareNamedSchema proxy = do
+  declareNamedSchema proxy =
     return $ NamedSchema Nothing $ mempty
       & type_ .~ SwaggerString
 
@@ -115,7 +114,7 @@ instance ToParamSchema IDType
 instance (ToSchema a) => ToSchema (Authenticated a)
 
 instance ToSchema (FB.UserAccessToken) where
-  declareNamedSchema proxy = do
+  declareNamedSchema proxy =
     return $ NamedSchema (Just "UserAccessToken") $
-      (sketchSchema (FB.UserAccessToken "10155182179270463" "EAACEdEose0cBAIM1ZBWcOfQl3Gw03XZCY1yxzQZAZCA1HUuaqfaIUmhWRWfZCtDafrX0n6VaU8dGUggn7H0dpGe93eFUfVg5Ew4HxDdjb5jbNuFFuqcMbiKpMPdZAeoZATBVF1j8R5xTrWjiFnDJYLcjuhZCTccZCPqMIwUXZBm0lPNwZDZD" (UTCTime (fromGregorian 2015 12 31) 0)))
+      sketchSchema (FB.UserAccessToken "10155182179270463" "EAACEdEose0cBAIM1ZBWcOfQl3Gw03XZCY1yxzQZAZCA1HUuaqfaIUmhWRWfZCtDafrX0n6VaU8dGUggn7H0dpGe93eFUfVg5Ew4HxDdjb5jbNuFFuqcMbiKpMPdZAeoZATBVF1j8R5xTrWjiFnDJYLcjuhZCTccZCPqMIwUXZBm0lPNwZDZD" (UTCTime (fromGregorian 2015 12 31) 0))
       & description ?~ "`id` is the FB app user ID, `token` the user access token, and `expires` is the token expiration date in `%FT%T%z` format"

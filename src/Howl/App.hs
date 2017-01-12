@@ -38,9 +38,7 @@ sizeOfSqlitePool = 10
 
 mkApp :: FilePath -> Fb.Credentials -> IO Application
 mkApp sqliteFile fbCredentials = do
-  pool <- runStderrLoggingT $ do
-    createSqlitePool (cs sqliteFile) sizeOfSqlitePool
-
+  pool <- runStderrLoggingT $ createSqlitePool (cs sqliteFile) sizeOfSqlitePool
   runSqlPool (runMigration migrateAll) pool
   manager <- newManager tlsManagerSettings
   return $ app pool manager fbCredentials

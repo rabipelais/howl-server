@@ -1,35 +1,19 @@
-module Howl.Facebook (
-  module Howl.Facebook.Object.Event,
-  module Howl.Facebook.Monad,
-  module Howl.Facebook.Types,
-  module Howl.Facebook.Base,
-  module Howl.Facebook.Auth,
-  module Howl.Facebook.Pager,
-  module Howl.Facebook.Graph,
-  module Howl.Facebook.Object.Page,
-  module Howl.Facebook.Object.User,
-  module Howl.Facebook.Object.Action,
-  module Howl.Facebook.Object.Checkin,
-  module Howl.Facebook.Object.Order,
-  module Howl.Facebook.Object.FriendList,
-  module Howl.Facebook.RealTime,
-  module Howl.Facebook.FQL,
-  module Howl.Facebook.TestUsers
-  ) where
+module Howl.Facebook (module Export) where
 
-import           Howl.Facebook.Auth
-import           Howl.Facebook.Base
-import           Howl.Facebook.FQL
-import           Howl.Facebook.Graph
-import           Howl.Facebook.Monad
-import           Howl.Facebook.Object.Action
-import           Howl.Facebook.Object.Checkin
-import           Howl.Facebook.Object.Event
-import           Howl.Facebook.Object.FriendList
-import           Howl.Facebook.Object.Order      hiding (appId, appName)
-import           Howl.Facebook.Object.Page
-import           Howl.Facebook.Object.User
-import           Howl.Facebook.Pager
-import           Howl.Facebook.RealTime
-import           Howl.Facebook.TestUsers
-import           Howl.Facebook.Types
+import           Howl.Facebook.Auth              as Export
+import           Howl.Facebook.Base              as Export
+import           Howl.Facebook.FQL               as Export
+import           Howl.Facebook.Graph             as Export
+import           Howl.Facebook.Monad             as Export
+import           Howl.Facebook.Object.Action     as Export
+import           Howl.Facebook.Object.Checkin    as Export
+import           Howl.Facebook.Object.Event      as Export
+import           Howl.Facebook.Object.FriendList as Export
+import           Howl.Facebook.Object.Order      as Export hiding (appId,
+                                                            appName)
+import           Howl.Facebook.Object.Page       as Export
+import           Howl.Facebook.Object.User       as Export
+import           Howl.Facebook.Pager             as Export
+import           Howl.Facebook.RealTime          as Export
+import           Howl.Facebook.TestUsers         as Export
+import           Howl.Facebook.Types             as Export

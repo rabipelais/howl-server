@@ -60,10 +60,10 @@ postUsersH (pool, manager, fbCredentials) userAT = do
 
 postUsers :: ConnectionPool -> Manager -> Fb.Credentials -> Fb.UserAccessToken -> IO (Maybe User)
 postUsers pool manager creds userAT = flip liftSqlPersistMPool pool $ do
-  exists <- selectFirst [UserFbID ==. (accessTokenUserId userAT)] []
+  exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
   case exists of
     Nothing -> Just <$> (do
-                           u <- (getNewUser userAT creds manager)
+                           u <- getNewUser userAT creds manager
                            insert u
                            return u)
     Just _ -> return Nothing
@@ -83,8 +83,8 @@ getUsersId pool userID = flip runSqlPersistMPool pool $ do
 putUsersIdH :: Resources -> IDType -> User -> Maybe Token -> Handler User
 putUsersIdH (p, m, c) i u mToken = do
   liftIO $ print "PUT {userID}"
-  if (userFbID u /= i)
-    then (liftIO $ print "id doesn't match") >> throwError err400
+  if userFbID u /= i
+    then liftIO (print "id doesn't match") >> throwError err400
     else do
       liftIO $ print "Fb ID and User dataload match"
       eRep <- liftIO $ putUserId p i u
@@ -120,7 +120,7 @@ deleteUserId pool i = flip runSqlPersistMPool pool $ do
 getUsersIdConnectH = undefined
 
 getUsersIdFollowingH :: Resources -> IDType -> Maybe Token -> Handler [User]
-getUsersIdFollowingH (p, m, c) i mToken = do
+getUsersIdFollowingH (p, m, c) i mToken =
   liftIO $ getUsersIdFollowing (p, m, c) i
 
 getUsersIdFollowing ::  Resources -> IDType -> IO [User]
