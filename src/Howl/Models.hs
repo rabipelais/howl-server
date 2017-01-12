@@ -1,5 +1,8 @@
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -7,27 +10,23 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Howl.Models where
 
-import Data.Aeson
-import Data.Text
+import           Data.Aeson
+import           Data.Text
 
-import Control.Applicative
-import Data.Time.Clock
-import System.Directory
-import GHC.Generics
+import           Control.Applicative
+import           Data.Time.Clock
+import           GHC.Generics
+import           System.Directory
 
-import Database.Persist.TH
-import qualified Howl.Facebook as Fb
-import Howl.Facebook.Persistent ()
-import Howl.Facebook.Object.Event (RSVP)
+import           Database.Persist.TH
+import qualified Howl.Facebook              as Fb
+import           Howl.Facebook.Object.Event (RSVP)
+import           Howl.Facebook.Persistent   ()
 
-import Howl.Types
+import           Howl.Types
 
 type IDType = Fb.Id
 
@@ -44,10 +43,10 @@ User json
   deriving Eq Read Show Generic
 
 Followship json
-  userSourceId UserId
-  userTargetId UserId
+  sourceId IDType
+  targetId IDType
   status FollowStatus
-  UniqueFriendshipID userSourceId userTargetId
+  UniqueFriendshipID sourceId targetId
   deriving Eq Read Show
 
 Event json
