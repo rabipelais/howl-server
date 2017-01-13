@@ -1,5 +1,10 @@
 image: haskell:8.0.1
 
+cache:
+  untracked: true
+  paths:
+    - .stack-work
+
 before_script:
     - stack setup;
 
