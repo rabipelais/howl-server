@@ -1,11 +1,16 @@
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Howl.App.Users where
 
 import           Control.Monad.IO.Class
-import           Control.Monad.Logger     (runStderrLoggingT)
+import           Control.Monad.Logger     (runStderrLoggingT, MonadLogger, logError, logInfo)
+import Control.Monad.Except
+import Control.Exception.Lifted
+import Control.Monad.Trans.Resource
 
 import           Data.String.Conversions
 
-import           Database.Esqueleto       ((^.))
+import           Database.Esqueleto       ((^.), select, from)
 import qualified Database.Esqueleto       as E
 import           Database.Persist
 import           Database.Persist.Sql
@@ -29,102 +34,100 @@ import           Howl.Utils
 
 type Resources = (ConnectionPool, Manager, Fb.Credentials)
 
-usersHandlers :: Resources -> Server UsersAPI
-usersHandlers s@(p, m, c) =
-  (getUsersH s)
-  :<|> (postUsersH s)
-  :<|> (getUsersIdH s)
-  :<|> (putUsersIdH s)
-  :<|> (deleteUsersIdH s)
+usersHandlers :: ServerT UsersAPI (HandlerT IO)
+usersHandlers =
+  getUsersH
+  :<|> postUsersH
+  :<|> getUsersIdH
+  :<|> putUsersIdH
+  :<|> deleteUsersIdH
   -- :<|> getUsersIdConnectH
-  :<|> (getUsersIdFollowingH s)
+  :<|> getUsersIdFollowingH
   -- :<|> postUsersIdFriendsH
   -- :<|> getUsersIdFriendsEventsH
   -- :<|> deleteUsersIdFriendsIdH
   -- :<|> getUsersIdEventsH
 
 
-getUsersH :: Resources -> Maybe Token -> Handler [User]
-getUsersH (p, m, c) mToken = do
-  liftIO $ print "GET Users"
-  liftIO $ flip liftSqlPersistMPool p $ do
-    userEntities <- selectList [] []
-    return $ map (\(Entity _ u) -> u) userEntities
+getUsersH :: Maybe Token -> HandlerT IO [User]
+getUsersH mToken = do
+  entities <- runQuery $ (select . from $ pure)
+  return $ map entityVal entities
 
-postUsersH :: Resources -> Fb.UserAccessToken -> Handler User
-postUsersH (pool, manager, fbCredentials) userAT = do
-  mResult <- liftIO $ postUsers pool manager fbCredentials userAT
+postUsersH :: Fb.UserAccessToken -> HandlerT IO User
+postUsersH userAT = do
+  mResult <- postUsers userAT
   case mResult of
     Just u -> return u
     Nothing -> throwError err409
 
-postUsers :: ConnectionPool -> Manager -> Fb.Credentials -> Fb.UserAccessToken -> IO (Maybe User)
-postUsers pool manager creds userAT = flip liftSqlPersistMPool pool $ do
-  exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
-  case exists of
-    Nothing -> Just <$> (do
-                           u <- getNewUser userAT creds manager
+postUsers :: Fb.UserAccessToken -> HandlerT IO (Maybe User)
+postUsers userAT = do
+  creds' <- asks creds
+  manager' <- asks manager
+  u <- liftIO $ runResourceT $ getNewUser userAT creds' manager'
+  runQuery $ do
+    exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
+    case exists of
+      Nothing -> Just <$> (do
                            insert u
                            return u)
-    Just _ -> return Nothing
+      Just _ -> return Nothing
 
-getUsersIdH :: Resources -> IDType -> Maybe Token -> Handler User
-getUsersIdH (p, m, c) i mToken = do
-  mResult <- liftIO $ getUsersId p i
+getUsersIdH :: IDType -> Maybe Token -> HandlerT IO User
+getUsersIdH i mToken = do
+  mResult <- getUsersId i
   case mResult of
     Just u -> return u
     Nothing -> throwError err404
 
-getUsersId :: ConnectionPool -> IDType -> IO (Maybe User)
-getUsersId pool userID = flip runSqlPersistMPool pool $ do
+getUsersId :: IDType -> HandlerT IO (Maybe User)
+getUsersId userID = runQuery $ do
   mUser <- selectFirst [UserFbID ==. userID] []
   return $ entityVal <$> mUser
 
-putUsersIdH :: Resources -> IDType -> User -> Maybe Token -> Handler User
-putUsersIdH (p, m, c) i u mToken = do
-  liftIO $ print "PUT {userID}"
+putUsersIdH :: IDType -> User -> Maybe Token -> HandlerT IO User
+putUsersIdH i u mToken = do
   if userFbID u /= i
     then liftIO (print "id doesn't match") >> throwError err400
     else do
-      liftIO $ print "Fb ID and User dataload match"
-      eRep <- liftIO $ putUserId p i u
+      eRep <- putUserId i u
       case eRep of
         Left e -> throwError e
         Right u -> return u
 
-putUserId :: ConnectionPool -> IDType -> User -> IO (Either ServantErr User)
-putUserId pool i u = flip runSqlPersistMPool pool $ do
+putUserId :: IDType -> User -> HandlerT IO (Either ServantErr User)
+putUserId i u = runQuery $ do
   mUser <- getBy $ UniqueUserID i
   case mUser of
     Nothing -> return $ Left err404
     Just (Entity k _) -> do
-      liftIO $ print "User found"
       Sql.replace k u --TODO Check username uniqueness
       return $ Right u
 
-deleteUsersIdH :: Resources -> IDType -> Maybe Token -> Handler IDType
-deleteUsersIdH (p, m, c) i mToken = do
-  eRep <- liftIO $ deleteUserId p i
+deleteUsersIdH :: IDType -> Maybe Token -> HandlerT IO IDType
+deleteUsersIdH i mToken = do
+  eRep <- deleteUserId i
   case eRep of
     Left e -> throwError e
     Right _ -> return i
 
-deleteUserId pool i = flip runSqlPersistMPool pool $ do
+deleteUserId i = runQuery $ do
   mUser <- getBy $ UniqueUserID i
   case mUser of
     Nothing -> return $ Left err404
     Just (Entity k u) -> do
       Sql.delete k
-      return $ Right u
+      return $ Right i
 
 getUsersIdConnectH = undefined
 
-getUsersIdFollowingH :: Resources -> IDType -> Maybe Token -> Handler [User]
-getUsersIdFollowingH (p, m, c) i mToken =
-  liftIO $ getUsersIdFollowing (p, m, c) i
+getUsersIdFollowingH :: IDType -> Maybe Token -> HandlerT IO [User]
+getUsersIdFollowingH i mToken = do
+  getUsersIdFollowing i
 
-getUsersIdFollowing ::  Resources -> IDType -> IO [User]
-getUsersIdFollowing (pool, _, _) i = flip runSqlPersistMPool pool $ do
+getUsersIdFollowing :: IDType -> HandlerT IO [User]
+getUsersIdFollowing i = runQuery $ do
   userEntities <- E.select
     $ E.from
     $ \(user `E.InnerJoin` follow) -> do
@@ -143,3 +146,16 @@ deleteUsersIdFriendsIdH = undefined
 getUsersIdFriendsEventsH = undefined
 --getUsersEventsH :: IDType -> Maybe Token -> Server [Event]
 getUsersIdEventsH = undefined
+
+runDb :: (MonadLogger (HandlerT IO), MonadError e (HandlerT IO))
+      => ConnectionPool -> e -> SqlPersistT (HandlerT IO) a -> HandlerT IO a
+runDb pool err q =
+  catch (runSqlPool q pool) $ \(SomeException e) -> do
+    $logError "runSqlPool failed."
+    $logError $ "Error: " <> (pack . show) e
+    throwError err
+
+runQuery :: SqlPersistT (HandlerT IO) a -> HandlerT IO a
+runQuery query = do
+  pool <- asks db
+  runDb pool err500 query

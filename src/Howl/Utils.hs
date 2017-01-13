@@ -23,7 +23,7 @@ laterToken i t = do
   let later = addUTCTime 3600 now
   return $ Fb.UserAccessToken i t later
 
-getNewUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
+--getNewUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
 getNewUser userAT creds manager =  do
   fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name")] (Just userAT)
   let

@@ -51,4 +51,4 @@ main = do
       runSqlPool (runMigration migrateAll) pool
       manager <- liftIO $ newManager tlsManagerSettings
       let env = LogEnv logFn $ HandlerEnv pool manager creds
-      liftIO $ Warp.run port $ app pool manager creds
+      liftIO $ Warp.run port $ app env

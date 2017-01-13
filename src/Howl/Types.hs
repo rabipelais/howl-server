@@ -34,6 +34,7 @@ import           Control.Monad.Trans.Either  (EitherT)
 import           Control.Monad.Trans.Except  (ExceptT, runExceptT)
 import Control.Monad.Writer (WriterT)
 
+import Servant
 import           Servant.API
 import qualified Howl.Facebook       as FB
 import           Howl.Logger (LogFunction, withLogger)
@@ -56,6 +57,7 @@ instance ToHttpApiData FB.Id where
 instance FromHttpApiData FB.Id where
   parseUrlPiece = Right . FB.Id
 
+type HandlerT = DienerT ServantErr HandlerEnv
 
 data HandlerEnv = HandlerEnv
   { db :: ConnectionPool
