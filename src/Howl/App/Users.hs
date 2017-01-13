@@ -1,6 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Howl.App.Users where
+module Howl.App.Users
+  (
+    usersHandlers
+  ) where
 
 import           Control.Monad.IO.Class
 import           Control.Monad.Logger     (runStderrLoggingT, MonadLogger, logError, logInfo)
@@ -31,8 +34,6 @@ import           Howl.Api.Users
 import           Howl.Models
 import           Howl.Types
 import           Howl.Utils
-
-type Resources = (ConnectionPool, Manager, Fb.Credentials)
 
 usersHandlers :: ServerT UsersAPI (HandlerT IO)
 usersHandlers =
