@@ -100,7 +100,7 @@ library
 executable howl-backend
   hs-source-dirs:      app
   main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -fhpc
   other-modules:
   build-depends:       base
                      , howl-backend

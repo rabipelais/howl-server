@@ -40,7 +40,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                delete, get, matchBody, request,
                                                shouldRespondWith, with)
 
-getUsers :<|> postUsers :<|> getUsersId :<|> putUsersId :<|> deleteUsersId :<|> getUsersIdFollowing = client api
+getUsers :<|> postUsers :<|> putUsers :<|> getUsersId :<|> putUsersId :<|> deleteUsersId :<|> getUsersIdFollowing = client api
 
 emptyToken = Just "emptyToken"
 
@@ -51,6 +51,12 @@ spec conf = do
     context "/users" $ do
       it "returns an empty list" $ \host -> do
         try host (getUsers emptyToken) `shouldReturn` []
+
+      context "PUT" $ do
+        it "creates one new user entry" $ \host -> do
+          try host (putUsers albert emptyToken)
+          u <- try host (getUsers emptyToken)
+          u `shouldBe` [albert]
 
 type Host = (Manager, BaseUrl)
 
@@ -81,3 +87,14 @@ testApp (_, u, c) = do
     manager <- liftIO $ newManager tlsManagerSettings
     let env = LogEnv undefined $ HandlerEnv pool manager c
     return $ app env
+
+albert :: User
+albert =
+  User "12345" "el boleta" "Albert" (Just "Boleta") (Just "albert@yahoo.co") Nothing
+
+bob :: User
+bob =
+  User "67890" "abreu" "Bob" (Just "Patiño") (Just "bob@yahoo.de") Nothing
+
+charles :: User
+charles = User "1683671673" "charlie" "Charles" (Just "Flummoxon III") (Just "c.daddy@yahoo.de") Nothing
