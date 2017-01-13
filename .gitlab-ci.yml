@@ -9,4 +9,4 @@ howl_test:
     paths:
       - .stack-work
   script:
-    - stack --no-terminal test howl-backend:howl-backend-test
+    - stack --no-terminal test howl-backend:howl-backend-test --coverage
