@@ -39,6 +39,7 @@ usersHandlers :: ServerT UsersAPI (HandlerT IO)
 usersHandlers =
   getUsersH
   :<|> postUsersH
+  :<|> putUsersH
   :<|> getUsersIdH
   :<|> putUsersIdH
   :<|> deleteUsersIdH
@@ -105,6 +106,17 @@ putUserId i u = runQuery $ do
     Just (Entity k _) -> do
       Sql.replace k u --TODO Check username uniqueness
       return $ Right u
+
+putUsersH :: User -> Maybe Token -> HandlerT IO User
+putUsersH u mToken =  runQuery $ do
+  mUser <- getBy $ UniqueUserID (userFbID u)
+  case mUser of
+    Nothing -> do
+      insert u
+      return u
+    Just (Entity k _) -> do
+      Sql.replace k u --TODO Check username uniqueness
+      return u
 
 deleteUsersIdH :: IDType -> Maybe Token -> HandlerT IO IDType
 deleteUsersIdH i mToken = do

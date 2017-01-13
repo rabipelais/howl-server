@@ -27,6 +27,7 @@ import           Servant.API
 type UsersAPI =
   UsersGet
   :<|> UsersPost
+  :<|> UsersPut
   :<|> UsersIdGet
   :<|> UsersIdPut
   :<|> UsersIdDelete
@@ -43,6 +44,10 @@ type UsersGet = "users" :> Header "token" Token
 
 type UsersPost = "users" :> ReqBody '[JSON] FB.UserAccessToken
                          :> PostCreated '[JSON] User
+
+type UsersPut = "users" :> ReqBody '[JSON] User
+                        :> Header "token" Token
+                        :> Put '[JSON] User
 
 type UsersIdGet = "users" :> Capture "userID" IDType
                           :> Header "token" Token
