@@ -63,6 +63,17 @@ postUsersH userAT = do
     Just u -> return u
     Nothing -> throwError err409
 
+putUsersH :: User -> Maybe Token -> HandlerT IO User
+putUsersH u mToken =  runQuery $ do
+  mUser <- getBy $ UniqueUserID (userFbID u)
+  case mUser of
+    Nothing -> do
+      insert u
+      return u
+    Just (Entity k _) -> do
+      Sql.replace k u --TODO Check username uniqueness
+      return u
+
 postUsers :: Fb.UserAccessToken -> HandlerT IO (Maybe User)
 postUsers userAT = do
   creds' <- asks creds
@@ -91,7 +102,7 @@ getUsersId userID = runQuery $ do
 putUsersIdH :: IDType -> User -> Maybe Token -> HandlerT IO User
 putUsersIdH i u mToken = do
   if userFbID u /= i
-    then liftIO (print "id doesn't match") >> throwError err400
+    then throwError err403
     else do
       eRep <- putUserId i u
       case eRep of
@@ -106,17 +117,6 @@ putUserId i u = runQuery $ do
     Just (Entity k _) -> do
       Sql.replace k u --TODO Check username uniqueness
       return $ Right u
-
-putUsersH :: User -> Maybe Token -> HandlerT IO User
-putUsersH u mToken =  runQuery $ do
-  mUser <- getBy $ UniqueUserID (userFbID u)
-  case mUser of
-    Nothing -> do
-      insert u
-      return u
-    Just (Entity k _) -> do
-      Sql.replace k u --TODO Check username uniqueness
-      return u
 
 deleteUsersIdH :: IDType -> Maybe Token -> HandlerT IO IDType
 deleteUsersIdH i mToken = do

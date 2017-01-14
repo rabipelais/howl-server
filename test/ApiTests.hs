@@ -15,7 +15,7 @@ import           Howl
 import qualified Howl.Facebook                as Fb
 import qualified Howl.Logger                  as Logger
 
-import           Network.Wai
+import           Network.Wai                  (Application)
 import           Network.Wai.Handler.Warp     as Warp
 import           Servant.API
 import           Servant.Client
@@ -30,11 +30,10 @@ import           Control.Monad.Logger
 import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Resource
 import           Data.Monoid                  ((<>))
-import           Data.Text
-import           Data.Time.Clock
 import           Network.HTTP.Client          (Manager, defaultManagerSettings,
                                                newManager)
 import           Network.HTTP.Conduit         (tlsManagerSettings)
+import           Network.HTTP.Types
 import           Test.Hspec                   (Spec, describe, hspec, it)
 import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                delete, get, matchBody, request,
@@ -57,6 +56,62 @@ spec conf = do
           try host (putUsers albert emptyToken)
           u <- try host (getUsers emptyToken)
           u `shouldBe` [albert]
+
+        it "is idempotent" $ \host -> do
+          try host (putUsers albert emptyToken)
+          try host (putUsers albert emptyToken)
+          u <- try host (getUsers emptyToken)
+          u `shouldBe` [albert]
+
+        it "adds two users" $ \host -> do
+          try host (putUsers albert emptyToken)
+          try host (putUsers bob emptyToken)
+          u <- try host (getUsers emptyToken)
+          u `shouldBe` [albert, bob]
+
+      context "/users/{userID}" $ do
+        context "GET" $ do
+          it "returns 404 for missing user" $ \(manager, baseUrl) -> do
+            Left err <- runExceptT $ getUsersId "12345" emptyToken manager baseUrl
+            responseStatus err `shouldBe` notFound404
+
+          it "returns user in DB" $ \host -> do
+            try host (putUsers albert emptyToken)
+            u <- try host (getUsersId "12345" emptyToken)
+            u `shouldBe` albert
+
+        context "PUT" $ do
+          it "returns 403 if replacing wrong user" $ \(manager, baseUrl) -> do
+            Left err <- runExceptT $ putUsersId "12346" albert emptyToken manager baseUrl
+            responseStatus err `shouldBe` forbidden403
+
+          it "returns 404 if user not found"  $ \(manager, baseUrl) -> do
+            Left err <- runExceptT $ putUsersId "12345" albert emptyToken manager baseUrl
+            responseStatus err `shouldBe` notFound404
+
+          it "modifies existing user" $ \host -> do
+            try host (putUsers albert emptyToken)
+            try host (putUsersId "12345" (albert{userFirstName = "Albertote"}) emptyToken)
+            u <- try host (getUsersId "12345" emptyToken)
+            u `shouldBe` (albert{userFirstName = "Albertote"})
+
+          it "is idempotent" $ \host -> do
+            try host (putUsers albert emptyToken)
+            try host (putUsersId "12345" albert emptyToken)
+            try host (putUsersId "12345" albert emptyToken)
+            u <- try host (getUsers emptyToken)
+            u `shouldBe` [albert]
+
+        context "DELETE" $ do
+          it "returns 404 when user not found" $ \(manager, baseUrl) -> do
+            Left err <- runExceptT $ deleteUsersId "12345" emptyToken manager baseUrl
+            responseStatus err `shouldBe` notFound404
+
+          it "successfully deletes correct user" $ \host -> do
+            try host (putUsers albert emptyToken)
+            try host (deleteUsersId "12345" emptyToken)
+            u <- try host (getUsers emptyToken)
+            u `shouldBe` []
 
 type Host = (Manager, BaseUrl)
 

@@ -166,6 +166,7 @@ test-suite howl-backend-test
                      , HUnit
                      , hspec
                      , http-client
+                     , http-types
                      , hspec-wai
                      , hspec-wai-json
                      , optparse-generic
