@@ -160,8 +160,8 @@ postUsersIdFollowsH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 postUsersIdFollowsH s t mToken =
   if s == t then throwError err409
   else runQuery $ do
-    checkExistOrThrow s
-    checkExistOrThrow t
+    checkExistsOrThrow s
+    checkExistsOrThrow t
     getBy (UniqueFollowshipID t s) >>= \case
       Just (Entity _ (Followship _ _ Blocked)) -> throwError err403
       _ -> insertBy (Followship s t Accepted) >>= \case
@@ -172,7 +172,12 @@ deleteUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 deleteUsersIdFollowsIdH = undefined
 
 getUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO FollowStatus
-getUsersIdFollowsIdH = undefined
+getUsersIdFollowsIdH s t mToken = runQuery $ do
+  checkExistsOrThrow s
+  checkExistsOrThrow t
+  getBy (UniqueFollowshipID s t) >>= \case
+    Just (Entity _ (Followship _ _ status)) -> return status
+    Nothing -> throwError err404
 
 getUsersIdFollowsEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdFollowsEventsH = undefined
@@ -193,7 +198,7 @@ runQuery query = do
   pool <- asks db
   runDb pool err500 query
 
-checkExistOrThrow i = do
+checkExistsOrThrow i = do
   mUser <- getBy $ UniqueUserID i
   case mUser of
     Nothing -> throwError err404
