@@ -32,11 +32,12 @@ type UsersAPI =
   :<|> UsersIdPut
   :<|> UsersIdDelete
                 -- :<|> UsersIdConnectGet
-  :<|> UsersIdFollowingGet
-                -- :<|> UsersIdFriendsPost
-                -- :<|> UsersIdFriendsEventsGet
-                -- :<|> UsersIdFriendsIdDelete
-                -- :<|> UsersIdEventsGet
+  :<|> UsersIdFollowsGet
+  :<|> UsersIdFollowsPost
+  :<|> UsersIdFollowsIdGet
+  :<|> UsersIdFollowsIdDelete
+  :<|> UsersIdFollowsEventsGet
+  :<|> UsersIdEventsGet
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -67,23 +68,29 @@ type UsersIdDelete = "users" :> Capture "userID" IDType
                           :> Header "token" Token
                           :> Delete '[JSON] IDType
 
-type UsersIdFollowingGet = "users" :> Capture "userID" IDType
+type UsersIdFollowsGet = "users" :> Capture "userID" IDType
                           :> "follows"
                           :> Header "token" Text
                           :> Get '[JSON] [User]
 
-type UsersIdFollowingPost = "users" :> Capture "userID" IDType
+type UsersIdFollowsPost = "users" :> Capture "userID" IDType
                           :> "follows"
                           :> ReqBody '[JSON] IDType
                           :> Header "token" Text
                           :> PostAccepted '[JSON] IDType
 
-type UsersIdFollowingEventsGet = "users" :> Capture "userID" IDType
+type UsersIdFollowsEventsGet = "users" :> Capture "userID" IDType
                           :> "follows" :> "events"
                           :> Header "token" Text
                           :> Get '[JSON] [Event]
 
-type UsersIdFollowingIdDelete = "users" :> Capture "userID" IDType
+type UsersIdFollowsIdGet = "users" :> Capture "userID" IDType
+                           :> "follows"
+                           :> Capture "friendID" IDType
+                           :> Header "token" Text
+                           :> Get '[JSON] FollowStatus
+
+type UsersIdFollowsIdDelete = "users" :> Capture "userID" IDType
                               :> "follows"
                               :> Capture "friendID" IDType
                               :> Header "token" Text

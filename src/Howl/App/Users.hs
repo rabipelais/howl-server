@@ -1,5 +1,6 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase       #-}
 module Howl.App.Users
   (
     usersHandlers
@@ -44,11 +45,12 @@ usersHandlers =
   :<|> putUsersIdH
   :<|> deleteUsersIdH
   -- :<|> getUsersIdConnectH
-  :<|> getUsersIdFollowingH
-  -- :<|> postUsersIdFriendsH
-  -- :<|> getUsersIdFriendsEventsH
-  -- :<|> deleteUsersIdFriendsIdH
-  -- :<|> getUsersIdEventsH
+  :<|> getUsersIdFollowsH
+  :<|> postUsersIdFollowsH
+  :<|> getUsersIdFollowsIdH
+  :<|> deleteUsersIdFollowsIdH
+  :<|> getUsersIdFollowsEventsH
+  :<|> getUsersIdEventsH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -135,29 +137,38 @@ deleteUserId i = runQuery $ do
 
 getUsersIdConnectH = undefined
 
-getUsersIdFollowingH :: IDType -> Maybe Token -> HandlerT IO [User]
-getUsersIdFollowingH i mToken = do
-  getUsersIdFollowing i
+getUsersIdFollowsH :: IDType -> Maybe Token -> HandlerT IO [User]
+getUsersIdFollowsH i mToken =
+  getUsersIdFollows i
 
-getUsersIdFollowing :: IDType -> HandlerT IO [User]
-getUsersIdFollowing i = runQuery $ do
-  userEntities <- E.select
-    $ E.from
-    $ \(user `E.InnerJoin` follow) -> do
-    E.on (user^.UserFbID E.==. follow^.FollowshipTargetId
-          E.&&. follow^.FollowshipSourceId E.==. E.val i)
-    E.where_ (follow^.FollowshipStatus E.==. E.val Accepted)
-    return user
-  return $ map entityVal userEntities
+getUsersIdFollows :: IDType -> HandlerT IO [User]
+getUsersIdFollows i = runQuery $ do
+  selectFirst [UserFbID ==. i] [] >>= \case
+    Nothing -> throwError err404
+    Just _ -> do
+      userEntities <- E.select
+        $ E.from
+        $ \(user `E.InnerJoin` follow) -> do
+        E.on (user^.UserFbID E.==. follow^.FollowshipTargetId
+              E.&&. follow^.FollowshipSourceId E.==. E.val i)
+        E.where_ (follow^.FollowshipStatus E.==. E.val Accepted)
+        return user
+      return $ map entityVal userEntities
 
+-- userID -> content
+postUsersIdFollowsH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
+postUsersIdFollowsH = undefined
 
---postUsersIdFriendsH :: IDType -> IDType -> Maybe Token -> Server IDType
-postUsersIdFriendsH = undefined
---deleteUsersIdFriendsIdH :: IDType -> IDType -> Maybe Token -> Server ()
-deleteUsersIdFriendsIdH = undefined
+deleteUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
+deleteUsersIdFollowsIdH = undefined
 
-getUsersIdFriendsEventsH = undefined
---getUsersEventsH :: IDType -> Maybe Token -> Server [Event]
+getUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO FollowStatus
+getUsersIdFollowsIdH = undefined
+
+getUsersIdFollowsEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
+getUsersIdFollowsEventsH = undefined
+
+getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsH = undefined
 
 runDb :: (MonadLogger (HandlerT IO), MonadError e (HandlerT IO))

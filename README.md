@@ -20,6 +20,11 @@ To start the web-server, run
 $ stack exec howl-backend
 ```
 
+To run the tests, use
+```
+$ stack test howl-backend:howl-backend-test
+```
+
 ## Documentation
 To auto-generate the `Swagger` JSON for the Web API, run `stack exec howl-swagger`
 **TODO** Put here the actual API docs.
@@ -28,5 +33,5 @@ To auto-generate the `Swagger` JSON for the Web API, run `stack exec howl-swagge
 Use the [Gitlab issue tracker](https://gitlab.com/smendez/howl-backend/issues) to submit bug reports and feature requests.
 
 ## License
-Copyright (c) 2016-2017 Sebastian Mendez Siem 
+Copyright (c) 2016-2017 Sebastian Mendez Siem
 Licensed under the BSD-3 license.
