@@ -29,7 +29,7 @@ import qualified Howl.Facebook            as Fb
 
 import           Servant
 
-import           Data.Text                hiding (map)
+import           Data.Text                hiding (map, foldl1)
 
 import           Howl.Api.Users
 import           Howl.Models
@@ -49,7 +49,7 @@ usersHandlers =
   :<|> postUsersIdFollowsH
   :<|> getUsersIdFollowsIdH
   :<|> deleteUsersIdFollowsIdH
-  :<|> getUsersIdFollowsEventsH
+  :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdEventsH
 
 
@@ -185,11 +185,28 @@ getUsersIdFollowsIdH s t mToken = runQuery $ do
     Just (Entity _ (Followship _ _ status)) -> return status
     Nothing -> throwError err404
 
-getUsersIdFollowsEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
-getUsersIdFollowsEventsH = undefined
+getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
+getUsersIdEventsFollowsH i mToken = runQuery $ do
+  liftIO $ putStrLn "ARSTRASTRAST"
+  checkExistsOrThrow i
+  friends <- selectList [ FollowshipSourceId ==. i
+                        , FollowshipStatus ==. Accepted] []
+  let friendsIds = map (followshipTargetId . entityVal) friends
+  let eventsConds = foldl1 (||.) $ map (\x -> [UserEventUserID ==. x]) friendsIds
+  eventsUser <- selectList eventsConds []
+  let eventsIds = map (userEventEventID . entityVal) eventsUser
+  let conds = foldl1 (||.) $ map (\x -> [EventFbID ==. x]) eventsIds
+  events <- selectList conds []
+  return $ map entityVal events
 
 getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
-getUsersIdEventsH = undefined
+getUsersIdEventsH i mToken = runQuery $ do
+  checkExistsOrThrow i
+  eventsUser <- selectList [UserEventUserID ==. i] []
+  let eventsIds = map (userEventEventID . entityVal) eventsUser
+  let conds = foldl1 (||.) $ map (\x -> [EventFbID ==. x]) eventsIds
+  events <- selectList conds []
+  return $ map entityVal events
 
 runDb :: (MonadLogger (HandlerT IO), MonadError e (HandlerT IO))
       => ConnectionPool -> e -> SqlPersistT (HandlerT IO) a -> HandlerT IO a

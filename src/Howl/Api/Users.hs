@@ -36,8 +36,8 @@ type UsersAPI =
   :<|> UsersIdFollowsPost
   :<|> UsersIdFollowsIdGet
   :<|> UsersIdFollowsIdDelete
-  :<|> UsersIdFollowsEventsGet
   :<|> UsersIdEventsGet
+  :<|> UsersIdEventsFollowsGet
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -79,8 +79,8 @@ type UsersIdFollowsPost = "users" :> Capture "userID" IDType
                           :> Header "token" Text
                           :> PostAccepted '[JSON] IDType
 
-type UsersIdFollowsEventsGet = "users" :> Capture "userID" IDType
-                          :> "follows" :> "events"
+type UsersIdEventsFollowsGet = "users" :> Capture "userID" IDType
+                          :> "events" :> "follows"
                           :> Header "token" Text
                           :> Get '[JSON] [Event]
 

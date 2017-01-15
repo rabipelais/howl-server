@@ -66,10 +66,10 @@ EventCoverPic
   deriving Eq Read Show
 
 UserEvent json
-  userId UserId
-  eventId EventId
+  userID IDType
+  eventID IDType
   rsvp RSVP
-  UniqueUserEvent userId eventId
+  UniqueUserEvent userID eventID
   deriving Eq Read Show
 
 Venue json
