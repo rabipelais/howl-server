@@ -169,7 +169,13 @@ postUsersIdFollowsH s t mToken =
         Right _ -> return t
 
 deleteUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
-deleteUsersIdFollowsIdH = undefined
+deleteUsersIdFollowsIdH s t mToken = runQuery $ do
+    checkExistsOrThrow s
+    checkExistsOrThrow t
+    getBy (UniqueFollowshipID s t) >>= \case
+      Just _ -> deleteBy (UniqueFollowshipID s t) >> return t
+      _ -> throwError err404
+
 
 getUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO FollowStatus
 getUsersIdFollowsIdH s t mToken = runQuery $ do
