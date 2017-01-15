@@ -157,7 +157,16 @@ getUsersIdFollows i = runQuery $ do
 
 -- userID -> content
 postUsersIdFollowsH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
-postUsersIdFollowsH = undefined
+postUsersIdFollowsH s t mToken =
+  if s == t then throwError err409
+  else runQuery $ do
+    checkExistOrThrow s
+    checkExistOrThrow t
+    getBy (UniqueFollowshipID t s) >>= \case
+      Just (Entity _ (Followship _ _ Blocked)) -> throwError err403
+      _ -> insertBy (Followship s t Accepted) >>= \case
+        Left _ -> throwError err409
+        Right _ -> return t
 
 deleteUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 deleteUsersIdFollowsIdH = undefined
@@ -183,3 +192,9 @@ runQuery :: SqlPersistT (HandlerT IO) a -> HandlerT IO a
 runQuery query = do
   pool <- asks db
   runDb pool err500 query
+
+checkExistOrThrow i = do
+  mUser <- getBy $ UniqueUserID i
+  case mUser of
+    Nothing -> throwError err404
+    Just (Entity k u) -> return u

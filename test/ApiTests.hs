@@ -120,6 +120,7 @@ usersIdSpec =
             u `shouldBe` []
 
         usersIdFollowsSpec
+        usersIdEventsSpec
 
 usersIdFollowsSpec =
   context "users/{userID}/follows" $ do
@@ -134,7 +135,7 @@ usersIdFollowsSpec =
 
         context "POST" $ do
           it "returns 404 for non-existent requesting user" $ \(manager, baseUrl) -> do
-            Left err <- runExceptT $ postUsersIdFollows "12345" "12345" emptyToken manager baseUrl
+            Left err <- runExceptT $ postUsersIdFollows "12345" "12346" emptyToken manager baseUrl
             responseStatus err `shouldBe` notFound404
 
           it "returns 404 for non-existent target user" $ \(manager, baseUrl) -> do
@@ -145,14 +146,18 @@ usersIdFollowsSpec =
           it "returns 409 if users tries to follow themselves" $ \(manager, baseUrl) -> do
             try (manager, baseUrl) (putUsers albert emptyToken)
             Left err <- runExceptT $ postUsersIdFollows "12345" "12345" emptyToken manager baseUrl
+            responseStatus err `shouldBe` status409
+
+          it "returns 409 if source is alredy following target" $ \(manager, baseUrl) -> do
+            try (manager, baseUrl) (putUsers albert emptyToken)
+            Left err <- runExceptT $ postUsersIdFollows "12345" "12345" emptyToken manager baseUrl
             responseStatus err `shouldBe` conflict409
 
           it "returns 403 if users tries to follow user who blocked them" $ \(manager, baseUrl) -> do
             try (manager, baseUrl) (putUsers albert emptyToken)
             try (manager, baseUrl) (putUsers bob emptyToken)
             Left err <- runExceptT $ postUsersIdFollows "12345" "67890" emptyToken manager baseUrl
-            --responseStatus err `shouldBe` conflict409
-            pending
+            responseStatus err `shouldBe` status403
 
           it "marks the user as following the target" $ \host -> do
             try host (putUsers albert emptyToken)
@@ -162,31 +167,83 @@ usersIdFollowsSpec =
             fs `shouldBe` [bob]
 
         usersIdFollowsIdSpec
+        usersIdFollowsEventsSpec
 
 usersIdFollowsIdSpec = context "/users/{userID}/follows/{targetID}" $ do
+  context "GET" $ do
+    it "returns 404 for non-existent requesting user" $ \(manager, baseUrl) -> do
+            Left err <- runExceptT $ getUsersIdFollowsId "12345" "12345" emptyToken manager baseUrl
+            responseStatus err `shouldBe` notFound404
+
+    it "returns 404 for non-existent target user" $ \(manager, baseUrl) -> do
+            try (manager, baseUrl) (putUsers albert emptyToken)
+            Left err <- runExceptT $ getUsersIdFollowsId "12345" "12346" emptyToken manager baseUrl
+            responseStatus err `shouldBe` notFound404
+
+    it "returns 404 if source is not following target" $ \(manager, baseUrl) -> do
+            try (manager, baseUrl) (putUsers albert emptyToken)
+            try (manager, baseUrl) (putUsers bob emptyToken)
+            Left err <- runExceptT $ getUsersIdFollowsId "12345" "67890" emptyToken manager baseUrl
+            responseStatus err `shouldBe` notFound404
+
+    it "returns Accepted if source is following target" $ \host -> do
+            try host (putUsers albert emptyToken)
+            try host (putUsers bob emptyToken)
+            try host (postUsersIdFollows "12345" "67890" emptyToken)
+            fs <- try host (getUsersIdFollowsId "12345" "67890" emptyToken)
+            fs `shouldBe` Accepted
+
   context "DELETE" $ do
-          it "returns 404 for non-existent requesting user" $ \(manager, baseUrl) -> do
+    it "returns 404 for non-existent requesting user" $ \(manager, baseUrl) -> do
             Left err <- runExceptT $ deleteUsersIdFollowsId "12345" "12345" emptyToken manager baseUrl
             responseStatus err `shouldBe` notFound404
 
-          it "returns 404 for non-existent target user" $ \(manager, baseUrl) -> do
+    it "returns 404 for non-existent target user" $ \(manager, baseUrl) -> do
             try (manager, baseUrl) (putUsers albert emptyToken)
             Left err <- runExceptT $ deleteUsersIdFollowsId "12345" "12346" emptyToken manager baseUrl
             responseStatus err `shouldBe` notFound404
 
-          it "returns 404 if source is not following target" $ \(manager, baseUrl) -> do
+    it "returns 404 if source is not following target" $ \(manager, baseUrl) -> do
             try (manager, baseUrl) (putUsers albert emptyToken)
             try (manager, baseUrl) (putUsers bob emptyToken)
             Left err <- runExceptT $ deleteUsersIdFollowsId "12345" "67890" emptyToken manager baseUrl
             responseStatus err `shouldBe` notFound404
 
-          it "successfully deletes follow status" $ \host -> do
+    it "successfully deletes follow status" $ \host -> do
             try host (putUsers albert emptyToken)
             try host (putUsers bob emptyToken)
             try host (postUsersIdFollows "12345" "67890" emptyToken)
             try host (deleteUsersIdFollowsId "12345" "67890" emptyToken)
             fs <- try host (getUsersIdFollows "12345" emptyToken)
             fs `shouldBe` []
+
+usersIdEventsSpec = context "/users/{userID}/events" $ do
+  it "return 404 if user doesn't exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getUsersIdEvents "12345" emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns empty list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    es <- try host (getUsersIdEvents "12345" emptyToken)
+    es `shouldBe` []
+
+  it "returns the user's events list" $ \host -> do
+    pending
+
+
+usersIdFollowsEventsSpec = context "/users/{userID}/follows/events" $ do
+  it "return 404 if user doesn't exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getUsersIdFollowsEvents "12345" emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns empty list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    es <- try host (getUsersIdFollowsEvents "12345" emptyToken)
+    es `shouldBe` []
+
+  it "returns the user's events list" $ \host -> do
+    pending
+
 
 
 type Host = (Manager, BaseUrl)

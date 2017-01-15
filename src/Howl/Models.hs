@@ -46,7 +46,7 @@ Followship json
   sourceId IDType
   targetId IDType
   status FollowStatus
-  UniqueFriendshipID sourceId targetId
+  UniqueFollowshipID sourceId targetId
   deriving Eq Read Show
 
 Event json
