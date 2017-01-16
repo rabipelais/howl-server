@@ -187,7 +187,6 @@ getUsersIdFollowsIdH s t mToken = runQuery $ do
 
 getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsFollowsH i mToken = runQuery $ do
-  liftIO $ putStrLn "ARSTRASTRAST"
   checkExistsOrThrow i
   friends <- selectList [ FollowshipSourceId ==. i
                         , FollowshipStatus ==. Accepted] []
