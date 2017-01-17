@@ -28,8 +28,6 @@ import           Howl.Facebook.Persistent   ()
 
 import           Howl.Types
 
-type IDType = Fb.Id
-
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User json
   fbID IDType

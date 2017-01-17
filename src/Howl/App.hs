@@ -22,6 +22,7 @@ import           Data.Text
 import           Howl.Api
 import           Howl.App.Users
 import           Howl.Models
+import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
 

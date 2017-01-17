@@ -33,6 +33,7 @@ import           Data.Text                hiding (map, foldl1)
 
 import           Howl.Api.Users
 import           Howl.Models
+import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
 
