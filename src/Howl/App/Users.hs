@@ -53,7 +53,7 @@ usersHandlers =
   :<|> deleteUsersIdFollowsIdH
   :<|> getUsersIdBlockedH
   :<|> postUsersIdBlockedH
-  :<|> deleteUsersIdBlockedFollowsIdH
+  :<|> deleteUsersIdBlockedIdH
   :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdEventsH
 
@@ -209,13 +209,20 @@ postUsersIdBlockedH s t mToken =
     checkExistsOrThrow t
     getBy (UniqueFollowshipID s t) >>= \case
       Just (Entity _ (Followship _ _ Blocked)) -> throwError err409
-      Nothing -> do
+      _ -> do
         deleteBy (UniqueFollowshipID t s)
+        deleteBy (UniqueFollowshipID s t)
         insert (Followship s t Blocked)
         return t
 
-deleteUsersIdBlockedFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
-deleteUsersIdBlockedFollowsIdH = undefined
+deleteUsersIdBlockedIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
+deleteUsersIdBlockedIdH s t mToken = runQuery $ do
+  checkExistsOrThrow s
+  checkExistsOrThrow t
+  getBy (UniqueFollowshipID s t) >>= \case
+    Just (Entity _ (Followship _ _ Blocked)) -> deleteBy (UniqueFollowshipID s t) >> return t
+    _ -> throwError err404
+
 
 getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsFollowsH i mToken = runQuery $ do

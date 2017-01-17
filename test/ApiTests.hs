@@ -39,7 +39,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                delete, get, matchBody, request,
                                                shouldRespondWith, with)
 
-getUsers :<|> postUsers :<|> putUsers :<|> getUsersId :<|> putUsersId :<|> deleteUsersId :<|> getUsersIdFollows :<|> postUsersIdFollows :<|> getUsersIdFollowsId :<|> deleteUsersIdFollowsId :<|> getUsersIdBlocked :<|> postUsersIdBlocked :<|> deleteUsersIdBlockedFollowsId :<|> getUsersIdEvents :<|> getUsersIdEventsFollows = client api
+getUsers :<|> postUsers :<|> putUsers :<|> getUsersId :<|> putUsersId :<|> deleteUsersId :<|> getUsersIdFollows :<|> postUsersIdFollows :<|> getUsersIdFollowsId :<|> deleteUsersIdFollowsId :<|> getUsersIdBlocked :<|> postUsersIdBlocked :<|> deleteUsersIdBlockedId :<|> getUsersIdEvents :<|> getUsersIdEventsFollows = client api
 
 emptyToken = Just "emptyToken"
 
@@ -274,6 +274,16 @@ usersIdBlockedSpec = context "/users/{userID}/blocked" $ do
       bs <- try host (getUsersIdBlocked "12345" emptyToken)
       bs `shouldBe` [charles, bob]
 
+    it "marks target as blocked, and removes s->t follow" $ \host -> do
+      try host (putUsers albert emptyToken)
+      try host (putUsers bob emptyToken)
+      try host (postUsersIdFollows albertId bobId emptyToken)
+      try host (postUsersIdBlocked albertId bobId emptyToken)
+      fs <- try host (getUsersIdFollows albertId emptyToken)
+      fs `shouldBe` []
+      bs <- try host (getUsersIdBlocked albertId emptyToken)
+      bs `shouldBe` [bob]
+
     it "makes target stop following source after block" $ \host -> do
       try host (putUsers albert emptyToken)
       try host (putUsers bob emptyToken)
@@ -283,6 +293,31 @@ usersIdBlockedSpec = context "/users/{userID}/blocked" $ do
       try host (postUsersIdBlocked bobId albertId emptyToken)
       fs <- try host (getUsersIdFollows albertId emptyToken)
       fs `shouldBe` []
+
+  context "/users/{userID}/blocked/{friendID}" $ do
+    context "DELETE" $ do
+      it "returns 404 if user doesn't exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ deleteUsersIdBlockedId "12345" "12346" emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if target user doesn't exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        Left err <- runExceptT $ deleteUsersIdBlockedId "12345" "12346" emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if target is not blocked" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ deleteUsersIdBlockedId albertId bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "deletes the blocked status" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putUsers bob emptyToken)
+        try host (postUsersIdBlocked albertId bobId emptyToken)
+        try host (deleteUsersIdBlockedId albertId bobId emptyToken)
+        bs <- try host (getUsersIdBlocked albertId emptyToken)
+        bs `shouldBe` []
 
 
 usersIdEventsFollowsSpec = context "/users/{userID}/events/follows" $ do
