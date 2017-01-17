@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell  #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase       #-}
+
 module Howl.App.Users
   (
     usersHandlers
@@ -29,7 +30,7 @@ import qualified Howl.Facebook            as Fb
 
 import           Servant
 
-import           Data.Text                hiding (map, foldl1)
+import           Data.Text                hiding (map, foldl)
 
 import           Howl.Api.Users
 import           Howl.Models
@@ -192,10 +193,10 @@ getUsersIdEventsFollowsH i mToken = runQuery $ do
   friends <- selectList [ FollowshipSourceId ==. i
                         , FollowshipStatus ==. Accepted] []
   let friendsIds = map (followshipTargetId . entityVal) friends
-  let eventsConds = foldl1 (||.) $ map (\x -> [UserEventUserID ==. x]) friendsIds
+  let eventsConds = foldl (||.) [] $ map (\x -> [UserEventUserID ==. x]) friendsIds
   eventsUser <- selectList eventsConds []
   let eventsIds = map (userEventEventID . entityVal) eventsUser
-  let conds = foldl1 (||.) $ map (\x -> [EventFbID ==. x]) eventsIds
+  let conds = foldl (||.) [] $ map (\x -> [EventFbID ==. x]) eventsIds
   events <- selectList conds []
   return $ map entityVal events
 
@@ -204,7 +205,7 @@ getUsersIdEventsH i mToken = runQuery $ do
   checkExistsOrThrow i
   eventsUser <- selectList [UserEventUserID ==. i] []
   let eventsIds = map (userEventEventID . entityVal) eventsUser
-  let conds = foldl1 (||.) $ map (\x -> [EventFbID ==. x]) eventsIds
+  let conds = foldl (||.) []  $ map (\x -> [EventFbID ==. x]) eventsIds
   events <- selectList conds []
   return $ map entityVal events
 

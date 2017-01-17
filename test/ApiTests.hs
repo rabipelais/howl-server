@@ -268,14 +268,14 @@ testApp (_, u, c) = do
   let logSettings = Logger.Settings
         { Logger.filePath = "webserver.log"
         , Logger.logLevel = LevelDebug
-        , Logger.noConsoleLogging = True
+        , Logger.noConsoleLogging = False
         }
-  runNoLoggingT $ do
+  Logger.withLogger logSettings $ \logFn -> do
     let port = 3000 :: Int
     pool <- runNoLoggingT $ createSqlitePool ":memory:" 10
     runSqlPool (runMigrationSilent migrateAll) pool
     manager <- liftIO $ newManager tlsManagerSettings
-    let env = LogEnv undefined $ noAuthHandlerEnv pool manager c
+    let env = LogEnv logFn $ noAuthHandlerEnv pool manager c
     return $ app env
 
 albert :: User
