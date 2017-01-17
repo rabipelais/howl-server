@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverloadedStrings    #-}
 
 module Howl.Monad where
 
@@ -40,14 +41,15 @@ import           Servant.API
 
 type HandlerT = DienerT ServantErr HandlerEnv
 
-authHandlerEnv d m c = HandlerEnv d m c validateId
-noAuthHandlerEnv d m c = HandlerEnv d m c noValidation
+authHandlerEnv d m c = HandlerEnv d m c validateId idTokenLookup
+noAuthHandlerEnv d m c = HandlerEnv d m c noValidation noopToken
 
 data HandlerEnv = HandlerEnv
   { db :: ConnectionPool
   , manager :: Manager
   , creds :: FB.Credentials
-  , valFunction :: IDType -> Maybe Token -> IO ()
+  , valFunction :: IDType -> Maybe Token -> DienerT ServantErr HandlerEnv IO ()
+  , idFromToken :: Maybe Token -> DienerT ServantErr HandlerEnv IO IDType
   }
 
 -- Diener
@@ -121,7 +123,13 @@ instance (Monoid w, MonadDiener e r m io) => MonadDiener e r (RWST r' w s m) io 
 asks :: Monad m => (r -> a) -> DienerT e r m a
 asks f = f <$> Reader.asks logEnv
 
-auth i mt = asks valFunction >>= \f -> liftIO (f i mt)
+auth i mt = asks valFunction >>= \f -> (f i mt)
 
-validateId _ _ = putStrLn "Validation"
-noValidation _ _ = putStrLn "NoValidation"
+validateId _ _ = liftIO $ putStrLn "Validation"
+noValidation _ _ = liftIO $ putStrLn "NoValidation"
+
+idTokenLookup Nothing = throwError err400
+idTokenLookup (Just t) = undefined
+
+noopToken Nothing = throwError err400
+noopToken (Just t) = return (FB.Id t)
