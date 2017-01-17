@@ -5,18 +5,16 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 
-module ApiTests where
+module EventsApiTests where
 
 import           Test.Tasty
 import           Test.Tasty.Hspec
 import           Test.Tasty.HUnit
 
-import           EventsApiTests
 import           Howl
 import qualified Howl.Facebook                as Fb
 import qualified Howl.Logger                  as Logger
 import           TestsCommon
-import           UsersApiTests
 
 import           Network.Wai                  (Application)
 import           Network.Wai.Handler.Warp     as Warp
@@ -42,10 +40,6 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                delete, get, matchBody, request,
                                                shouldRespondWith, with)
 
-
-apiTests conf = testSpec "API Tests" (spec conf)
-
-spec conf = do
-  describe "API Tests" $ around (withApp conf) $ do
-    usersSpec
-    eventsSpec
+eventsSpec = context "/events" $ do
+  it "empty test" $ \host -> do
+    1 `shouldBe` 1
