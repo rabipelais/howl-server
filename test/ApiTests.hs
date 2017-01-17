@@ -39,7 +39,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                delete, get, matchBody, request,
                                                shouldRespondWith, with)
 
-getUsers :<|> postUsers :<|> putUsers :<|> getUsersId :<|> putUsersId :<|> deleteUsersId :<|> getUsersIdFollows :<|> postUsersIdFollows :<|> getUsersIdFollowsId :<|> deleteUsersIdFollowsId :<|> getUsersIdEvents :<|> getUsersIdEventsFollows = client api
+getUsers :<|> postUsers :<|> putUsers :<|> getUsersId :<|> putUsersId :<|> deleteUsersId :<|> getUsersIdFollows :<|> postUsersIdFollows :<|> getUsersIdFollowsId :<|> deleteUsersIdFollowsId :<|> getUsersIdBlocked :<|> postUsersIdBlocked :<|> deleteUsersIdBlockedFollowsId :<|> getUsersIdEvents :<|> getUsersIdEventsFollows = client api
 
 emptyToken = Just "emptyToken"
 
@@ -121,6 +121,7 @@ usersIdSpec =
 
         usersIdFollowsSpec
         usersIdEventsSpec
+        usersIdBlockedSpec
 
 usersIdFollowsSpec =
   context "users/{userID}/follows" $ do
@@ -156,9 +157,9 @@ usersIdFollowsSpec =
           it "returns 403 if users tries to follow user who blocked them" $ \(manager, baseUrl) -> do
             try (manager, baseUrl) (putUsers albert emptyToken)
             try (manager, baseUrl) (putUsers bob emptyToken)
-            _ <- runExceptT $ postUsersIdFollows "12345" "67890" emptyToken manager baseUrl
-            pending
-            --responseStatus err `shouldBe` status403
+            try (manager, baseUrl) (postUsersIdBlocked bobId albertId emptyToken)
+            Left err <- runExceptT $ postUsersIdFollows "12345" "67890" emptyToken manager baseUrl
+            responseStatus err `shouldBe` status403
 
           it "marks the user as following the target" $ \host -> do
             try host (putUsers albert emptyToken)
@@ -232,6 +233,57 @@ usersIdEventsSpec = context "/users/{userID}/events" $ do
 
   usersIdEventsFollowsSpec
 
+usersIdBlockedSpec = context "/users/{userID}/blocked" $ do
+  it "returns 404 if user doesn't exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getUsersIdBlocked "12345" emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns an empty list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    bs <- try host (getUsersIdBlocked "12345" emptyToken)
+    bs `shouldBe` []
+
+  context "POST" $ do
+    it "returns 404 if user doesn't exist" $ \(manager, baseUrl) -> do
+      Left err <- runExceptT $ postUsersIdBlocked "12345" "12346" emptyToken manager baseUrl
+      responseStatus err `shouldBe` notFound404
+
+    it "returns 404 if target user doesn't exist" $ \(manager, baseUrl) -> do
+      try (manager, baseUrl) (putUsers albert emptyToken)
+      Left err <- runExceptT $ postUsersIdBlocked "12345" "12346" emptyToken manager baseUrl
+      responseStatus err `shouldBe` notFound404
+
+    it "returns 409 if user tries to block themself" $ \(manager, baseUrl) -> do
+      try (manager, baseUrl) (putUsers albert emptyToken)
+      Left err <- runExceptT $ postUsersIdBlocked "12345" "12345" emptyToken manager baseUrl
+      responseStatus err `shouldBe` conflict409
+
+    it "returns 409 if target is already blocked" $ \(manager, baseUrl) -> do
+      try (manager, baseUrl) (putUsers albert emptyToken)
+      try (manager, baseUrl) (putUsers bob emptyToken)
+      try (manager, baseUrl) (postUsersIdBlocked "12345" "67890" emptyToken)
+      Left err <- runExceptT $ postUsersIdBlocked "12345" "67890" emptyToken manager baseUrl
+      responseStatus err `shouldBe` conflict409
+
+    it "marks targets as blocked" $ \host -> do
+      try host (putUsers albert emptyToken)
+      try host (putUsers bob emptyToken)
+      try host (putUsers charles emptyToken)
+      try host (postUsersIdBlocked "12345" bobId emptyToken)
+      try host (postUsersIdBlocked "12345" charlesId emptyToken)
+      bs <- try host (getUsersIdBlocked "12345" emptyToken)
+      bs `shouldBe` [charles, bob]
+
+    it "makes target stop following source after block" $ \host -> do
+      try host (putUsers albert emptyToken)
+      try host (putUsers bob emptyToken)
+      try host (postUsersIdFollows albertId bobId emptyToken)
+      fs <- try host (getUsersIdFollows albertId emptyToken)
+      fs `shouldBe` [bob]
+      try host (postUsersIdBlocked bobId albertId emptyToken)
+      fs <- try host (getUsersIdFollows albertId emptyToken)
+      fs `shouldBe` []
+
 
 usersIdEventsFollowsSpec = context "/users/{userID}/events/follows" $ do
   it "return 404 if user doesn't exist" $ \(manager, baseUrl) -> do
@@ -282,9 +334,15 @@ albert :: User
 albert =
   User "12345" "el boleta" "Albert" (Just "Boleta") (Just "albert@yahoo.co") Nothing
 
+albertId = "12345"
+
 bob :: User
 bob =
   User "67890" "abreu" "Bob" (Just "Patiño") (Just "bob@yahoo.de") Nothing
 
+bobId = "67890"
+
 charles :: User
 charles = User "1683671673" "charlie" "Charles" (Just "Flummoxon III") (Just "c.daddy@yahoo.de") Nothing
+
+charlesId = "1683671673"

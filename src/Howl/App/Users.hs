@@ -51,6 +51,9 @@ usersHandlers =
   :<|> postUsersIdFollowsH
   :<|> getUsersIdFollowsIdH
   :<|> deleteUsersIdFollowsIdH
+  :<|> getUsersIdBlockedH
+  :<|> postUsersIdBlockedH
+  :<|> deleteUsersIdBlockedFollowsIdH
   :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdEventsH
 
@@ -186,6 +189,33 @@ getUsersIdFollowsIdH s t mToken = runQuery $ do
   getBy (UniqueFollowshipID s t) >>= \case
     Just (Entity _ (Followship _ _ status)) -> return status
     Nothing -> throwError err404
+
+getUsersIdBlockedH :: IDType -> Maybe Token -> HandlerT IO [User]
+getUsersIdBlockedH s mToken = runQuery $ do
+  checkExistsOrThrow s
+  userEntities <- E.select
+        $ E.from
+        $ \(user `E.InnerJoin` follow) -> do
+        E.on (user^.UserFbID E.==. follow^.FollowshipTargetId
+              E.&&. follow^.FollowshipSourceId E.==. E.val s)
+        E.where_ (follow^.FollowshipStatus E.==. E.val Blocked)
+        return user
+  return $ map entityVal userEntities
+
+postUsersIdBlockedH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
+postUsersIdBlockedH s t mToken =
+  if s == t then throwError err409 else runQuery $ do
+    checkExistsOrThrow s
+    checkExistsOrThrow t
+    getBy (UniqueFollowshipID s t) >>= \case
+      Just (Entity _ (Followship _ _ Blocked)) -> throwError err409
+      Nothing -> do
+        deleteBy (UniqueFollowshipID t s)
+        insert (Followship s t Blocked)
+        return t
+
+deleteUsersIdBlockedFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
+deleteUsersIdBlockedFollowsIdH = undefined
 
 getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsFollowsH i mToken = runQuery $ do

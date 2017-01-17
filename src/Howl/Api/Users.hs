@@ -36,6 +36,9 @@ type UsersAPI =
   :<|> UsersIdFollowsPost
   :<|> UsersIdFollowsIdGet
   :<|> UsersIdFollowsIdDelete
+  :<|> UsersIdBlockedGet
+  :<|> UsersIdBlockedPost
+  :<|> UsersIdBlockedFollowsIdDelete
   :<|> UsersIdEventsGet
   :<|> UsersIdEventsFollowsGet
 
@@ -70,35 +73,52 @@ type UsersIdDelete = "users" :> Capture "userID" IDType
 
 type UsersIdFollowsGet = "users" :> Capture "userID" IDType
                           :> "follows"
-                          :> Header "token" Text
+                          :> Header "token" Token
                           :> Get '[JSON] [User]
 
 type UsersIdFollowsPost = "users" :> Capture "userID" IDType
                           :> "follows"
                           :> ReqBody '[JSON] IDType
-                          :> Header "token" Text
+                          :> Header "token" Token
                           :> PostAccepted '[JSON] IDType
 
 type UsersIdEventsFollowsGet = "users" :> Capture "userID" IDType
                           :> "events" :> "follows"
-                          :> Header "token" Text
+                          :> Header "token" Token
                           :> Get '[JSON] [Event]
 
 type UsersIdFollowsIdGet = "users" :> Capture "userID" IDType
                            :> "follows"
                            :> Capture "friendID" IDType
-                           :> Header "token" Text
+                           :> Header "token" Token
                            :> Get '[JSON] FollowStatus
 
 type UsersIdFollowsIdDelete = "users" :> Capture "userID" IDType
                               :> "follows"
                               :> Capture "friendID" IDType
-                              :> Header "token" Text
+                              :> Header "token" Token
                               :> Delete '[JSON] IDType
+
+type UsersIdBlockedGet = "users" :> Capture "userID" IDType
+                         :> "blocked"
+                         :> Header "token" Token
+                         :> Get '[JSON] [User]
+
+type UsersIdBlockedPost = "users" :> Capture "userID" IDType
+                          :> "blocked"
+                          :> ReqBody '[JSON] IDType
+                          :> Header "token" Token
+                          :> PostCreated '[JSON] IDType
+
+type UsersIdBlockedFollowsIdDelete = "users" :> Capture "userID" IDType
+                                     :> "blocked"
+                                     :> Capture  "friendID" IDType
+                                     :> Header "token" Token
+                                     :> Delete '[JSON] IDType
 
 type UsersIdEventsGet = "users" :> Capture "userID" IDType
                         :> "events"
-                        :> Header "token" Text
+                        :> Header "token" Token
                         :> Get '[JSON] [Event]
 
 
