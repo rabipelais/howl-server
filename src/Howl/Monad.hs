@@ -40,10 +40,14 @@ import           Servant.API
 
 type HandlerT = DienerT ServantErr HandlerEnv
 
+authHandlerEnv d m c = HandlerEnv d m c validateId
+noAuthHandlerEnv d m c = HandlerEnv d m c noValidation
+
 data HandlerEnv = HandlerEnv
   { db :: ConnectionPool
   , manager :: Manager
   , creds :: FB.Credentials
+  , valFunction :: IDType -> Maybe Token -> IO ()
   }
 
 -- Diener
@@ -116,3 +120,8 @@ instance (Monoid w, MonadDiener e r m io) => MonadDiener e r (RWST r' w s m) io 
 
 asks :: Monad m => (r -> a) -> DienerT e r m a
 asks f = f <$> Reader.asks logEnv
+
+auth i mt = asks valFunction >>= \f -> liftIO (f i mt)
+
+validateId _ _ = putStrLn "Validation"
+noValidation _ _ = putStrLn "NoValidation"

@@ -275,7 +275,7 @@ testApp (_, u, c) = do
     pool <- runNoLoggingT $ createSqlitePool ":memory:" 10
     runSqlPool (runMigrationSilent migrateAll) pool
     manager <- liftIO $ newManager tlsManagerSettings
-    let env = LogEnv undefined $ HandlerEnv pool manager c
+    let env = LogEnv undefined $ noAuthHandlerEnv pool manager c
     return $ app env
 
 albert :: User

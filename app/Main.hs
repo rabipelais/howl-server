@@ -50,5 +50,5 @@ main = do
       pool <- runStderrLoggingT $ createSqlitePool (cs dbName) poolSize
       runSqlPool (runMigration migrateAll) pool
       manager <- liftIO $ newManager tlsManagerSettings
-      let env = LogEnv logFn $ HandlerEnv pool manager creds
+      let env = LogEnv logFn $ authHandlerEnv pool manager creds
       liftIO $ Warp.run port $ app env
