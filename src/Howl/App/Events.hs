@@ -47,8 +47,9 @@ eventsHandlers =
   :<|> eventsNearbyGet
   :<|> eventsIdGet
   :<|> eventsIdInviteGet
-  :<|> eventsIdInvitePost
-  :<|> eventsIdInviteDelete
+  :<|> eventsIdInvitesIdGet
+  :<|> eventsIdInvitesIdPost
+  :<|> eventsIdInvitesIdDelete
   :<|> eventsIdRSVPUsersIdGet
   :<|> eventsIdRSVPUsersIdPut
   :<|> eventsIdRSVPUsersIdDelete
@@ -67,13 +68,21 @@ eventsPutH event mToken = runQuery $ do
 
 eventsNearbyGet = undefined
 
-eventsIdGet = undefined
+eventsIdGet :: IDType -> Maybe Token -> HandlerT IO Event
+eventsIdGet i mToken = runQuery $ do
+  checkEventOrThrow i
 
-eventsIdInviteGet = undefined
+eventsIdInviteGet :: IDType -> Maybe Token -> HandlerT IO [Invite]
+eventsIdInviteGet i mToken = runQuery $ do
+  checkEventOrThrow i
+  iEntities <- selectList [InviteEventID ==. i] []
+  return $ map entityVal iEntities
 
-eventsIdInvitePost = undefined
+eventsIdInvitesIdGet = undefined
 
-eventsIdInviteDelete = undefined
+eventsIdInvitesIdPost = undefined
+
+eventsIdInvitesIdDelete = undefined
 
 eventsIdRSVPUsersIdGet = undefined
 

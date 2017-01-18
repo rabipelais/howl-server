@@ -68,3 +68,28 @@ eventsSpec = context "/events" $ do
       try host (putEvents event2 emptyToken)
       es <- try host (getEvents emptyToken)
       es `shouldBe` [event1, event2]
+
+    eventsIdSpec
+
+eventsIdSpec = context "/events/{eventID}"$ do
+  it "returns 404 if event doesn't exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getEventsId event1Id emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "return the event in DB" $ \host -> do
+    try host (putEvents event1 emptyToken)
+    e <- try host (getEventsId event1Id emptyToken)
+    e `shouldBe`event1
+
+  eventsIdInviteSpec
+
+eventsIdInviteSpec = context "/events/{eventID}/invite" $ do
+  it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getEventsIdInvites event1Id emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns empty list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putEvents event1 albertToken)
+    r <- try host (getEventsIdInvites event1Id albertToken)
+    r `shouldBe` []

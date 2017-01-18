@@ -63,9 +63,10 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   :<|> putEvents
   :<|> getEventsNearby
   :<|> getEventsId
-  :<|> getEventsIdInvite
-  :<|> postEventsIdInvite
-  :<|> deleteEventsIdInvite
+  :<|> getEventsIdInvites
+  :<|> getEventsIdInvitesId
+  :<|> postEventsIdInvitesId
+  :<|> deleteEventsIdInvitesId
   :<|> getEventsIdRSVPUsersId
   :<|> putEventsIdRSVPUsersId
   :<|> deleteEventsIdRSVPUsersId
@@ -73,6 +74,9 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
 
 emptyToken :: Maybe Text
 emptyToken = Just "emptyToken"
+
+albertToken :: Maybe Text
+albertToken = Just "12345"
 
 type Host = (Manager, BaseUrl)
 

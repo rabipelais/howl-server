@@ -31,8 +31,9 @@ type EventsAPI =
   :<|> EventsNearbyGet
   :<|> EventsIdGet
   :<|> EventsIdInviteGet
-  :<|> EventsIdInvitePost
-  :<|> EventsIdInviteDelete
+  :<|> EventsIdInviteIdGet
+  :<|> EventsIdInviteIdPost
+  :<|> EventsIdInviteIdDelete
   :<|> EventsIdRSVPUserIdGet
   :<|> EventsIdRSVPUserIdPut
   :<|> EventsIdRSVPUserIdDelete
@@ -51,22 +52,27 @@ type EventsIdGet = Prefix :> Capture "eventID" IDType
                    :> Get '[JSON] Event
 
 type EventsIdInviteGet = Prefix :> Capture "eventID" IDType
-                        :> "invite"
+                        :> "invites"
+                        :> Header "token" Token
+                        :> Get '[JSON] [Invite]
+
+type EventsIdInviteIdGet = Prefix :> Capture "eventID" IDType
+                        :> "invites"
                         :> Capture "friendID" IDType
                         :> Header "token" Token
-                        :> Get '[JSON] Bool
+                        :> Get '[JSON] Invite
 
-type EventsIdInvitePost = Prefix :> Capture "eventID" IDType
-                        :> "invite"
+type EventsIdInviteIdPost = Prefix :> Capture "eventID" IDType
+                        :> "invites"
                         :> Capture "friendID" IDType
                         :> Header "token" Token
-                        :> PostCreated '[JSON] IDType
+                        :> PostCreated '[JSON] Invite
 
-type EventsIdInviteDelete = Prefix :> Capture "eventID" IDType
-                          :> "invite"
+type EventsIdInviteIdDelete = Prefix :> Capture "eventID" IDType
+                          :> "invites"
                           :> Capture "friendID" IDType
                           :> Header "token" Token
-                          :> Delete '[JSON] IDType
+                          :> Delete '[JSON] Invite
 
 
 type EventsIdRSVPUserIdGet = Prefix :> Capture "eventID" IDType
