@@ -70,6 +70,13 @@ UserEvent json
   UniqueUserEvent userID eventID
   deriving Eq Read Show
 
+Invite json
+  sourceID IDType
+  targetID IDType
+  eventID IDType
+  UniqueInvite sourceID targetID eventID
+  deriving Eq Read Show
+
 Venue json
   fbID IDType
   coverPicPath FilePath
