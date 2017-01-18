@@ -21,6 +21,7 @@ library
                      , Howl.Api.Users
                      , Howl.Api.Events
                      , Howl.App
+                     , Howl.App.Common
                      , Howl.App.Users
                      , Howl.App.Events
                      , Howl.Facebook

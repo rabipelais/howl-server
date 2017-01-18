@@ -34,10 +34,23 @@ import           Servant
 import           Data.Text                    hiding (foldl, map)
 
 import           Howl.Api.Events
+import           Howl.App.Common
 import           Howl.Models
 import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
 
 eventsHandlers :: ServerT EventsAPI (HandlerT IO)
-eventsHandlers = undefined
+eventsHandlers =
+  eventsGetH
+  :<|> eventsPutH
+  :<|> undefined
+
+eventsGetH :: Maybe Token -> HandlerT IO [Event]
+eventsGetH mToken = do
+  entities <- runQuery $ (select . from $ pure)
+  return $ map entityVal entities
+
+
+eventsPutH :: Event -> Maybe Token -> HandlerT IO Event
+eventsPutH = undefined

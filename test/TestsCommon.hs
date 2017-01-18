@@ -16,6 +16,8 @@ import qualified Howl.Facebook                as Fb
 import qualified Howl.Logger                  as Logger
 
 import           Data.Text
+import           Data.Time.Calendar
+import           Data.Time.Clock
 
 import           Network.Wai                  (Application)
 import           Network.Wai.Handler.Warp     as Warp
@@ -57,16 +59,16 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   :<|> deleteUsersIdBlockedId
   :<|> getUsersIdEvents
   :<|> getUsersIdEventsFollows) :<|>
-  (eventsGet
-  :<|> eventsPost
-  :<|> eventsNearbyGet
-  :<|> eventsIdGet
-  :<|> eventsIdInviteGet
-  :<|> eventsIdInvitePost
-  :<|> eventsIdInviteDelete
-  :<|> eventsIdRSVPUsersIdGet
-  :<|> eventsIdRSVPUsersIdPut
-  :<|> eventsIdRSVPUsersIdDelete
+  (getEvents
+  :<|> putEvents
+  :<|> getEventsNearby
+  :<|> getEventsId
+  :<|> getEventsIdInvite
+  :<|> postEventsIdInvite
+  :<|> deleteEventsIdInvite
+  :<|> getEventsIdRSVPUsersId
+  :<|> putEventsIdRSVPUsersId
+  :<|> deleteEventsIdRSVPUsersId
   ) = client api
 
 emptyToken :: Maybe Text
@@ -121,3 +123,29 @@ charles = User "1683671673" "charlie" "Charles" (Just "Flummoxon III") (Just "c.
 
 charlesId :: Fb.Id
 charlesId = "1683671673"
+
+event1Id :: IDType
+event1Id = "12345"
+
+venue1Id :: IDType
+venue1Id = "12345"
+
+event1 = Event event1Id
+  "Fun fun time"
+  "The greatest event ever"
+  (UTCTime (fromGregorian 2017 1 17) (secondsToDiffTime 40000))
+  (UTCTime (fromGregorian 2017 1 18) (secondsToDiffTime 40000))
+  venue1Id
+
+event2Id :: IDType
+event2Id = "67890"
+
+venue2Id :: IDType
+venue2Id = "67890"
+
+event2 = Event event2Id
+  "Not that fun of a time"
+  "The kinda cool event"
+  (UTCTime (fromGregorian 2017 2 17) (secondsToDiffTime 40000))
+  (UTCTime (fromGregorian 2017 2 18) (secondsToDiffTime 40000))
+  venue2Id
