@@ -41,5 +41,30 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                shouldRespondWith, with)
 
 eventsSpec = context "/events" $ do
-  it "empty test" $ \host -> do
-    1 `shouldBe` 1
+  it "returns an empty list" $ \host -> do
+    try host (getEvents emptyToken) `shouldReturn` []
+
+  context "POST" $ do
+    it "creates one new event" $ \host -> do
+      try host (putEvents event1 emptyToken)
+      es <- try host (getEvents emptyToken)
+      es `shouldBe` [event1]
+
+    it "is idempotent" $ \host -> do
+      try host (putEvents event1 emptyToken)
+      try host (putEvents event1 emptyToken)
+      es <- try host (getEvents emptyToken)
+      es `shouldBe` [event1]
+
+    it "modifies an event" $ \host -> do
+      try host (putEvents event1 emptyToken)
+      let event' = event1 {eventName = "ASRT"}
+      try host (putEvents event' emptyToken)
+      es <- try host (getEvents emptyToken)
+      es `shouldBe` [event']
+
+    it "add two events" $ \host -> do
+      try host (putEvents event1 emptyToken)
+      try host (putEvents event2 emptyToken)
+      es <- try host (getEvents emptyToken)
+      es `shouldBe` [event1, event2]

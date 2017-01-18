@@ -27,7 +27,7 @@ import           Servant.API
 
 type EventsAPI =
   EventsGet
-  :<|> EventsPost
+  :<|> EventsPut
   :<|> EventsNearbyGet
   :<|> EventsIdGet
   :<|> EventsIdInviteGet
@@ -42,9 +42,9 @@ type Prefix = "events"
 type EventsGet = Prefix :> Header "token" Token
                 :> Get '[JSON] [Event]
 
-type EventsPost = Prefix :> ReqBody '[JSON] Event
+type EventsPut = Prefix :> ReqBody '[JSON] Event
                 :> Header "token" Token
-                :> PostCreated '[JSON] Event
+                :> Put '[JSON] Event
 
 type EventsIdGet = Prefix :> Capture "eventID" IDType
                    :> Header "token" Token

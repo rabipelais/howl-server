@@ -31,7 +31,7 @@ import qualified Howl.Facebook                as Fb
 
 import           Servant
 
-import           Data.Text                    hiding (foldl, map)
+import           Data.Text                    hiding (foldl, map, replace)
 
 import           Howl.Api.Events
 import           Howl.App.Common
@@ -53,4 +53,15 @@ eventsGetH mToken = do
 
 
 eventsPutH :: Event -> Maybe Token -> HandlerT IO Event
-eventsPutH = undefined
+eventsPutH event mToken = runQuery $ do
+  getBy (UniqueEventID (eventFbID event)) >>= \case
+    Just (Entity k _) -> replace k event >> return event
+    Nothing -> insert event >> return event
+
+eventsNearbyGet = undefined
+
+eventsIdGet = undefined
+
+eventsIdInviteGet = undefined
+
+eventsIdInvitePost = undefined
