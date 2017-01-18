@@ -20,14 +20,18 @@ import           Servant
 import           Data.Text
 
 import           Howl.Api
+import           Howl.App.Events
 import           Howl.App.Users
 import           Howl.Models
 import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
 
+handlers :: ServerT Api (HandlerT IO)
+handlers = usersHandlers :<|> eventsHandlers
+
 server :: LogEnv HandlerEnv -> Server Api
-server env = enter dienerToEither usersHandlers
+server env = enter dienerToEither handlers
   where
     dienerToEither :: HandlerT IO :~> ExceptT ServantErr IO
     dienerToEither = Nat $ \ar ->

@@ -19,8 +19,10 @@ library
   exposed-modules:     Howl
                      , Howl.Api
                      , Howl.Api.Users
+                     , Howl.Api.Events
                      , Howl.App
                      , Howl.App.Users
+                     , Howl.App.Events
                      , Howl.Facebook
                      , Howl.Facebook.Object.Event
                      , Howl.Facebook.Monad

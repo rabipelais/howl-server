@@ -41,6 +41,34 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                delete, get, matchBody, request,
                                                shouldRespondWith, with)
 
+
+(getUsers
+  :<|> postUsers
+  :<|> putUsers
+  :<|> getUsersId
+  :<|> putUsersId
+  :<|> deleteUsersId
+  :<|> getUsersIdFollows
+  :<|> postUsersIdFollows
+  :<|> getUsersIdFollowsId
+  :<|> deleteUsersIdFollowsId
+  :<|> getUsersIdBlocked
+  :<|> postUsersIdBlocked
+  :<|> deleteUsersIdBlockedId
+  :<|> getUsersIdEvents
+  :<|> getUsersIdEventsFollows) :<|>
+  (eventsGet
+  :<|> eventsPost
+  :<|> eventsNearbyGet
+  :<|> eventsIdGet
+  :<|> eventsIdInviteGet
+  :<|> eventsIdInvitePost
+  :<|> eventsIdInviteDelete
+  :<|> eventsIdRSVPUsersIdGet
+  :<|> eventsIdRSVPUsersIdPut
+  :<|> eventsIdRSVPUsersIdDelete
+  ) = client api
+
 emptyToken :: Maybe Text
 emptyToken = Just "emptyToken"
 

@@ -41,8 +41,6 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                shouldRespondWith, with)
 
 
-getUsers :<|> postUsers :<|> putUsers :<|> getUsersId :<|> putUsersId :<|> deleteUsersId :<|> getUsersIdFollows :<|> postUsersIdFollows :<|> getUsersIdFollowsId :<|> deleteUsersIdFollowsId :<|> getUsersIdBlocked :<|> postUsersIdBlocked :<|> deleteUsersIdBlockedId :<|> getUsersIdEvents :<|> getUsersIdEventsFollows = client api
-
 
 -- ============= USERS SPEC ===================================
 usersSpec =

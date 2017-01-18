@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Howl.Api.Users where
+module Howl.Api.Events where
 
 import           Control.Lens
 import qualified Data.ByteString.Lazy.Char8 as BL8
@@ -70,19 +70,19 @@ type EventsIdInviteDelete = Prefix :> Capture "eventID" IDType
 
 
 type EventsIdRSVPUserIdGet = Prefix :> Capture "eventID" IDType
-                      :> "rsvp" :> Capture "userID"
+                      :> "rsvp" :> Capture "userID" IDType
                       :> ReqBody '[JSON] FB.RSVP
                       :> Header "token" Token
                       :> Get '[JSON] FB.RSVP
 
 type EventsIdRSVPUserIdPut = Prefix :> Capture "eventID" IDType
-                      :> "rsvp" :> Capture "userID"
+                      :> "rsvp" :> Capture "userID" IDType
                       :> ReqBody '[JSON] FB.RSVP
                       :> Header "token" Token
                       :> Put '[JSON] FB.RSVP
 
 type EventsIdRSVPUserIdDelete = Prefix :> Capture "eventID" IDType
-                                :> "rsvp" :> Capture "userID"
+                                :> "rsvp" :> Capture "userID" IDType
                                 :> Header "token" Token
                                 :> Delete '[JSON] FB.RSVP
 
