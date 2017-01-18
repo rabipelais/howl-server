@@ -44,7 +44,14 @@ eventsHandlers :: ServerT EventsAPI (HandlerT IO)
 eventsHandlers =
   eventsGetH
   :<|> eventsPutH
-  :<|> undefined
+  :<|> eventsNearbyGet
+  :<|> eventsIdGet
+  :<|> eventsIdInviteGet
+  :<|> eventsIdInvitePost
+  :<|> eventsIdInviteDelete
+  :<|> eventsIdRSVPUsersIdGet
+  :<|> eventsIdRSVPUsersIdPut
+  :<|> eventsIdRSVPUsersIdDelete
 
 eventsGetH :: Maybe Token -> HandlerT IO [Event]
 eventsGetH mToken = do
@@ -65,3 +72,11 @@ eventsIdGet = undefined
 eventsIdInviteGet = undefined
 
 eventsIdInvitePost = undefined
+
+eventsIdInviteDelete = undefined
+
+eventsIdRSVPUsersIdGet = undefined
+
+eventsIdRSVPUsersIdPut = undefined
+
+eventsIdRSVPUsersIdDelete = undefined
