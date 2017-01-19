@@ -98,7 +98,10 @@ eventsIdInvitesIdPost ei fi mToken = do
     checkExistsOrThrow fi
     checkExistsOrThrowError ui err401
     getBy (UniqueInvite ui fi ei) >>= \case
-      Nothing -> insertEntity (Invite ui fi ei) >>= return .entityVal
+      Nothing -> do
+        inviteEntity <- insertEntity (Invite ui fi ei)
+        insertBy (EventRSVP fi ei Fb.NotReplied)
+        return $ entityVal inviteEntity
       Just _ -> throwError err409
 
 eventsIdInvitesIdDelete :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
@@ -122,7 +125,16 @@ eventsIdRSVPGet ei mToken = do
     rEntities <- selectList [EventRSVPEventID ==. ei] []
     return $ map entityVal rEntities
 
-eventsIdRSVPUsersIdGet = undefined
+eventsIdRSVPUsersIdGet :: IDType -> IDType -> Maybe Token -> HandlerT IO EventRSVP
+eventsIdRSVPUsersIdGet ei fi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkEventOrThrow ei
+    checkExistsOrThrow fi
+    checkExistsOrThrowError ui err401
+    getBy (UniqueEventRSVP fi ei) >>= \case
+      Nothing -> throwError err404
+      Just e -> return $ entityVal e
 
 eventsIdRSVPUsersIdPut = undefined
 

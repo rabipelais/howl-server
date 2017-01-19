@@ -67,7 +67,7 @@ EventRSVP json
   userID IDType
   eventID IDType
   rsvp RSVP
-  UniqueUserEvent userID eventID
+  UniqueEventRSVP userID eventID
   deriving Eq Read Show
 
 Invite json

@@ -207,7 +207,6 @@ eventsIdRSVPSpec = context "/events/{eventID}/rsvp" $ do
   it "returns 401 if the token doesn't belong to an existing user" $ \(manager, baseUrl) -> do
     try (manager, baseUrl) (putEvents event1 albertToken)
     Left err <- runExceptT $ getEventsIdRSVP event1Id albertToken manager baseUrl
-
     responseStatus err `shouldBe` unauthorized401
 
   it "returns an empty list" $ \host -> do
@@ -215,3 +214,35 @@ eventsIdRSVPSpec = context "/events/{eventID}/rsvp" $ do
     try host (putEvents event1 albertToken)
     rs <- try host (getEventsIdRSVP event1Id albertToken)
     rs `shouldBe` []
+
+  context "/events/{eventID}/rsvp/{userID}" $ do
+    context "GET" $ do
+      it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ getEventsIdRSVPUsersId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if friend does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        Left err <- runExceptT $ getEventsIdRSVPUsersId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ getEventsIdRSVPUsersId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` unauthorized401
+
+      it "returns 404 if there's no RSVP for this event and this user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ getEventsIdRSVPUsersId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "inviting sets an RSVP with 'NotReplied'" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putUsers bob emptyToken)
+        try host (putEvents event1 albertToken)
+        try host (postEventsIdInvitesId event1Id bobId albertToken)
+        r <- try host (getEventsIdRSVPUsersId event1Id bobId albertToken)
+        r `shouldBe` (EventRSVP bobId event1Id Fb.NotReplied)
