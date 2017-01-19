@@ -56,8 +56,8 @@ usersHandlers =
   :<|> getUsersIdBlockedH
   :<|> postUsersIdBlockedH
   :<|> deleteUsersIdBlockedIdH
-  :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdEventsH
+  :<|> getUsersIdEventsFollowsH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -226,13 +226,14 @@ deleteUsersIdBlockedIdH s t mToken = runQuery $ do
     _ -> throwError err404
 
 
+-- TODO: Rewrite with join
 getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsFollowsH i mToken = runQuery $ do
   checkExistsOrThrow i
   friends <- selectList [ FollowshipSourceId ==. i
                         , FollowshipStatus ==. Accepted] []
   let friendsIds = map (followshipTargetId . entityVal) friends
-  let eventsConds = foldl (||.) [] $ map (\x -> [EventRSVPUserID ==. x]) friendsIds
+  let eventsConds = foldl (||.) [] $ map (\x -> [EventRSVPUserID ==. x, EventRSVPRsvp !=. Fb.Declined]) friendsIds
   eventsUser <- selectList eventsConds []
   let eventsIds = map (eventRSVPEventID . entityVal) eventsUser
   let conds = foldl (||.) [] $ map (\x -> [EventFbID ==. x]) eventsIds
@@ -242,8 +243,11 @@ getUsersIdEventsFollowsH i mToken = runQuery $ do
 getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsH i mToken = runQuery $ do
   checkExistsOrThrow i
-  eventsUser <- selectList [EventRSVPUserID ==. i] []
-  let eventsIds = map (eventRSVPEventID . entityVal) eventsUser
-  let conds = foldl (||.) []  $ map (\x -> [EventFbID ==. x]) eventsIds
-  events <- selectList conds []
-  return $ map entityVal events
+  eventEntities <- E.select
+    $ E.from
+    $ \(event `E.InnerJoin` rsvp) -> do
+    E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
+         E.&&. rsvp^.EventRSVPUserID E.==. E.val i
+         E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
+    return event
+  return $ map entityVal eventEntities

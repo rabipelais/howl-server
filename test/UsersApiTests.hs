@@ -226,7 +226,29 @@ usersIdEventsSpec = context "/users/{userID}/events" $ do
     es `shouldBe` []
 
   it "returns the user's events list" $ \host -> do
-    pending
+    try host (putUsers albert emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id albertId Fb.Maybe albertToken)
+    es <- try host (getUsersIdEvents albertId emptyToken)
+    es `shouldBe` [event1]
+
+  it "returns the user's events list (two events)" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEvents event2 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id albertId Fb.Maybe albertToken)
+    try host (putEventsIdRSVPUsersId event2Id albertId Fb.Attending albertToken)
+    es <- try host (getUsersIdEvents albertId emptyToken)
+    es `shouldBe` [event1, event2]
+
+  it "doesn't return declined events" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEvents event2 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id albertId Fb.Maybe albertToken)
+    try host (putEventsIdRSVPUsersId event2Id albertId Fb.Declined albertToken)
+    es <- try host (getUsersIdEvents albertId emptyToken)
+    es `shouldBe` [event1]
 
   usersIdEventsFollowsSpec
 -- USERS ID EVENTS
