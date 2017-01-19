@@ -97,12 +97,18 @@ eventsIdInvitesIdPost ei fi mToken = do
     checkEventOrThrow ei
     checkExistsOrThrow fi
     checkExistsOrThrowError ui err401
-    getBy (UniqueInvite ui fi ei) >>= \case
-      Nothing -> do
-        inviteEntity <- insertEntity (Invite ui fi ei)
-        insertBy (EventRSVP fi ei Fb.NotReplied)
-        return $ entityVal inviteEntity
+    getBy (UniqueEventRSVP fi ei) >>= \case
+      Just (Entity _ (EventRSVP _ _ Fb.NotReplied)) -> post ui
       Just _ -> throwError err409
+      Nothing -> post ui
+  where
+    post ui =
+      getBy (UniqueInvite ui fi ei) >>= \case
+        Nothing -> do
+          inviteEntity <- insertEntity (Invite ui fi ei)
+          insertBy (EventRSVP fi ei Fb.NotReplied)
+          return $ entityVal inviteEntity
+        Just _ -> throwError err409
 
 eventsIdInvitesIdDelete :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdDelete ei fi mToken =  do
