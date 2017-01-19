@@ -232,9 +232,9 @@ getUsersIdEventsFollowsH i mToken = runQuery $ do
   friends <- selectList [ FollowshipSourceId ==. i
                         , FollowshipStatus ==. Accepted] []
   let friendsIds = map (followshipTargetId . entityVal) friends
-  let eventsConds = foldl (||.) [] $ map (\x -> [UserEventUserID ==. x]) friendsIds
+  let eventsConds = foldl (||.) [] $ map (\x -> [EventRSVPUserID ==. x]) friendsIds
   eventsUser <- selectList eventsConds []
-  let eventsIds = map (userEventEventID . entityVal) eventsUser
+  let eventsIds = map (eventRSVPEventID . entityVal) eventsUser
   let conds = foldl (||.) [] $ map (\x -> [EventFbID ==. x]) eventsIds
   events <- selectList conds []
   return $ map entityVal events
@@ -242,8 +242,8 @@ getUsersIdEventsFollowsH i mToken = runQuery $ do
 getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsH i mToken = runQuery $ do
   checkExistsOrThrow i
-  eventsUser <- selectList [UserEventUserID ==. i] []
-  let eventsIds = map (userEventEventID . entityVal) eventsUser
+  eventsUser <- selectList [EventRSVPUserID ==. i] []
+  let eventsIds = map (eventRSVPEventID . entityVal) eventsUser
   let conds = foldl (||.) []  $ map (\x -> [EventFbID ==. x]) eventsIds
   events <- selectList conds []
   return $ map entityVal events

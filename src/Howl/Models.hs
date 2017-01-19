@@ -63,7 +63,7 @@ EventCoverPic
   UniqueEventCoverPic eventId coverPicPath
   deriving Eq Read Show
 
-UserEvent json
+EventRSVP json
   userID IDType
   eventID IDType
   rsvp RSVP

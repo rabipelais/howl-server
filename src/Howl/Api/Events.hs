@@ -78,23 +78,23 @@ type EventsIdInviteIdDelete = Prefix :> Capture "eventID" IDType
 type EventsIdRSVPGet = Prefix :> Capture "eventID" IDType
                        :> "rsvp"
                        :> Header "token" Token
-                       :> Get '[JSON] [FB.RSVP]
+                       :> Get '[JSON] [EventRSVP]
 
 type EventsIdRSVPUserIdGet = Prefix :> Capture "eventID" IDType
                       :> "rsvp" :> Capture "userID" IDType
                       :> Header "token" Token
-                      :> Get '[JSON] FB.RSVP
+                      :> Get '[JSON] EventRSVP
 
 type EventsIdRSVPUserIdPut = Prefix :> Capture "eventID" IDType
                       :> "rsvp" :> Capture "userID" IDType
                       :> ReqBody '[JSON] FB.RSVP
                       :> Header "token" Token
-                      :> Put '[JSON] FB.RSVP
+                      :> Put '[JSON] EventRSVP
 
 type EventsIdRSVPUserIdDelete = Prefix :> Capture "eventID" IDType
                                 :> "rsvp" :> Capture "userID" IDType
                                 :> Header "token" Token
-                                :> Delete '[JSON] FB.RSVP
+                                :> Delete '[JSON] EventRSVP
 
 type EventsNearbyGet = Prefix :> "nearby"
                      :> QueryParam "lat" Double
