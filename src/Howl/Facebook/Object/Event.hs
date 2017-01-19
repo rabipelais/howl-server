@@ -1,38 +1,44 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings,TemplateHaskell, DeriveGeneric,TypeFamilies #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE TypeFamilies       #-}
 module Howl.Facebook.Object.Event where
 
-import Control.Applicative
-import Control.Monad (mzero)
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Aeson ((.:), (.:?))
-import Data.Aeson.Types
-import Data.Monoid ((<>))
-import Data.Text (Text)
-import Data.Time
-import Data.Typeable (Typeable)
-import GHC.Generics
+import           Control.Applicative
+import           Control.Monad                (mzero)
+import           Control.Monad.Trans.Control  (MonadBaseControl)
+import           Data.Aeson                   ((.:), (.:?))
+import           Data.Aeson.Types
+import           Data.Char
+import           Data.Monoid                  ((<>))
+import           Data.Text                    (Text)
+import           Data.Time
+import           Data.Typeable                (Typeable)
+import           GHC.Generics
 
 import qualified Control.Monad.Trans.Resource as R
-import Data.Aeson as A
+import           Data.Aeson                   as A
 
-import Howl.Facebook.Types
-import Howl.Facebook.Monad
-import Howl.Facebook.Graph
-import Howl.Facebook.Pager
-import Howl.Facebook.Object.Checkin
+import           Howl.Facebook.Graph
+import           Howl.Facebook.Monad
+import           Howl.Facebook.Object.Checkin
+import           Howl.Facebook.Pager
+import           Howl.Facebook.Types
 
 type EventId = Id
 
 data Event =
-  Event { eventId :: Maybe EventId
-        , eventName :: Maybe Text
-        , eventCategory :: Maybe Text
+  Event { eventId          :: Maybe EventId
+        , eventName        :: Maybe Text
+        , eventCategory    :: Maybe Text
         , eventDescription :: Maybe Text
-        , eventStartTime :: Maybe UTCTime
-        , eventEndTime :: Maybe UTCTime
-        , eventPlace :: Maybe Place
-        , eventRSVP :: Maybe RSVP
-        , eventOwner :: Maybe Owner}
+        , eventStartTime   :: Maybe UTCTime
+        , eventEndTime     :: Maybe UTCTime
+        , eventPlace       :: Maybe Place
+        , eventRSVP        :: Maybe RSVP
+        , eventOwner       :: Maybe Owner}
   deriving (Eq, Ord, Show, Read, Typeable, Generic)
 
 instance A.FromJSON Event where
@@ -67,9 +73,7 @@ data RSVP = Attending | Created | Declined
           deriving (Ord, Show, Read, Eq, Generic, Typeable)
 
 instance A.ToJSON RSVP where
-  -- For efficiency, we write a simple toEncoding implementation, as
-  -- the default version uses toJSON.
-  toEncoding = genericToEncoding defaultOptions
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = map toLower}
 
 instance A.FromJSON RSVP where
   parseJSON (A.String v) = case v of
