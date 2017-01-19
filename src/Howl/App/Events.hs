@@ -83,9 +83,7 @@ eventsIdInvitesIdGet :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdGet ei fi mToken = do
   ui <- tokenUser mToken
   runQuery $ do
-    checkEventOrThrow ei
-    checkExistsOrThrow fi
-    checkExistsOrThrowError ui err401
+    checkUsersAndEvent fi ei ui
     getBy (UniqueInvite ui fi ei) >>= \case
       Nothing -> throwError err404
       Just invite -> return $ entityVal invite
@@ -94,9 +92,7 @@ eventsIdInvitesIdPost :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdPost ei fi mToken = do
   ui <- tokenUser mToken
   runQuery $ do
-    checkEventOrThrow ei
-    checkExistsOrThrow fi
-    checkExistsOrThrowError ui err401
+    checkUsersAndEvent fi ei ui
     getBy (UniqueEventRSVP fi ei) >>= \case
       Just (Entity _ (EventRSVP _ _ Fb.NotReplied)) -> post ui
       Just _ -> throwError err409
@@ -114,12 +110,10 @@ eventsIdInvitesIdDelete :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdDelete ei fi mToken =  do
   ui <- tokenUser mToken
   runQuery $ do
-    checkEventOrThrow ei
-    checkExistsOrThrow fi
-    checkExistsOrThrowError ui err401
+    checkUsersAndEvent fi ei ui
     let uniqueInvite = UniqueInvite ui fi ei
     getBy uniqueInvite >>= \case
-      Just _ -> deleteBy uniqueInvite >> return (Invite ui fi ei)
+      Just entity -> deleteBy uniqueInvite >> return (Invite ui fi ei)
       Nothing -> throwError err404
 
 eventsIdRSVPGet :: IDType -> Maybe Token -> HandlerT IO [EventRSVP]
@@ -135,9 +129,7 @@ eventsIdRSVPUsersIdGet :: IDType -> IDType -> Maybe Token -> HandlerT IO EventRS
 eventsIdRSVPUsersIdGet ei fi mToken = do
   ui <- tokenUser mToken
   runQuery $ do
-    checkEventOrThrow ei
-    checkExistsOrThrow fi
-    checkExistsOrThrowError ui err401
+    checkUsersAndEvent fi ei ui
     getBy (UniqueEventRSVP fi ei) >>= \case
       Nothing -> throwError err404
       Just e -> return $ entityVal e
@@ -146,13 +138,25 @@ eventsIdRSVPUsersIdPut :: IDType -> IDType -> Fb.RSVP -> Maybe Token -> HandlerT
 eventsIdRSVPUsersIdPut ei fi r mToken = do
   ui <- tokenUser mToken
   runQuery $ do
-    checkEventOrThrow ei
-    checkExistsOrThrow fi
-    checkExistsOrThrowError ui err401
+    checkUsersAndEvent fi ei ui
     let rsvp = EventRSVP fi ei r
     getBy (UniqueEventRSVP fi ei) >>= \case
       Just (Entity k _) -> replace k rsvp
       Nothing -> insert_ rsvp
     return rsvp
 
-eventsIdRSVPUsersIdDelete = undefined
+eventsIdRSVPUsersIdDelete :: IDType -> IDType -> Maybe Token -> HandlerT IO EventRSVP
+eventsIdRSVPUsersIdDelete ei fi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkUsersAndEvent fi ei ui
+    let uniqueRSVP = UniqueEventRSVP fi ei
+    getBy uniqueRSVP >>= \case
+      Just entity -> deleteBy uniqueRSVP >> return (entityVal entity)
+      Nothing -> throwError err404
+
+
+checkUsersAndEvent fi ei ui = do
+  checkEventOrThrow ei
+  checkExistsOrThrow fi
+  checkExistsOrThrowError ui err401

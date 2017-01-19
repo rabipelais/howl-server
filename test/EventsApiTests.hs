@@ -288,3 +288,35 @@ eventsIdRSVPSpec = context "/events/{eventID}/rsvp" $ do
         try host (putEventsIdRSVPUsersId event1Id bobId Fb.NotReplied albertToken)
         r <- try host (getEventsIdRSVPUsersId event1Id bobId albertToken)
         r `shouldBe` (EventRSVP bobId event1Id Fb.NotReplied)
+
+    context "DELETE" $ do
+      it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ deleteEventsIdRSVPUsersId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if friend does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        Left err <- runExceptT $ deleteEventsIdRSVPUsersId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ deleteEventsIdRSVPUsersId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` unauthorized401
+
+      it "returns 404 friend had no RSVP" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ deleteEventsIdRSVPUsersId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "deletes the RSVP" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (postEventsIdInvitesId event1Id bobId albertToken)
+        try (manager, baseUrl) (deleteEventsIdRSVPUsersId event1Id bobId albertToken)
+        Left err <- runExceptT $ getEventsIdRSVPUsersId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
