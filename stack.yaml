@@ -4,5 +4,6 @@ packages:
 - location:
     git: https://github.com/bitemyapp/esqueleto
     commit: master
-extra-deps: []
+extra-deps:
+  - aeson-casing-0.1.0.5
 resolver: lts-7.8

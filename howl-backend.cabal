@@ -81,6 +81,7 @@ library
                      , bytestring
                      , lens
                      , aeson
+                     , aeson-casing
                      , bytestring
                      , text
                      , transformers-base

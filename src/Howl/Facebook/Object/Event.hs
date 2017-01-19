@@ -10,6 +10,7 @@ import           Control.Applicative
 import           Control.Monad                (mzero)
 import           Control.Monad.Trans.Control  (MonadBaseControl)
 import           Data.Aeson                   ((.:), (.:?))
+import           Data.Aeson.Casing
 import           Data.Aeson.Types
 import           Data.Char
 import           Data.Monoid                  ((<>))
@@ -73,7 +74,7 @@ data RSVP = Attending | Created | Declined
           deriving (Ord, Show, Read, Eq, Generic, Typeable)
 
 instance A.ToJSON RSVP where
-  toJSON = genericToJSON defaultOptions {constructorTagModifier = map toLower}
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase}
 
 instance A.FromJSON RSVP where
   parseJSON (A.String v) = case v of
