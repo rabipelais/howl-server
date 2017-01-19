@@ -50,6 +50,7 @@ eventsHandlers =
   :<|> eventsIdInvitesIdGet
   :<|> eventsIdInvitesIdPost
   :<|> eventsIdInvitesIdDelete
+  :<|> eventsIdRSVPGet
   :<|> eventsIdRSVPUsersIdGet
   :<|> eventsIdRSVPUsersIdPut
   :<|> eventsIdRSVPUsersIdDelete
@@ -100,7 +101,18 @@ eventsIdInvitesIdPost ei fi mToken = do
       Nothing -> insertEntity (Invite ui fi ei) >>= return .entityVal
       Just _ -> throwError err409
 
-eventsIdInvitesIdDelete = undefined
+eventsIdInvitesIdDelete ei fi mToken =  do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkEventOrThrow ei
+    checkExistsOrThrow fi
+    checkExistsOrThrow ui
+    let uniqueInvite = UniqueInvite ui fi ei
+    getBy uniqueInvite >>= \case
+      Just _ -> deleteBy uniqueInvite >> return (Invite ui fi ei)
+      Nothing -> throwError err404
+
+eventsIdRSVPGet = undefined
 
 eventsIdRSVPUsersIdGet = undefined
 

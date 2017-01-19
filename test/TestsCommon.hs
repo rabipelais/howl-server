@@ -67,6 +67,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   :<|> getEventsIdInvitesId
   :<|> postEventsIdInvitesId
   :<|> deleteEventsIdInvitesId
+  :<|> getEventsIdRSVP
   :<|> getEventsIdRSVPUsersId
   :<|> putEventsIdRSVPUsersId
   :<|> deleteEventsIdRSVPUsersId
