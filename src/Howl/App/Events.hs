@@ -85,7 +85,7 @@ eventsIdInvitesIdGet ei fi mToken = do
   runQuery $ do
     checkEventOrThrow ei
     checkExistsOrThrow fi
-    checkExistsOrThrow ui
+    checkExistsOrThrowError ui err401
     getBy (UniqueInvite ui fi ei) >>= \case
       Nothing -> throwError err404
       Just invite -> return $ entityVal invite
@@ -96,7 +96,7 @@ eventsIdInvitesIdPost ei fi mToken = do
   runQuery $ do
     checkEventOrThrow ei
     checkExistsOrThrow fi
-    checkExistsOrThrow ui
+    checkExistsOrThrowError ui err401
     getBy (UniqueInvite ui fi ei) >>= \case
       Nothing -> insertEntity (Invite ui fi ei) >>= return .entityVal
       Just _ -> throwError err409
@@ -106,7 +106,7 @@ eventsIdInvitesIdDelete ei fi mToken =  do
   runQuery $ do
     checkEventOrThrow ei
     checkExistsOrThrow fi
-    checkExistsOrThrow ui
+    checkExistsOrThrowError ui err401
     let uniqueInvite = UniqueInvite ui fi ei
     getBy uniqueInvite >>= \case
       Just _ -> deleteBy uniqueInvite >> return (Invite ui fi ei)

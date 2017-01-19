@@ -48,10 +48,12 @@ runQuery query = do
   pool <- asks db
   runDb pool err500 query
 
-checkExistsOrThrow i = do
+checkExistsOrThrow i = checkExistsOrThrowError i err404
+
+checkExistsOrThrowError i e = do
   mUser <- getBy $ UniqueUserID i
   case mUser of
-    Nothing -> throwError err404
+    Nothing -> throwError e
     Just (Entity k u) -> return u
 
 
