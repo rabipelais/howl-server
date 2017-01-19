@@ -82,6 +82,7 @@ eventsIdSpec = context "/events/{eventID}"$ do
     e `shouldBe`event1
 
   eventsIdInviteSpec
+  eventsIdRSVPSpec
 
 eventsIdInviteSpec = context "/events/{eventID}/invites" $ do
   it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
@@ -105,11 +106,11 @@ eventsIdInviteSpec = context "/events/{eventID}/invites" $ do
         Left err <- runExceptT $ getEventsIdInvitesId event1Id bobId emptyToken manager baseUrl
         responseStatus err `shouldBe` notFound404
 
-      it "returns 404 if token does not name an existing user" $ \(manager, baseUrl) -> do
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
         try (manager, baseUrl) (putEvents event1 emptyToken)
         try (manager, baseUrl) (putUsers bob emptyToken)
         Left err <- runExceptT $ getEventsIdInvitesId event1Id bobId albertToken manager baseUrl
-        responseStatus err `shouldBe` notFound404
+        responseStatus err `shouldBe` unauthorized401
 
       it "returns 404 if user did not invite friend" $ \(manager, baseUrl) -> do
         try (manager, baseUrl) (putEvents event1 emptyToken)
@@ -136,11 +137,11 @@ eventsIdInviteSpec = context "/events/{eventID}/invites" $ do
         Left err <- runExceptT $ postEventsIdInvitesId event1Id bobId emptyToken manager baseUrl
         responseStatus err `shouldBe` notFound404
 
-      it "returns 404 if token does not name an existing user" $ \(manager, baseUrl) -> do
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
         try (manager, baseUrl) (putEvents event1 emptyToken)
         try (manager, baseUrl) (putUsers bob emptyToken)
         Left err <- runExceptT $ postEventsIdInvitesId event1Id bobId albertToken manager baseUrl
-        responseStatus err `shouldBe` notFound404
+        responseStatus err `shouldBe` unauthorized401
 
       it "returns 409 if user tries to invite friend twice" $ \(manager, baseUrl) -> do
         try (manager, baseUrl) (putEvents event1 emptyToken)
@@ -176,14 +177,15 @@ eventsIdInviteSpec = context "/events/{eventID}/invites" $ do
         Left err <- runExceptT $ deleteEventsIdInvitesId event1Id bobId emptyToken manager baseUrl
         responseStatus err `shouldBe` notFound404
 
-      it "returns 404 if token does not name an existing user" $ \(manager, baseUrl) -> do
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
         try (manager, baseUrl) (putEvents event1 emptyToken)
         try (manager, baseUrl) (putUsers bob emptyToken)
         Left err <- runExceptT $ deleteEventsIdInvitesId event1Id bobId albertToken manager baseUrl
-        responseStatus err `shouldBe` notFound404
+        responseStatus err `shouldBe` unauthorized401
 
       it "returns 404 if user did not invite this friend" $ \(manager, baseUrl) -> do
         try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
         try (manager, baseUrl) (putUsers bob emptyToken)
         Left err <- runExceptT $ deleteEventsIdInvitesId event1Id bobId albertToken manager baseUrl
         responseStatus err `shouldBe` notFound404
@@ -196,3 +198,20 @@ eventsIdInviteSpec = context "/events/{eventID}/invites" $ do
         try (manager, baseUrl) (deleteEventsIdInvitesId event1Id bobId albertToken)
         Left err <- runExceptT $ getEventsIdInvitesId event1Id bobId albertToken manager baseUrl
         responseStatus err `shouldBe` notFound404
+
+eventsIdRSVPSpec = context "/events/{eventID}/rsvp" $ do
+  it "returns 404 if event doesn't exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getEventsIdRSVP event1Id albertToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns 401 if the token doesn't belong to an existing user" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putEvents event1 albertToken)
+    Left err <- runExceptT $ getEventsIdRSVP event1Id albertToken manager baseUrl
+
+    responseStatus err `shouldBe` unauthorized401
+
+  it "returns an empty list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putEvents event1 albertToken)
+    rs <- try host (getEventsIdRSVP event1Id albertToken)
+    rs `shouldBe` []

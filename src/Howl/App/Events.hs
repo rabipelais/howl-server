@@ -101,6 +101,7 @@ eventsIdInvitesIdPost ei fi mToken = do
       Nothing -> insertEntity (Invite ui fi ei) >>= return .entityVal
       Just _ -> throwError err409
 
+eventsIdInvitesIdDelete :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdDelete ei fi mToken =  do
   ui <- tokenUser mToken
   runQuery $ do
@@ -112,7 +113,14 @@ eventsIdInvitesIdDelete ei fi mToken =  do
       Just _ -> deleteBy uniqueInvite >> return (Invite ui fi ei)
       Nothing -> throwError err404
 
-eventsIdRSVPGet = undefined
+eventsIdRSVPGet :: IDType -> Maybe Token -> HandlerT IO [EventRSVP]
+eventsIdRSVPGet ei mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkEventOrThrow ei
+    checkExistsOrThrowError ui err401
+    rEntities <- selectList [EventRSVPEventID ==. ei] []
+    return $ map entityVal rEntities
 
 eventsIdRSVPUsersIdGet = undefined
 
