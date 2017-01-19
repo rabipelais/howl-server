@@ -125,6 +125,8 @@ asks f = f <$> Reader.asks logEnv
 
 auth i mt = asks valFunction >>= \f -> (f i mt)
 
+tokenUser mt = asks idFromToken >>= \f -> f mt
+
 validateId _ _ = liftIO $ putStrLn "Validation"
 noValidation _ _ = liftIO $ putStrLn "NoValidation"
 

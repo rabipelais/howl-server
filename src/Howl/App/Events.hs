@@ -78,9 +78,27 @@ eventsIdInviteGet i mToken = runQuery $ do
   iEntities <- selectList [InviteEventID ==. i] []
   return $ map entityVal iEntities
 
-eventsIdInvitesIdGet = undefined
+eventsIdInvitesIdGet :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
+eventsIdInvitesIdGet ei fi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkEventOrThrow ei
+    checkExistsOrThrow fi
+    checkExistsOrThrow ui
+    getBy (UniqueInvite ui fi ei) >>= \case
+      Nothing -> throwError err404
+      Just invite -> return $ entityVal invite
 
-eventsIdInvitesIdPost = undefined
+eventsIdInvitesIdPost :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
+eventsIdInvitesIdPost ei fi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkEventOrThrow ei
+    checkExistsOrThrow fi
+    checkExistsOrThrow ui
+    getBy (UniqueInvite ui fi ei) >>= \case
+      Nothing -> insertEntity (Invite ui fi ei) >>= return .entityVal
+      Just _ -> throwError err409
 
 eventsIdInvitesIdDelete = undefined
 

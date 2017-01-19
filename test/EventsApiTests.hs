@@ -83,7 +83,7 @@ eventsIdSpec = context "/events/{eventID}"$ do
 
   eventsIdInviteSpec
 
-eventsIdInviteSpec = context "/events/{eventID}/invite" $ do
+eventsIdInviteSpec = context "/events/{eventID}/invites" $ do
   it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
     Left err <- runExceptT $ getEventsIdInvites event1Id emptyToken manager baseUrl
     responseStatus err `shouldBe` notFound404
@@ -93,3 +93,67 @@ eventsIdInviteSpec = context "/events/{eventID}/invite" $ do
     try host (putEvents event1 albertToken)
     r <- try host (getEventsIdInvites event1Id albertToken)
     r `shouldBe` []
+
+  context "/events/{eventID}/invites/{friendID}" $ do
+    context "GET" $ do
+      it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ getEventsIdInvitesId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if friend does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        Left err <- runExceptT $ getEventsIdInvitesId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ getEventsIdInvitesId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if user did not invite friend" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ getEventsIdInvitesId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns the invite" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putUsers bob emptyToken)
+        try host (putEvents event1 albertToken)
+        try host (postEventsIdInvitesId event1Id bobId albertToken)
+        r <- try host (getEventsIdInvitesId event1Id bobId albertToken)
+        r `shouldBe` (Invite albertId bobId event1Id)
+
+    context "POST" $ do
+      it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ postEventsIdInvitesId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if friend does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        Left err <- runExceptT $ postEventsIdInvitesId event1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ postEventsIdInvitesId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 409 if user tries to invite friend twice" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        try (manager, baseUrl) (postEventsIdInvitesId event1Id bobId albertToken)
+        Left err <- runExceptT $ postEventsIdInvitesId event1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` conflict409
+
+      it "is able to post an invite" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putUsers bob emptyToken)
+        try host (putEvents event1 albertToken)
+        try host (postEventsIdInvitesId event1Id bobId albertToken)
+        r <- try host (getEventsIdInvitesId event1Id bobId albertToken)
+        r `shouldBe` (Invite albertId bobId event1Id)
