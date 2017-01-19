@@ -246,3 +246,45 @@ eventsIdRSVPSpec = context "/events/{eventID}/rsvp" $ do
         try host (postEventsIdInvitesId event1Id bobId albertToken)
         r <- try host (getEventsIdRSVPUsersId event1Id bobId albertToken)
         r `shouldBe` (EventRSVP bobId event1Id Fb.NotReplied)
+
+    context "PUT" $ do
+      it "returns 404 if event does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ putEventsIdRSVPUsersId event1Id bobId Fb.Maybe emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if friend does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        Left err <- runExceptT $ putEventsIdRSVPUsersId event1Id bobId Fb.Declined emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putEvents event1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ putEventsIdRSVPUsersId event1Id bobId Fb.Attending albertToken manager baseUrl
+        responseStatus err `shouldBe` unauthorized401
+
+      it "is able to put an RSVP" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putUsers bob emptyToken)
+        try host (putEvents event1 albertToken)
+        try host (putEventsIdRSVPUsersId event1Id bobId Fb.Created albertToken)
+        r <- try host (getEventsIdRSVPUsersId event1Id bobId albertToken)
+        r `shouldBe` (EventRSVP bobId event1Id Fb.Created)
+
+      it "is idempotent" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putUsers bob emptyToken)
+        try host (putEvents event1 albertToken)
+        try host (putEventsIdRSVPUsersId event1Id bobId Fb.Created albertToken)
+        try host (putEventsIdRSVPUsersId event1Id bobId Fb.Created albertToken)
+        r <- try host (getEventsIdRSVPUsersId event1Id bobId albertToken)
+        r `shouldBe` (EventRSVP bobId event1Id Fb.Created)
+
+      it "can modify an RSVP" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putUsers bob emptyToken)
+        try host (putEvents event1 albertToken)
+        try host (putEventsIdRSVPUsersId event1Id bobId Fb.Created albertToken)
+        try host (putEventsIdRSVPUsersId event1Id bobId Fb.NotReplied albertToken)
+        r <- try host (getEventsIdRSVPUsersId event1Id bobId albertToken)
+        r `shouldBe` (EventRSVP bobId event1Id Fb.NotReplied)

@@ -136,6 +136,17 @@ eventsIdRSVPUsersIdGet ei fi mToken = do
       Nothing -> throwError err404
       Just e -> return $ entityVal e
 
-eventsIdRSVPUsersIdPut = undefined
+eventsIdRSVPUsersIdPut :: IDType -> IDType -> Fb.RSVP -> Maybe Token -> HandlerT IO EventRSVP
+eventsIdRSVPUsersIdPut ei fi r mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkEventOrThrow ei
+    checkExistsOrThrow fi
+    checkExistsOrThrowError ui err401
+    let rsvp = EventRSVP fi ei r
+    getBy (UniqueEventRSVP fi ei) >>= \case
+      Just (Entity k _) -> replace k rsvp
+      Nothing -> insert_ rsvp
+    return rsvp
 
 eventsIdRSVPUsersIdDelete = undefined
