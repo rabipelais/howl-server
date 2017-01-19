@@ -350,6 +350,71 @@ usersIdEventsFollowsSpec = context "/users/{userID}/events/follows" $ do
     es <- try host (getUsersIdEventsFollows "12345" emptyToken)
     es `shouldBe` []
 
-  it "returns the user's events list" $ \host -> do
-    pending
+  it "return 404 if user doesn't exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getUsersIdEventsFollows "12345" emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns empty list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    es <- try host (getUsersIdEventsFollows "12345" emptyToken)
+    es `shouldBe` []
+
+  it "returns the user's 'follows' events list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putUsers bob emptyToken)
+    try host (postUsersIdFollows albertId bobId emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id bobId Fb.Maybe albertToken)
+    es <- try host (getUsersIdEventsFollows albertId emptyToken)
+    es `shouldBe` [event1]
+
+  it "returns the user's events list (two events)" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putUsers bob emptyToken)
+    try host (postUsersIdFollows albertId bobId emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEvents event2 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id bobId Fb.Maybe albertToken)
+    try host (putEventsIdRSVPUsersId event2Id bobId Fb.Attending albertToken)
+    es <- try host (getUsersIdEventsFollows albertId emptyToken)
+    es `shouldBe` [event1, event2]
+
+  it "returns the user's events list (two friends)" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putUsers bob emptyToken)
+    try host (postUsersIdFollows albertId bobId emptyToken)
+    try host (putUsers charles emptyToken)
+    try host (postUsersIdFollows albertId charlesId emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEvents event2 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id bobId Fb.Maybe albertToken)
+    try host (putEventsIdRSVPUsersId event2Id charlesId Fb.Attending albertToken)
+    es <- try host (getUsersIdEventsFollows albertId emptyToken)
+    es `shouldBe` [event2, event1]
+
+  it "returns the user's events list (two friends, same event)" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putUsers bob emptyToken)
+    try host (postUsersIdFollows albertId bobId emptyToken)
+    try host (putUsers charles emptyToken)
+    try host (postUsersIdFollows albertId charlesId emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEvents event2 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id bobId Fb.Maybe albertToken)
+    try host (putEventsIdRSVPUsersId event1Id charlesId Fb.Attending albertToken)
+    es <- try host (getUsersIdEventsFollows albertId emptyToken)
+    es `shouldBe` [event1]
+
+  it "doesn't return declined events" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putUsers bob emptyToken)
+    try host (postUsersIdFollows albertId bobId emptyToken)
+    try host (putUsers charles emptyToken)
+    try host (postUsersIdFollows albertId charlesId emptyToken)
+    try host (putEvents event1 emptyToken)
+    try host (putEvents event2 emptyToken)
+    try host (putEventsIdRSVPUsersId event1Id bobId Fb.Maybe albertToken)
+    try host (putEventsIdRSVPUsersId event2Id charlesId Fb.Declined albertToken)
+    es <- try host (getUsersIdEventsFollows albertId emptyToken)
+    es `shouldBe` [event1]
 -- USERS ID EVENTS FOLLOW

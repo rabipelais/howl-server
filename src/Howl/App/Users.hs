@@ -230,15 +230,17 @@ deleteUsersIdBlockedIdH s t mToken = runQuery $ do
 getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsFollowsH i mToken = runQuery $ do
   checkExistsOrThrow i
-  friends <- selectList [ FollowshipSourceId ==. i
-                        , FollowshipStatus ==. Accepted] []
-  let friendsIds = map (followshipTargetId . entityVal) friends
-  let eventsConds = foldl (||.) [] $ map (\x -> [EventRSVPUserID ==. x, EventRSVPRsvp !=. Fb.Declined]) friendsIds
-  eventsUser <- selectList eventsConds []
-  let eventsIds = map (eventRSVPEventID . entityVal) eventsUser
-  let conds = foldl (||.) [] $ map (\x -> [EventFbID ==. x]) eventsIds
-  events <- selectList conds []
-  return $ map entityVal events
+  eventEntities <- E.select $ E.distinct
+    $ E.from
+    $ \(event `E.InnerJoin` rsvp `E.InnerJoin` follows) -> do
+    E.on (rsvp^.EventRSVPUserID E.==. follows^.FollowshipTargetId
+         E.&&. follows^.FollowshipSourceId E.==. E.val i
+         E.&&. follows^.FollowshipStatus E.==. E.val Accepted)
+    E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
+         E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
+    return event
+  return $ map entityVal eventEntities
+
 
 getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsH i mToken = runQuery $ do
