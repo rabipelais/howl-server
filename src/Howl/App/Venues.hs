@@ -52,7 +52,9 @@ venuesHandlers =
   :<|> getVenuesIdEventsH
 
 getVenuesH :: Maybe Token -> HandlerT IO [Venue]
-getVenuesH = undefined
+getVenuesH mToken = do
+  entities <- runQuery $ (select . from $ pure)
+  return $ map entityVal entities
 
 putVenuesH :: Venue -> Maybe Token -> HandlerT IO Venue
 putVenuesH = undefined

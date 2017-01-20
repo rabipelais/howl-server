@@ -42,4 +42,4 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
 
 venuesSpec = context "/venues" $ do
   it "returns an empty list" $ \host -> do
-    pending
+    try host (getVenues emptyToken) `shouldReturn` []
