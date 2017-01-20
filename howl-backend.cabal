@@ -20,10 +20,12 @@ library
                      , Howl.Api
                      , Howl.Api.Users
                      , Howl.Api.Events
+                     , Howl.Api.Venues
                      , Howl.App
                      , Howl.App.Common
                      , Howl.App.Users
                      , Howl.App.Events
+                     , Howl.App.Venues
                      , Howl.Facebook
                      , Howl.Facebook.Object.Event
                      , Howl.Facebook.Monad

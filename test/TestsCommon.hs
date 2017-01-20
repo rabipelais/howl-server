@@ -58,7 +58,8 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   :<|> postUsersIdBlocked
   :<|> deleteUsersIdBlockedId
   :<|> getUsersIdEvents
-  :<|> getUsersIdEventsFollows) :<|>
+  :<|> getUsersIdEventsFollows
+  :<|> getUsersIdVenues) :<|>
   (getEvents
   :<|> putEvents
   :<|> getEventsNearby
@@ -71,7 +72,8 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   :<|> getEventsIdRSVPUsersId
   :<|> putEventsIdRSVPUsersId
   :<|> deleteEventsIdRSVPUsersId
-  ) = client api
+  ) :<|>
+  (venuesApi) = client api
 
 emptyToken :: Maybe Text
 emptyToken = Just "emptyToken"

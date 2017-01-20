@@ -87,9 +87,9 @@ Venue json
   UniqueVenueID fbID
   deriving Eq Read Show
 
-VenueFollowers json
+VenueFollower json
   venueId VenueId
   userId UserId
-  UniqueVenueFollowers venueId userId
+  UniqueVenueFollower venueId userId
   deriving Eq Read Show
 |]
