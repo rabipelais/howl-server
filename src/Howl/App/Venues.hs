@@ -63,7 +63,8 @@ putVenuesH venue mToken = runQuery $ do
     Nothing -> insert venue >> return venue
 
 getVenuesIdH :: IDType -> Maybe Token -> HandlerT IO Venue
-getVenuesIdH = undefined
+getVenuesIdH i mToken = runQuery $ do
+  checkVenueOrThrow i
 
 getVenuesIdFollowersH :: IDType -> Maybe Token -> HandlerT IO [User]
 getVenuesIdFollowersH = undefined

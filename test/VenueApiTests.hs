@@ -68,3 +68,15 @@ venuesSpec = context "/venues" $ do
       try host (putVenues venue2 emptyToken)
       vs <- try host (getVenues emptyToken)
       vs `shouldBe` [venue1, venue2]
+
+    venuesIdSpec
+
+venuesIdSpec = context "/venues/{venueID}" $ do
+  it "returns 404 if venue doesn't exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getVenuesId venue1Id emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "return the venue in DB" $ \host -> do
+    try host (putVenues venue1 emptyToken)
+    v <- try host (getVenuesId venue1Id emptyToken)
+    v `shouldBe`venue1

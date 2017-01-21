@@ -56,9 +56,14 @@ checkExistsOrThrowError i e = do
     Nothing -> throwError e
     Just (Entity k u) -> return u
 
-
 checkEventOrThrow i = do
-  mUser <- getBy $ UniqueEventID i
-  case mUser of
+  mEvent <- getBy $ UniqueEventID i
+  case mEvent of
+    Nothing -> throwError err404
+    Just (Entity k u) -> return u
+
+checkVenueOrThrow i = do
+  mVenue <- getBy $ UniqueVenueID i
+  case mVenue of
     Nothing -> throwError err404
     Just (Entity k u) -> return u
