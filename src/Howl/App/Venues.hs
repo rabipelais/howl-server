@@ -103,7 +103,26 @@ putVenuesIdFollowersIdH vi fi mToken = do
     return vf
 
 deleteVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
-deleteVenuesIdFollowersIdH = undefined
+deleteVenuesIdFollowersIdH vi fi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkVenueOrThrow vi
+    checkExistsOrThrow fi
+    checkExistsOrThrowError ui err401
+    when (fi /= ui) (throwError err403)
+    let uFollow = UniqueVenueFollower vi fi
+    getBy uFollow >>= \case
+      Just entity -> deleteBy uFollow >> return (entityVal entity)
+      Nothing -> throwError err404
 
 getVenuesIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
-getVenuesIdEventsH = undefined
+getVenuesIdEventsH vi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkVenueOrThrow vi
+    checkExistsOrThrowError ui err401
+    entities <- select $ E.distinct
+      $ from $ \event -> do
+      E.where_ (event^.EventVenueId E.==. E.val vi)
+      return event
+    return $ map entityVal entities

@@ -82,6 +82,7 @@ venuesIdSpec = context "/venues/{venueID}" $ do
     v `shouldBe`venue1
 
   venuesIdFollowersSpec
+  venuesIdEventsSpec
 
 venuesIdFollowersSpec = context "/venues/{venueID}/followers" $ do
   it "returns 404 if venue does not exist" $ \(manager, baseUrl) -> do
@@ -155,3 +156,63 @@ venuesIdFollowersSpec = context "/venues/{venueID}/followers" $ do
         try host (putVenuesIdFollowersId venue1Id albertId albertToken)
         r <- try host (getVenuesIdFollowersId venue1Id albertId albertToken)
         r `shouldBe` (VenueFollower venue1Id albertId)
+
+    context "DELETE" $ do
+      it "returns 404 if venue does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ deleteVenuesIdFollowersId venue1Id albertId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if user does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        Left err <- runExceptT $ deleteVenuesIdFollowersId venue1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ deleteVenuesIdFollowersId venue1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` unauthorized401
+
+      it "returns 403 if user and token don't match" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ deleteVenuesIdFollowersId venue1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` forbidden403
+
+      it "returns 404 if user did not follow this venue" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        Left err <- runExceptT $ deleteVenuesIdFollowersId venue1Id albertId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "deletes the follower" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putVenuesIdFollowersId venue1Id albertId albertToken)
+        try (manager, baseUrl) (deleteVenuesIdFollowersId venue1Id albertId albertToken)
+        Left err <- runExceptT $ getVenuesIdFollowersId venue1Id albertId albertToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+venuesIdEventsSpec = context "/venues/{venuesID}/events" $ do
+  it "returns 404 if venue does not exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getVenuesIdEvents venue1Id emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putVenues venue1 emptyToken)
+    try (manager, baseUrl) (putUsers bob emptyToken)
+    Left err <- runExceptT $ getVenuesIdEvents venue1Id albertToken manager baseUrl
+    responseStatus err `shouldBe` unauthorized401
+
+  it "returns the list of events in that venue" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putVenues venue1 albertToken)
+    let event1' = event1 {eventVenueId = venue1Id}
+        event2' = event2 {eventVenueId = venue1Id}
+        event3' = event2 {eventVenueId = venue2Id}
+    try host (putEvents event1' emptyToken)
+    try host (putEvents event3' emptyToken)
+    try host (putEvents event2' emptyToken)
+    r <- try host (getVenuesIdEvents venue1Id albertToken)
+    r `shouldBe` [event1', event2']
