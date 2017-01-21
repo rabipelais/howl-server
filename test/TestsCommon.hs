@@ -163,3 +163,17 @@ event2 = Event event2Id
   (UTCTime (fromGregorian 2017 2 17) (secondsToDiffTime 40000))
   (UTCTime (fromGregorian 2017 2 18) (secondsToDiffTime 40000))
   venue2Id
+
+venue1 = Venue venue1Id
+  Nothing
+  "The freshest venue on the East Side"
+  "Swag-town"
+  "Left of here"
+  (Just 4)
+
+venue2 = Venue venue2Id
+  Nothing
+  "Westside is best side"
+  "Le ouest"
+  "Second star to the right"
+  (Just 2)

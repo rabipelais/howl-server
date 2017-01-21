@@ -43,3 +43,28 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
 venuesSpec = context "/venues" $ do
   it "returns an empty list" $ \host -> do
     try host (getVenues emptyToken) `shouldReturn` []
+
+  context "PUT" $ do
+    it "creates a new venue" $ \host -> do
+      try host (putVenues venue1 emptyToken)
+      vs <- try host (getVenues emptyToken)
+      vs `shouldBe` [venue1]
+
+    it "is idempotent" $ \host -> do
+      try host (putVenues venue1 emptyToken)
+      try host (putVenues venue1 emptyToken)
+      vs <- try host (getVenues emptyToken)
+      vs `shouldBe` [venue1]
+
+    it "modifies an event" $ \host -> do
+      try host (putVenues venue1 emptyToken)
+      let venue' = venue1 {venueName = "ARST"}
+      try host (putVenues venue' emptyToken)
+      vs <- try host (getVenues emptyToken)
+      vs `shouldBe` [venue']
+
+    it "add two venues" $ \host -> do
+      try host (putVenues venue1 emptyToken)
+      try host (putVenues venue2 emptyToken)
+      vs <- try host (getVenues emptyToken)
+      vs `shouldBe` [venue1, venue2]

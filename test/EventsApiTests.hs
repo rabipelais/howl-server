@@ -44,7 +44,7 @@ eventsSpec = context "/events" $ do
   it "returns an empty list" $ \host -> do
     try host (getEvents emptyToken) `shouldReturn` []
 
-  context "POST" $ do
+  context "PUT" $ do
     it "creates one new event" $ \host -> do
       try host (putEvents event1 emptyToken)
       es <- try host (getEvents emptyToken)

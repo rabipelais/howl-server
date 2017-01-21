@@ -30,7 +30,7 @@ import qualified Howl.Facebook                as Fb
 
 import           Servant
 
-import           Data.Text                    hiding (foldl, map)
+import           Data.Text                    hiding (foldl, map, replace)
 
 import           Howl.Api.Venues
 import           Howl.App.Common
@@ -57,7 +57,10 @@ getVenuesH mToken = do
   return $ map entityVal entities
 
 putVenuesH :: Venue -> Maybe Token -> HandlerT IO Venue
-putVenuesH = undefined
+putVenuesH venue mToken = runQuery $ do
+  getBy (UniqueVenueID (venueFbID venue)) >>= \case
+    Just (Entity k _) -> replace k venue >> return venue
+    Nothing -> insert venue >> return venue
 
 getVenuesIdH :: IDType -> Maybe Token -> HandlerT IO Venue
 getVenuesIdH = undefined

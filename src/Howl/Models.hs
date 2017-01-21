@@ -79,7 +79,7 @@ Invite json
 
 Venue json
   fbID IDType
-  coverPicPath FilePath
+  coverPicPath FilePath Maybe
   description Text
   name Text
   location Text
