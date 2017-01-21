@@ -116,6 +116,7 @@ usersIdSpec =
         usersIdFollowsSpec
         usersIdEventsSpec
         usersIdBlockedSpec
+        usersIdVenuesSpec
 -- //USERS ID SPEC
 
 usersIdFollowsSpec =
@@ -418,3 +419,30 @@ usersIdEventsFollowsSpec = context "/users/{userID}/events/follows" $ do
     es <- try host (getUsersIdEventsFollows albertId emptyToken)
     es `shouldBe` [event1]
 -- USERS ID EVENTS FOLLOW
+
+usersIdVenuesSpec = context "/users/{userID}/venues" $ do
+  it "returns 404 if user does not exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getUsersIdVenues albertId emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putUsers bob emptyToken)
+    Left err <- runExceptT $ getUsersIdVenues bobId albertToken manager baseUrl
+    responseStatus err `shouldBe` unauthorized401
+
+  it "returns 403 if user and token don't match" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putUsers albert emptyToken)
+    try (manager, baseUrl) (putUsers bob emptyToken)
+    Left err <- runExceptT $ getUsersIdVenues bobId albertToken manager baseUrl
+    responseStatus err `shouldBe` forbidden403
+
+  it "returns the list of venues the user follows" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putUsers bob emptyToken)
+    try host (putVenues venue1 emptyToken)
+    try host (putVenues venue2 emptyToken)
+    try host (putVenuesIdFollowersId venue1Id albertId albertToken)
+    try host (putVenuesIdFollowersId venue2Id albertId albertToken)
+    try host (putVenuesIdFollowersId venue2Id bobId bobToken)
+    vs <- try host (getUsersIdVenues albertId albertToken)
+    vs `shouldBe` [venue1, venue2]

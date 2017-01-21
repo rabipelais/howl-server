@@ -58,6 +58,7 @@ usersHandlers =
   :<|> deleteUsersIdBlockedIdH
   :<|> getUsersIdEventsH
   :<|> getUsersIdEventsFollowsH
+  :<|> getUsersIdVenuesH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -253,3 +254,18 @@ getUsersIdEventsH i mToken = runQuery $ do
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
     return event
   return $ map entityVal eventEntities
+
+getUsersIdVenuesH :: IDType -> Maybe Token -> HandlerT IO [Venue]
+getUsersIdVenuesH ui mToken = do
+  ui' <- tokenUser mToken
+  runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    eventEntities <- E.select
+      $ E.from
+      $ \(venue `E.InnerJoin` follower) -> do
+      E.on (venue^.VenueFbID E.==. follower^.VenueFollowerVenueID
+            E.&&. follower^.VenueFollowerUserID E.==. E.val ui)
+      return venue
+    return $ map entityVal eventEntities

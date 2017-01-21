@@ -41,6 +41,7 @@ type UsersAPI =
   :<|> UsersIdBlockedFollowsIdDelete
   :<|> UsersIdEventsGet
   :<|> UsersIdEventsFollowsGet
+  :<|> UsersIdVenuesGet
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -120,6 +121,11 @@ type UsersIdEventsGet = "users" :> Capture "userID" IDType
                         :> "events"
                         :> Header "token" Token
                         :> Get '[JSON] [Event]
+
+type UsersIdVenuesGet = "users" :> Capture "userID" IDType
+                        :> "venues"
+                        :> Header "token" Token
+                        :> Get '[JSON] [Venue]
 
 
 instance ToSchema User where

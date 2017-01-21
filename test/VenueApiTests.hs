@@ -56,7 +56,7 @@ venuesSpec = context "/venues" $ do
       vs <- try host (getVenues emptyToken)
       vs `shouldBe` [venue1]
 
-    it "modifies an event" $ \host -> do
+    it "modifies a venue" $ \host -> do
       try host (putVenues venue1 emptyToken)
       let venue' = venue1 {venueName = "ARST"}
       try host (putVenues venue' emptyToken)

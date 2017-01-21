@@ -88,6 +88,9 @@ emptyToken = Just "emptyToken"
 albertToken :: Maybe Text
 albertToken = Just "12345"
 
+bobToken :: Maybe Text
+bobToken = Just (Fb.idCode bobId)
+
 type Host = (Manager, BaseUrl)
 
 try :: Host -> (Manager -> BaseUrl -> ClientM a) -> IO a
