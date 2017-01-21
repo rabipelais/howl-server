@@ -78,10 +78,29 @@ getVenuesIdFollowersH i mToken = runQuery $ do
   return $ map entityVal eventEntities
 
 getVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
-getVenuesIdFollowersIdH = undefined
+getVenuesIdFollowersIdH vi fi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkVenueOrThrow vi
+    checkExistsOrThrow fi
+    checkExistsOrThrowError ui err401
+    getBy (UniqueVenueFollower vi fi) >>= \case
+      Nothing -> throwError err404
+      Just e -> return $ entityVal e
 
 putVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
-putVenuesIdFollowersIdH = undefined
+putVenuesIdFollowersIdH vi fi mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    checkVenueOrThrow vi
+    checkExistsOrThrow fi
+    checkExistsOrThrowError ui err401
+    when (fi /= ui) (throwError err403)
+    let vf = VenueFollower vi fi
+    getBy (UniqueVenueFollower vi fi) >>= \case
+      Nothing -> insert_ vf
+      Just (Entity k _) -> replace k vf
+    return vf
 
 deleteVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
 deleteVenuesIdFollowersIdH = undefined

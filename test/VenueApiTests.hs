@@ -93,3 +93,65 @@ venuesIdFollowersSpec = context "/venues/{venueID}/followers" $ do
     try host (putVenues venue1 albertToken)
     r <- try host (getVenuesIdFollowers venue1Id albertToken)
     r `shouldBe` []
+
+  context "/venues/{venueID}/followers/{friendID}" $ do
+    context "GET" $ do
+      it "returns 404 if venue does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ getVenuesIdFollowersId venue1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if friend does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        Left err <- runExceptT $ getVenuesIdFollowersId venue1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ getVenuesIdFollowersId venue1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` unauthorized401
+
+      it "returns the follower datatype if user is a follower" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putVenues venue1 albertToken)
+        try host (putVenuesIdFollowersId venue1Id albertId albertToken)
+        r <- try host (getVenuesIdFollowersId venue1Id albertId albertToken)
+        r `shouldBe` (VenueFollower venue1Id albertId)
+
+    context "POST" $ do
+      it "returns 404 if venue does not exist" $ \(manager, baseUrl) -> do
+        Left err <- runExceptT $ putVenuesIdFollowersId venue1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 404 if user does not exist" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        Left err <- runExceptT $ putVenuesIdFollowersId venue1Id bobId emptyToken manager baseUrl
+        responseStatus err `shouldBe` notFound404
+
+      it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ putVenuesIdFollowersId venue1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` unauthorized401
+
+      it "returns 403 if user and token don't match" $ \(manager, baseUrl) -> do
+        try (manager, baseUrl) (putVenues venue1 emptyToken)
+        try (manager, baseUrl) (putUsers albert emptyToken)
+        try (manager, baseUrl) (putUsers bob emptyToken)
+        Left err <- runExceptT $ putVenuesIdFollowersId venue1Id bobId albertToken manager baseUrl
+        responseStatus err `shouldBe` forbidden403
+
+      it "is able to put the follow" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putVenues venue1 albertToken)
+        try host (putVenuesIdFollowersId venue1Id albertId albertToken)
+        r <- try host (getVenuesIdFollowersId venue1Id albertId albertToken)
+        r `shouldBe` (VenueFollower venue1Id albertId)
+
+      it "is idempotent" $ \host -> do
+        try host (putUsers albert emptyToken)
+        try host (putVenues venue1 albertToken)
+        try host (putVenuesIdFollowersId venue1Id albertId albertToken)
+        try host (putVenuesIdFollowersId venue1Id albertId albertToken)
+        r <- try host (getVenuesIdFollowersId venue1Id albertId albertToken)
+        r `shouldBe` (VenueFollower venue1Id albertId)
