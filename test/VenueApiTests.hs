@@ -80,3 +80,16 @@ venuesIdSpec = context "/venues/{venueID}" $ do
     try host (putVenues venue1 emptyToken)
     v <- try host (getVenuesId venue1Id emptyToken)
     v `shouldBe`venue1
+
+  venuesIdFollowersSpec
+
+venuesIdFollowersSpec = context "/venues/{venueID}/followers" $ do
+  it "returns 404 if venue does not exist" $ \(manager, baseUrl) -> do
+    Left err <- runExceptT $ getVenuesIdFollowers venue1Id emptyToken manager baseUrl
+    responseStatus err `shouldBe` notFound404
+
+  it "returns empty list" $ \host -> do
+    try host (putUsers albert emptyToken)
+    try host (putVenues venue1 albertToken)
+    r <- try host (getVenuesIdFollowers venue1Id albertToken)
+    r `shouldBe` []

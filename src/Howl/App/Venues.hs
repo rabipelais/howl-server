@@ -67,7 +67,15 @@ getVenuesIdH i mToken = runQuery $ do
   checkVenueOrThrow i
 
 getVenuesIdFollowersH :: IDType -> Maybe Token -> HandlerT IO [User]
-getVenuesIdFollowersH = undefined
+getVenuesIdFollowersH i mToken = runQuery $ do
+  checkVenueOrThrow i
+  eventEntities <- E.select $ E.distinct
+    $ E.from
+    $ \(user `E.InnerJoin` follower) -> do
+    E.on (user^.UserFbID E.==. follower^.VenueFollowerUserID
+         E.&&. follower^.VenueFollowerVenueID E.==. E.val i)
+    return user
+  return $ map entityVal eventEntities
 
 getVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
 getVenuesIdFollowersIdH = undefined

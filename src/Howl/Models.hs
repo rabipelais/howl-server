@@ -88,8 +88,8 @@ Venue json
   deriving Eq Read Show
 
 VenueFollower json
-  venueId VenueId
-  userId UserId
-  UniqueVenueFollower venueId userId
+  venueID IDType
+  userID IDType
+  UniqueVenueFollower venueID userID
   deriving Eq Read Show
 |]
