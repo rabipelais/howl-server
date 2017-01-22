@@ -27,7 +27,7 @@ import           Servant.API
 type VenuesAPI =
   VenuesGet
   :<|> VenuesPut
---  :<|> VenuesNearbyGet
+  :<|> VenuesNearbyGet
   :<|> VenuesIdGet
   :<|> VenuesIdFollowersGet
   :<|> VenuesIdFollowersIdGet
@@ -75,4 +75,10 @@ type VenuesIdEventsGet = Prefix :> Capture "venueID" IDType
                          :> "events"
                          :> Header "token" Token
                          :> Get '[JSON] [Event]
---type VenuesNearbyGet
+
+type VenuesNearbyGet = Prefix :> "nearby"
+                     :> QueryParam "lat" Double
+                     :> QueryParam "long" Double
+                     :> QueryParam "distance" Double
+                     :> Header "token" Token
+                     :> Get '[JSON] [Venue]

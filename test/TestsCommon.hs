@@ -75,6 +75,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   ) :<|>
   (getVenues
   :<|> putVenues
+  :<|> getVenuesNearby
   :<|> getVenuesId
   :<|> getVenuesIdFollowers
   :<|> getVenuesIdFollowersId

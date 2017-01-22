@@ -83,6 +83,7 @@ venuesIdSpec = context "/venues/{venueID}" $ do
 
   venuesIdFollowersSpec
   venuesIdEventsSpec
+  venuesNearbySpec
 
 venuesIdFollowersSpec = context "/venues/{venueID}/followers" $ do
   it "returns 404 if venue does not exist" $ \(manager, baseUrl) -> do
@@ -216,3 +217,29 @@ venuesIdEventsSpec = context "/venues/{venuesID}/events" $ do
     try host (putEvents event2' emptyToken)
     r <- try host (getVenuesIdEvents venue1Id albertToken)
     r `shouldBe` [event1', event2']
+
+venuesNearbySpec = context "/venues/nearby" $ do
+
+  it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putVenues venue1 emptyToken)
+    try (manager, baseUrl) (putUsers bob emptyToken)
+    Left err <- runExceptT $ getVenuesNearby (Just 0.0) (Just 0.0) Nothing albertToken manager baseUrl
+    responseStatus err `shouldBe` unauthorized401
+
+  it "returns 400 if missing a query param" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putUsers albert emptyToken)
+    Left err <- runExceptT $ getVenuesNearby Nothing (Just 0.0) (Just 0.0) albertToken manager baseUrl
+    responseStatus err `shouldBe` badRequest400
+
+  it "returns the nearby venues" $ \host -> do
+    try host (putUsers albert emptyToken)
+    let venue1' = venue1 {venueFbID = "123", venueLat = Just 0.0, venueLong = Just 0.0}
+        venue2' = venue2 {venueFbID = "124",venueLat = Just 0.0, venueLong = Just 0.00000000001}
+        venue3' = venue2 {venueFbID = "125",venueLat = Just 15.0, venueLong = Just 10.0}
+        venue4' = venue2 {venueFbID = "126",venueLat = Just 0.0, venueLong = Nothing}
+    try host (putVenues venue1' albertToken)
+    try host (putVenues venue2' albertToken)
+    try host (putVenues venue3' albertToken)
+    try host (putVenues venue4' albertToken)
+    rs <- try host (getVenuesNearby (Just 0.0) (Just 0.0) (Just 1000) albertToken)
+    rs `shouldBe` [venue1', venue2']

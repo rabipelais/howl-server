@@ -30,6 +30,7 @@ import qualified Howl.Facebook                as Fb
 
 import           Servant
 
+import           Data.Maybe
 import           Data.Text                    hiding (foldl, map, replace)
 
 import           Howl.Api.Venues
@@ -43,7 +44,7 @@ venuesHandlers :: ServerT VenuesAPI (HandlerT IO)
 venuesHandlers =
   getVenuesH
   :<|> putVenuesH
---  :<|> getVenuesNearbyH
+  :<|> getVenuesNearbyH
   :<|> getVenuesIdH
   :<|> getVenuesIdFollowersH
   :<|> getVenuesIdFollowersIdH
@@ -126,3 +127,21 @@ getVenuesIdEventsH vi mToken = do
       E.where_ (event^.EventVenueId E.==. E.val vi)
       return event
     return $ map entityVal entities
+
+getVenuesNearbyH :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Venue]
+getVenuesNearbyH (Just lat) (Just lon) d mToken = do
+  ui <- tokenUser mToken
+  eventEntities <- runQuery $ do
+    checkExistsOrThrowError ui err401
+    -- TODO: use actual trig functions in postgres
+    rawSql
+        "SELECT ?? \
+        \FROM venue  \
+        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.long - ?) * 112000) * ((venue.long - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.long IS NOT NULL"
+        [toPersistValue lat, toPersistValue lat, toPersistValue lon, toPersistValue lon, toPersistValue d', toPersistValue d']
+  return $ map entityVal eventEntities
+  where
+    nearby (Just lat1, Just lon1) (lat2, lon2) = (haversine (lat1, lon1) (lat2, lon2)) <= d'
+    nearby _ _ = False
+    d' = fromMaybe 1000 d
+getVenuesNearbyH _ _ _ _ = throwError err400
