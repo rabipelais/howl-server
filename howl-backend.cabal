@@ -148,11 +148,15 @@ test-suite howl-backend-test
                      , howl-backend
                      , fb
                      , cereal
+                     , containers
+                     , conduit
                      , http-conduit
                      , directory
                      , servant
                      , servant-server
                      , servant-client
+                     , lifted-base
+                     , data-default
                      , transformers
                      , monad-logger
                      , monad-control
@@ -167,6 +171,7 @@ test-suite howl-backend-test
                      , time
                      , wai
                      , warp
+                     , QuickCheck
                      , tasty
                      , tasty-hspec
                      , tasty-hunit

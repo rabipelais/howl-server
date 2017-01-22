@@ -22,6 +22,7 @@ import           Network.HTTP.Conduit         (Manager, newManager,
                                                tlsManagerSettings)
 
 import           ApiTests
+import           FacebookTests                (facebookSpecTests)
 
 getCredentials :: FilePath -> IO (Maybe Fb.Credentials)
 getCredentials filePath = do
@@ -45,8 +46,9 @@ main = do
   (Just token) <- C.lookup testCfg "test.token"
   conf <- makeConf config token
   apiTestTree <- apiTests conf
+  fbTestTree <- facebookSpecTests
   putStrLn "Starting tests"
-  defaultMain (testGroup "Test Suite" [apiTestTree])
+  defaultMain (testGroup "Test Suite" [apiTestTree, fbTestTree])
 
 
 instance Configured (Maybe Text) where
