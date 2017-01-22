@@ -46,9 +46,9 @@ main = do
   (Just token) <- C.lookup testCfg "test.token"
   conf <- makeConf config token
   apiTestTree <- apiTests conf
-  fbTestTree <- facebookSpecTests
+  --fbTestTree <- facebookSpecTests
   putStrLn "Starting tests"
-  defaultMain (testGroup "Test Suite" [apiTestTree, fbTestTree])
+  defaultMain (testGroup "Test Suite" [apiTestTree])
 
 
 instance Configured (Maybe Text) where

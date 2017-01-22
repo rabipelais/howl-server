@@ -83,6 +83,8 @@ Venue json
   description Text
   name Text
   location Text
+  lat Double Maybe
+  long Double Maybe
   rating Int Maybe
   UniqueVenueID fbID
   deriving Eq Read Show

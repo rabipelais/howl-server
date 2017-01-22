@@ -44,7 +44,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
                                                shouldRespondWith, with)
 
 
-apiTests conf = testSpec "API Tests" (spec conf)
+apiTests conf = testSpec "API" (spec conf)
 
 spec conf = do
   describe "API Tests" $ around (withApp conf) $ do

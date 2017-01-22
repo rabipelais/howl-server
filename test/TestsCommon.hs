@@ -172,6 +172,7 @@ venue1 = Venue venue1Id
   "The freshest venue on the East Side"
   "Swag-town"
   "Left of here"
+  Nothing Nothing
   (Just 4)
 
 venue2 = Venue venue2Id
@@ -179,4 +180,5 @@ venue2 = Venue venue2Id
   "Westside is best side"
   "Le ouest"
   "Second star to the right"
+  Nothing Nothing
   (Just 2)

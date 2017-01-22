@@ -16,7 +16,8 @@ import           Control.Monad.Trans.Resource
 
 import           Data.String.Conversions
 
-import           Database.Esqueleto           (from, select, (^.))
+import           Database.Esqueleto           (from, on, select, where_, (?.),
+                                               (^.))
 import qualified Database.Esqueleto           as E
 import           Database.Persist
 import           Database.Persist.Sql
@@ -31,6 +32,7 @@ import qualified Howl.Facebook                as Fb
 
 import           Servant
 
+import           Data.Maybe
 import           Data.Text                    hiding (foldl, map, replace)
 
 import           Howl.Api.Events
@@ -67,7 +69,24 @@ eventsPutH event mToken = runQuery $ do
     Just (Entity k _) -> replace k event >> return event
     Nothing -> insert event >> return event
 
-eventsNearbyGet = undefined
+eventsNearbyGet :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Event]
+eventsNearbyGet (Just lat) (Just lon) d mToken = do
+  ui <- tokenUser mToken
+  eventEntities <- runQuery $ do
+    checkExistsOrThrowError ui err401
+    -- TODO: use actual trig functions in postgres
+    rawSql
+        "SELECT ?? \
+        \FROM event INNER JOIN venue \
+        \ON event.venue_id=venue.fb_i_d \
+        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.long - ?) * 112000) * ((venue.long - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.long IS NOT NULL"
+        [toPersistValue lat, toPersistValue lat, toPersistValue lon, toPersistValue lon, toPersistValue d', toPersistValue d']
+  return $ map entityVal eventEntities
+  where
+    nearby (Just lat1, Just lon1) (lat2, lon2) = (haversine (lat1, lon1) (lat2, lon2)) <= d'
+    nearby _ _ = False
+    d' = fromMaybe 1000 d
+eventsNearbyGet _ _ _ _ = throwError err400
 
 eventsIdGet :: IDType -> Maybe Token -> HandlerT IO Event
 eventsIdGet i mToken = runQuery $ do

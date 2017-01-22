@@ -70,6 +70,7 @@ eventsSpec = context "/events" $ do
       es `shouldBe` [event1, event2]
 
     eventsIdSpec
+    eventsNearbySpec
 
 eventsIdSpec = context "/events/{eventID}"$ do
   it "returns 404 if event doesn't exist" $ \(manager, baseUrl) -> do
@@ -320,3 +321,37 @@ eventsIdRSVPSpec = context "/events/{eventID}/rsvp" $ do
         try (manager, baseUrl) (deleteEventsIdRSVPUsersId event1Id bobId albertToken)
         Left err <- runExceptT $ getEventsIdRSVPUsersId event1Id bobId albertToken manager baseUrl
         responseStatus err `shouldBe` notFound404
+
+eventsNearbySpec = context "/events/nearby" $ do
+
+  it "returns 401 if token does not name an existing user" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putEvents event1 emptyToken)
+    try (manager, baseUrl) (putUsers bob emptyToken)
+    Left err <- runExceptT $ getEventsNearby (Just 0.0) (Just 0.0) Nothing albertToken manager baseUrl
+    responseStatus err `shouldBe` unauthorized401
+
+  it "returns 400 if missing a query param" $ \(manager, baseUrl) -> do
+    try (manager, baseUrl) (putUsers albert emptyToken)
+    Left err <- runExceptT $ getEventsNearby Nothing (Just 0.0) (Just 0.0) albertToken manager baseUrl
+    responseStatus err `shouldBe` badRequest400
+
+  it "returns the nearby events" $ \host -> do
+    try host (putUsers albert emptyToken)
+    let venue1' = venue1 {venueFbID = "123", venueLat = Just 0.0, venueLong = Just 0.0}
+        venue2' = venue2 {venueFbID = "124",venueLat = Just 0.0, venueLong = Just 0.00000000001}
+        venue3' = venue2 {venueFbID = "125",venueLat = Just 15.0, venueLong = Just 10.0}
+        venue4' = venue2 {venueFbID = "126",venueLat = Just 0.0, venueLong = Nothing}
+        event1' = event1 {eventFbID = "1",eventVenueId = venueFbID venue1'}
+        event2' = event2 {eventFbID = "2",eventVenueId = venueFbID venue2'}
+        event3' = event2 {eventFbID = "3",eventVenueId = venueFbID venue3'}
+        event4' = event1 {eventFbID = "4",eventVenueId = venueFbID venue4'}
+    try host (putVenues venue1' albertToken)
+    try host (putVenues venue2' albertToken)
+    try host (putVenues venue3' albertToken)
+    try host (putVenues venue4' albertToken)
+    try host (putEvents event1' albertToken)
+    try host (putEvents event2' albertToken)
+    try host (putEvents event3' albertToken)
+    try host (putEvents event4' albertToken)
+    rs <- try host (getEventsNearby (Just 0.0) (Just 0.0) (Just 1000) albertToken)
+    rs `shouldBe` [event1', event2']
