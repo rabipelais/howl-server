@@ -1,9 +1,7 @@
 flags: {}
 packages:
 - '.'
-- location:
-    git: https://github.com/bitemyapp/esqueleto
-    commit: master
 extra-deps:
   - aeson-casing-0.1.0.5
+  - esqueleto-2.5.1
 resolver: lts-7.8
