@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveFunctor        #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE FlexibleContexts     #-}
@@ -28,6 +30,7 @@ import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
                                               defaultRestoreM)
 import           Control.Monad.Trans.Either  (EitherT)
 import           Control.Monad.Trans.Except  (ExceptT (..), runExceptT)
+import           Control.Monad.Trans.Resource
 import           Control.Monad.Writer        (WriterT)
 
 import           Database.Persist.Sql        (ConnectionPool)
@@ -135,3 +138,6 @@ idTokenLookup (Just t) = undefined
 
 noopToken Nothing = throwError err400
 noopToken (Just t) = return (FB.Id t)
+
+testFbFunction action = return ()
+productionFbFunction action = action >> return ()

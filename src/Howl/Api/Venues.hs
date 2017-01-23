@@ -19,6 +19,7 @@ import           Database.Persist
 import qualified Howl.Facebook              as FB
 import           Servant.Swagger            hiding (Header)
 
+import           Howl.Api.Common
 import           Howl.Models
 import           Howl.Types
 

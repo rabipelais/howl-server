@@ -23,19 +23,6 @@ laterToken i t = do
   let later = addUTCTime 3600 now
   return $ Fb.UserAccessToken i t later
 
---getNewUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
-getNewUser userAT creds manager =  do
-  fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name")] (Just userAT)
-  let
-    fbID = Fb.userId fbUser
-    username = fromMaybe (Fb.idCode fbID) (Fb.userUsername fbUser)
-    firstName = fromMaybe username (Fb.userFirstName fbUser)
-    lastName = Fb.userLastName fbUser
-    email = Fb.userEmail fbUser
-    profilePicPath = Nothing
-    user = User fbID username firstName lastName email profilePicPath
-  return user
-
 
 isUserTokenValid :: (MonadBaseControl IO m, MonadResource m) => Fb.Credentials -> Fb.UserAccessToken -> Fb.FacebookT Fb.Auth m Bool
 isUserTokenValid c@(Fb.Credentials name ai secret) u@(Fb.UserAccessToken ui t _) = do
