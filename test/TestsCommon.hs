@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
@@ -29,6 +30,7 @@ import           Database.Persist.Sql
 import           Database.Persist.Sqlite
 
 import           Control.Exception            (ErrorCall (..), throwIO)
+import qualified Control.Exception.Lifted as E
 import           Control.Monad.IO.Class
 import           Control.Monad.Logger
 import           Control.Monad.Trans.Except
@@ -183,3 +185,29 @@ venue2 = Venue venue2Id
   "Second star to the right"
   Nothing Nothing
   (Just 2)
+
+
+-- | Perform an action with a new test user. Remove the new test user
+-- after the action is performed.
+withTestUser :: (MonadResource m, MonadBaseControl IO m)
+                => Fb.CreateTestUser
+                -> (Fb.TestUser -> Fb.FacebookT Fb.Auth m a)
+                -> Fb.FacebookT Fb.Auth m a
+withTestUser ctu action = do
+  token <- Fb.getAppAccessToken
+  E.bracket (Fb.createTestUser ctu token)
+            (flip Fb.removeTestUser token)
+            action
+
+getTestToken testUser = do
+  appToken <- Fb.getAppAccessToken
+  Just testUserAccessTokenData <- return (Fb.tuAccessToken testUser)
+  ret <- Fb.debugToken appToken testUserAccessTokenData
+  return $ Fb.dtAccessToken ret
+
+-- Wrappers for HUnit operators using MonadIO
+(&?=) :: (Eq a, Show a, MonadIO m) => a -> a -> m ()
+v &?= e = liftIO (v @?= e)
+
+(#?=) :: (Eq a, Show a, MonadIO m) => m a -> a -> m ()
+m #?= e = m >>= (&?= e)

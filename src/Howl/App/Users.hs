@@ -31,7 +31,10 @@ import qualified Howl.Facebook                as Fb
 
 import           Servant
 
+import           Data.Maybe
 import           Data.Text                    hiding (foldl, map)
+import           Data.Text.Lazy               (fromStrict)
+import           Data.Text.Lazy.Encoding      (encodeUtf8)
 
 import           Howl.Api.Users
 import           Howl.App.Common
@@ -70,8 +73,8 @@ postUsersH :: Fb.UserAccessToken -> HandlerT IO User
 postUsersH userAT = do
   mResult <- postUsers userAT
   case mResult of
-    Just u -> return u
-    Nothing -> throwError err409
+    Right u -> return u
+    Left uid -> throwError err409{errBody = encodeUtf8 . fromStrict $ Fb.idCode uid}
 
 putUsersH :: User -> Maybe Token -> HandlerT IO User
 putUsersH u mToken =  runQuery $ do
@@ -84,18 +87,18 @@ putUsersH u mToken =  runQuery $ do
       Sql.replace k u --TODO Check username uniqueness
       return u
 
-postUsers :: Fb.UserAccessToken -> HandlerT IO (Maybe User)
+postUsers :: Fb.UserAccessToken -> HandlerT IO (Either IDType User)
 postUsers userAT = do
   creds' <- asks creds
   manager' <- asks manager
-  u <- liftIO $ runResourceT $ getNewUser userAT creds' manager'
+  u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
   runQuery $ do
     exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
     case exists of
-      Nothing -> Just <$> (do
+      Nothing -> Right <$> (do
                            insert u
                            return u)
-      Just _ -> return Nothing
+      Just entity -> return (Left (userFbID $ entityVal entity))
 
 getUsersIdH :: IDType -> Maybe Token -> HandlerT IO User
 getUsersIdH i mToken = do
@@ -269,3 +272,16 @@ getUsersIdVenuesH ui mToken = do
             E.&&. follower^.VenueFollowerUserID E.==. E.val ui)
       return venue
     return $ map entityVal eventEntities
+
+--getNewUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
+getNewFbUser userAT creds manager =  do
+  fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name")] (Just userAT)
+  let
+    fbID = Fb.userId fbUser
+    username = fromMaybe (Fb.idCode fbID) (Fb.userUsername fbUser)
+    firstName = fromMaybe username (Fb.userFirstName fbUser)
+    lastName = Fb.userLastName fbUser
+    email = Fb.userEmail fbUser
+    profilePicPath = Nothing
+    user = User fbID username firstName lastName email profilePicPath
+  return user

@@ -5,6 +5,9 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeFamilies          #-}
 
+import           System.Environment           (getEnv)
+import           System.Exit                  (exitFailure)
+import           System.IO.Error              (isDoesNotExistError)
 import           Test.Tasty
 import           Test.Tasty.Hspec
 import           Test.Tasty.HUnit
@@ -12,11 +15,12 @@ import           Test.Tasty.HUnit
 import           Howl
 import qualified Howl.Facebook                as Fb
 
+import qualified Control.Exception.Lifted     as E
 import           Control.Monad.Trans.Resource
 import           Data.Configurator            as C
 import           Data.Configurator.Types
 import           Data.Monoid                  ((<>))
-import           Data.Text
+import           Data.Text                    as T
 import           Data.Time.Clock
 import           Network.HTTP.Conduit         (Manager, newManager,
                                                tlsManagerSettings)
@@ -24,27 +28,48 @@ import           Network.HTTP.Conduit         (Manager, newManager,
 import           ApiTests
 import           FacebookTests                (facebookSpecTests)
 
-getCredentials :: FilePath -> IO (Maybe Fb.Credentials)
-getCredentials filePath = do
-  config <- load [Required filePath]
-  appName <- C.lookup config "credentials.appName"
-  appId <- C.lookup config "credentials.appId"
-  appSecret <- C.lookup config "credentials.appSecret"
-  return $ Fb.Credentials <$> appName <*> appId <*> appSecret
+getCredentials :: IO  Fb.Credentials
+getCredentials = tryToGet `E.catch` showHelp
+    where
+      tryToGet = do
+        [appName, appId, appSecret] <- mapM getEnv ["APP_NAME", "APP_ID", "APP_SECRET"]
+        return $ Fb.Credentials (T.pack appName) (T.pack appId) (T.pack appSecret)
 
-makeConf cfgPath token = do
+      showHelp exc | not (isDoesNotExistError exc) = E.throw exc
+      showHelp _ = do
+        putStrLn $ Prelude.unlines
+          [ "In order to run the tests from the 'fb' package, you need"
+          , "developer access to a Facebook app.  The tests are designed"
+          , "so that your app isn't going to be hurt, but we may not"
+          , "create a Facebook app for this purpose and then distribute"
+          , "its secret keys in the open."
+          , ""
+          , "Please give your app's name, id and secret on the enviroment"
+          , "variables APP_NAME, APP_ID and APP_SECRET, respectively.  "
+          , "For example, before running the test you could run in the shell:"
+          , ""
+          , "  $ export APP_NAME=\"example\""
+          , "  $ export APP_ID=\"458798571203498\""
+          , "  $ export APP_SECRET=\"28a9d0fa4272a14a9287f423f90a48f2304\""
+          , ""
+          , "Of course, these values above aren't valid and you need to"
+          , "replace them with your own."
+          , ""
+          , "(Exiting now with a failure code.)"]
+        exitFailure
+
+makeConf token = do
   expires <- addUTCTime 400000000 <$> getCurrentTime
   manager <- newManager tlsManagerSettings
   let userAT = Fb.UserAccessToken "10155182179270463" token expires
-  (Just creds) <- getCredentials cfgPath
+  creds <- getCredentials
   return (manager, userAT, creds)
 
 main :: IO ()
 main = do
   testCfg <- load [Required "tests.cfg"]
-  (Just config) <- C.lookup testCfg "test.configPath"
   (Just token) <- C.lookup testCfg "test.token"
-  conf <- makeConf config token
+  conf <- makeConf token
   apiTestTree <- apiTests conf
   --fbTestTree <- facebookSpecTests
   putStrLn "Starting tests"
@@ -55,7 +80,7 @@ instance Configured (Maybe Text) where
   convert (String v) = case first of
     "Just" -> Just (Just second)
     _  -> Just Nothing
-    where (first : second : _) = Data.Text.words v
+    where (first : second : _) = T.words v
   convert _ = Nothing
 
 instance Configured IDType where

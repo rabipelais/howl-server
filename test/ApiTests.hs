@@ -48,6 +48,6 @@ apiTests conf = testSpec "API" (spec conf)
 
 spec conf = do
   describe "API Tests" $ around (withApp conf) $ do
-    usersSpec
+    (usersSpec conf)
     eventsSpec
     venuesSpec

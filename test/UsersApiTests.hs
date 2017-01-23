@@ -30,6 +30,7 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Logger
 import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Resource
+import qualified Data.Default                 as D
 import           Data.Monoid                  ((<>))
 import           Network.HTTP.Client          (Manager, defaultManagerSettings,
                                                newManager)
@@ -43,7 +44,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
 
 
 -- ============= USERS SPEC ===================================
-usersSpec =
+usersSpec (m, _, c) =
   context "/users" $ do
       it "returns an empty list" $ \host -> do
         try host (getUsers emptyToken) `shouldReturn` []
@@ -65,6 +66,26 @@ usersSpec =
           try host (putUsers bob emptyToken)
           u <- try host (getUsers emptyToken)
           u `shouldBe` [albert, bob]
+
+      context "POST (from FB)" $ do
+        it "correctly inserts a user from facebook in the database" $ \host -> do
+          (u, u') <- runResourceT $ Fb.runFacebookT c m $
+            withTestUser D.def $ \testUser -> do
+              Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
+              u <- liftIO $ try host (postUsers testToken)
+              u' <- liftIO $ try host (getUsersId i (Just token))
+              return (u, u')
+          u `shouldBe` u'
+
+        it "returns 409 with the id of the user if it already existed" $ \(manager, baseUrl) -> do
+          (i, err) <- runResourceT $ Fb.runFacebookT c m $
+            withTestUser D.def $ \testUser -> do
+              Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
+              liftIO $ try (manager, baseUrl) (postUsers testToken)
+              Left err <- liftIO $ runExceptT $ postUsers testToken manager baseUrl
+              return (i, err)
+          responseStatus err `shouldBe` conflict409
+
 
       usersIdSpec
 
