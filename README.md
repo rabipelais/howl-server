@@ -24,6 +24,7 @@ To run the tests, use
 ```
 $ stack test howl-backend:howl-backend-test
 ```
+be sure the variables `APP_NAME`, `APP_SECRET`, and `APP_ID` are in the environment. In bash you do this with `$ export APP_NAME=\"example\""`, in fish with `$ set -g -x APP_NAME \"example\"`
 
 ## Documentation
 To auto-generate the `Swagger` JSON for the Web API, run `stack exec howl-swagger`
