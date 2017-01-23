@@ -1,12 +1,14 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Howl.App.Users
   (
     usersHandlers
   ) where
 
+import Prelude as P
 import           Control.Exception.Lifted
 import           Control.Monad.Except
 import           Control.Monad.IO.Class
@@ -32,6 +34,7 @@ import qualified Howl.Facebook                as Fb
 import           Servant
 
 import           Data.Maybe
+import           Data.Monoid                  ((<>))
 import           Data.Text                    hiding (foldl, map)
 import           Data.Text.Lazy               (fromStrict)
 import           Data.Text.Lazy.Encoding      (encodeUtf8)
@@ -76,6 +79,21 @@ postUsersH userAT = do
     Right u -> return u
     Left uid -> throwError err409{errBody = encodeUtf8 . fromStrict $ Fb.idCode uid}
 
+postUsers :: Fb.UserAccessToken -> HandlerT IO (Either IDType User)
+postUsers userAT = do
+  creds' <- asks creds
+  manager' <- asks manager
+  u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
+  es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 100
+  runQuery $ do
+    exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
+    case exists of
+      Nothing -> Right <$> (do
+                           insert u
+                           mapM_ insertUnique es
+                           return u)
+      Just entity -> return (Left (userFbID $ entityVal entity))
+
 putUsersH :: User -> Maybe Token -> HandlerT IO User
 putUsersH u mToken =  runQuery $ do
   mUser <- getBy $ UniqueUserID (userFbID u)
@@ -86,19 +104,6 @@ putUsersH u mToken =  runQuery $ do
     Just (Entity k _) -> do
       Sql.replace k u --TODO Check username uniqueness
       return u
-
-postUsers :: Fb.UserAccessToken -> HandlerT IO (Either IDType User)
-postUsers userAT = do
-  creds' <- asks creds
-  manager' <- asks manager
-  u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
-  runQuery $ do
-    exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
-    case exists of
-      Nothing -> Right <$> (do
-                           insert u
-                           return u)
-      Just entity -> return (Left (userFbID $ entityVal entity))
 
 getUsersIdH :: IDType -> Maybe Token -> HandlerT IO User
 getUsersIdH i mToken = do
@@ -230,7 +235,6 @@ deleteUsersIdBlockedIdH s t mToken = runQuery $ do
     _ -> throwError err404
 
 
--- TODO: Rewrite with join
 getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsFollowsH i mToken = runQuery $ do
   checkExistsOrThrow i
@@ -285,3 +289,16 @@ getNewFbUser userAT creds manager =  do
     profilePicPath = Nothing
     user = User fbID username firstName lastName email profilePicPath
   return user
+
+getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Event]
+getFbEvents userAT creds manager limit = do
+  let url = "/v2.8/" <> (Fb.idCode $ accessTokenUserId userAT) <> "/" <> "events"
+  eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner")] (Just userAT)
+  go eventPager []
+  where go pager res =
+          if P.length res < limit
+          then do
+            (Fb.runFacebookT creds manager $ Fb.fetchNextPage pager) >>= \case
+              Just nextPager -> go nextPager (res ++ (Fb.pagerData pager))
+              Nothing -> return res
+          else return res
