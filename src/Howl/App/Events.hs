@@ -59,18 +59,22 @@ eventsHandlers =
 
 eventsGetH :: Maybe Token -> HandlerT IO [Event]
 eventsGetH mToken = do
+  $logInfo $ "Request all events"
   entities <- runQuery $ (select . from $ pure)
   return $ map entityVal entities
 
 
 eventsPutH :: Event -> Maybe Token -> HandlerT IO Event
-eventsPutH event mToken = runQuery $ do
-  getBy (UniqueEventID (eventFbID event)) >>= \case
-    Just (Entity k _) -> replace k event >> return event
-    Nothing -> insert event >> return event
+eventsPutH event mToken = do
+  $logInfo $ "Request put event: " <> (pack . show) event
+  runQuery $ do
+    getBy (UniqueEventID (eventFbID event)) >>= \case
+      Just (Entity k _) -> replace k event >> return event
+      Nothing -> insert event >> return event
 
 eventsNearbyGet :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Event]
 eventsNearbyGet (Just lat) (Just lon) d mToken = do
+  $logInfo $ "Request events nearby: lat=" <> (pack . show) lat <> ", lon=" <> (pack . show) lon <> ", dist=" <> (pack . show) d
   ui <- tokenUser mToken
   eventEntities <- runQuery $ do
     checkExistsOrThrowError ui err401
@@ -90,17 +94,22 @@ eventsNearbyGet _ _ _ _ = throwError err400
 
 eventsIdGet :: IDType -> Maybe Token -> HandlerT IO Event
 eventsIdGet i mToken = runQuery $ do
+  $logInfo $ "Request event by id: " <> (pack . show) i
   checkEventOrThrow i
 
 eventsIdInviteGet :: IDType -> Maybe Token -> HandlerT IO [Invite]
-eventsIdInviteGet i mToken = runQuery $ do
-  checkEventOrThrow i
-  iEntities <- selectList [InviteEventID ==. i] []
-  return $ map entityVal iEntities
+eventsIdInviteGet i mToken = do
+  $logInfo $ "Request invite to event with id: " <> (pack . show) i
+  runQuery $ do
+    checkEventOrThrow i
+    iEntities <- selectList [InviteEventID ==. i] []
+    return $ map entityVal iEntities
 
 eventsIdInvitesIdGet :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdGet ei fi mToken = do
+  $logInfo $ "Request the invite from the user to the event " <> (pack . show) ei <> " to user " <> (pack . show) fi
   ui <- tokenUser mToken
+  $logInfo $ "-- form user: " <> (pack . show) ui
   runQuery $ do
     checkUsersAndEvent fi ei ui
     getBy (UniqueInvite ui fi ei) >>= \case
@@ -109,7 +118,9 @@ eventsIdInvitesIdGet ei fi mToken = do
 
 eventsIdInvitesIdPost :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdPost ei fi mToken = do
+  $logInfo $ "Request post invite to the event " <> (pack . show) ei <> " to user " <> (pack . show) fi
   ui <- tokenUser mToken
+  $logInfo $ "-- from user" <> (pack . show) ui
   runQuery $ do
     checkUsersAndEvent fi ei ui
     getBy (UniqueEventRSVP fi ei) >>= \case
@@ -127,7 +138,9 @@ eventsIdInvitesIdPost ei fi mToken = do
 
 eventsIdInvitesIdDelete :: IDType -> IDType -> Maybe Token -> HandlerT IO Invite
 eventsIdInvitesIdDelete ei fi mToken =  do
+  $logInfo $ "Request delete the invite to the event " <> (pack . show) ei <> " to user " <> (pack . show) fi
   ui <- tokenUser mToken
+  $logInfo $ "-- from user: " <> (pack . show) ui
   runQuery $ do
     checkUsersAndEvent fi ei ui
     let uniqueInvite = UniqueInvite ui fi ei
@@ -137,6 +150,7 @@ eventsIdInvitesIdDelete ei fi mToken =  do
 
 eventsIdRSVPGet :: IDType -> Maybe Token -> HandlerT IO [EventRSVP]
 eventsIdRSVPGet ei mToken = do
+  $logInfo $ "Request rsvps to the event " <> (pack . show) ei
   ui <- tokenUser mToken
   runQuery $ do
     checkEventOrThrow ei
@@ -146,6 +160,7 @@ eventsIdRSVPGet ei mToken = do
 
 eventsIdRSVPUsersIdGet :: IDType -> IDType -> Maybe Token -> HandlerT IO EventRSVP
 eventsIdRSVPUsersIdGet ei fi mToken = do
+  $logInfo $ "Request rsvp to the event " <> (pack . show) ei <> " from user " <> (pack . show) fi
   ui <- tokenUser mToken
   runQuery $ do
     checkUsersAndEvent fi ei ui
@@ -155,6 +170,7 @@ eventsIdRSVPUsersIdGet ei fi mToken = do
 
 eventsIdRSVPUsersIdPut :: IDType -> IDType -> Fb.RSVP -> Maybe Token -> HandlerT IO EventRSVP
 eventsIdRSVPUsersIdPut ei fi r mToken = do
+  $logInfo $ "Request put rsvp to the event " <> (pack . show) ei <> " from user " <> (pack . show) fi <> ": " <> (pack . show) r
   ui <- tokenUser mToken
   runQuery $ do
     checkUsersAndEvent fi ei ui
@@ -166,6 +182,7 @@ eventsIdRSVPUsersIdPut ei fi r mToken = do
 
 eventsIdRSVPUsersIdDelete :: IDType -> IDType -> Maybe Token -> HandlerT IO EventRSVP
 eventsIdRSVPUsersIdDelete ei fi mToken = do
+  $logInfo $ "Request delete rsvp to the event " <> (pack . show) ei <> " from user " <> (pack . show) fi
   ui <- tokenUser mToken
   runQuery $ do
     checkUsersAndEvent fi ei ui

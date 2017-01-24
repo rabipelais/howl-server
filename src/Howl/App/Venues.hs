@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase       #-}
+{-# LANGUAGE TemplateHaskell  #-}
 
 module Howl.App.Venues
   (
@@ -54,33 +55,42 @@ venuesHandlers =
 
 getVenuesH :: Maybe Token -> HandlerT IO [Venue]
 getVenuesH mToken = do
+  $logInfo $ "Request all venues"
   entities <- runQuery $ (select . from $ pure)
   return $ map entityVal entities
 
 putVenuesH :: Venue -> Maybe Token -> HandlerT IO Venue
-putVenuesH venue mToken = runQuery $ do
-  getBy (UniqueVenueID (venueFbID venue)) >>= \case
-    Just (Entity k _) -> replace k venue >> return venue
-    Nothing -> insert venue >> return venue
+putVenuesH venue mToken = do
+  $logInfo $ "Request put venue " <> (pack . show) venue
+  runQuery $ do
+    getBy (UniqueVenueID (venueFbID venue)) >>= \case
+      Just (Entity k _) -> replace k venue >> return venue
+      Nothing -> insert venue >> return venue
 
 getVenuesIdH :: IDType -> Maybe Token -> HandlerT IO Venue
-getVenuesIdH i mToken = runQuery $ do
-  checkVenueOrThrow i
+getVenuesIdH i mToken = do
+  $logInfo $ "Request get venue by id: " <> (pack . show) i
+  runQuery $ do
+    checkVenueOrThrow i
 
 getVenuesIdFollowersH :: IDType -> Maybe Token -> HandlerT IO [User]
-getVenuesIdFollowersH i mToken = runQuery $ do
-  checkVenueOrThrow i
-  eventEntities <- E.select $ E.distinct
-    $ E.from
-    $ \(user `E.InnerJoin` follower) -> do
-    E.on (user^.UserFbID E.==. follower^.VenueFollowerUserID
-         E.&&. follower^.VenueFollowerVenueID E.==. E.val i)
-    return user
-  return $ map entityVal eventEntities
+getVenuesIdFollowersH i mToken = do
+  $logInfo $ "Request get followers of venue with id: " <> (pack . show) i
+  runQuery $ do
+    checkVenueOrThrow i
+    eventEntities <- E.select $ E.distinct
+      $ E.from
+      $ \(user `E.InnerJoin` follower) -> do
+      E.on (user^.UserFbID E.==. follower^.VenueFollowerUserID
+            E.&&. follower^.VenueFollowerVenueID E.==. E.val i)
+      return user
+    return $ map entityVal eventEntities
 
 getVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
 getVenuesIdFollowersIdH vi fi mToken = do
+  $logInfo $ "Request get if user is following venue: " <> (pack . show) vi <> ", user: " <> (pack . show) fi
   ui <- tokenUser mToken
+  $logInfo $ "-- by user: " <> (pack . show) ui
   runQuery $ do
     checkVenueOrThrow vi
     checkExistsOrThrow fi
@@ -91,7 +101,9 @@ getVenuesIdFollowersIdH vi fi mToken = do
 
 putVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
 putVenuesIdFollowersIdH vi fi mToken = do
+  $logInfo $ "Request put user is following venue: " <> (pack . show) vi <> ", user: " <> (pack . show) fi
   ui <- tokenUser mToken
+  $logInfo $ "-- by user: " <> (pack . show) ui
   runQuery $ do
     checkVenueOrThrow vi
     checkExistsOrThrow fi
@@ -105,7 +117,9 @@ putVenuesIdFollowersIdH vi fi mToken = do
 
 deleteVenuesIdFollowersIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO VenueFollower
 deleteVenuesIdFollowersIdH vi fi mToken = do
+  $logInfo $ "Request delete if user is following venue: " <> (pack . show) vi <> ", user: " <> (pack . show) fi
   ui <- tokenUser mToken
+  $logInfo $ "-- by user: " <> (pack . show) ui
   runQuery $ do
     checkVenueOrThrow vi
     checkExistsOrThrow fi
@@ -118,7 +132,9 @@ deleteVenuesIdFollowersIdH vi fi mToken = do
 
 getVenuesIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getVenuesIdEventsH vi mToken = do
+  $logInfo $ "Request events in venue: " <> (pack . show) vi
   ui <- tokenUser mToken
+  $logInfo $ "-- by user: " <> (pack . show) ui
   runQuery $ do
     checkVenueOrThrow vi
     checkExistsOrThrowError ui err401
@@ -130,7 +146,9 @@ getVenuesIdEventsH vi mToken = do
 
 getVenuesNearbyH :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Venue]
 getVenuesNearbyH (Just lat) (Just lon) d mToken = do
+  $logInfo $ "Request venues nearby: lat=" <> (pack . show) lat <> ", lon=" <> (pack . show) lon <> ", dist=" <> (pack . show) d
   ui <- tokenUser mToken
+  $logInfo $ "-- by user: " <> (pack . show) ui
   eventEntities <- runQuery $ do
     checkExistsOrThrowError ui err401
     -- TODO: use actual trig functions in postgres
