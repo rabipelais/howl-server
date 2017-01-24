@@ -1,6 +1,7 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Howl.App.Common where
 
@@ -13,6 +14,7 @@ import           Control.Monad.Trans.Resource
 
 import           Data.String.Conversions
 
+import qualified Data.ByteString.Char8 as B
 import           Database.Esqueleto           (from, select, (^.))
 import qualified Database.Esqueleto           as E
 import           Database.Persist
@@ -67,3 +69,12 @@ checkVenueOrThrow i = do
   case mVenue of
     Nothing -> throwError err404
     Just (Entity k u) -> return u
+
+getFbVenuesIdNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Double -> Double -> Double ->  Fb.FacebookT anyAuth m (Fb.Pager IDType)
+getFbVenuesIdNearby userAT lat lon distance = do
+  let params = [ ("fields", "id")
+               , ("type", "place")
+               , ("center", (B.pack . show) lat <> "," <> (B.pack . show) lon)
+               , ("limit", "1000")
+               , ("distance", (B.pack . show) distance)]
+  Fb.searchObjects "place" "" params (Just userAT)

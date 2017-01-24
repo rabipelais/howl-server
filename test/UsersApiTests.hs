@@ -12,6 +12,7 @@ import           Test.Tasty.Hspec
 import           Test.Tasty.HUnit
 
 import           Howl
+import           Howl.App.Common
 import qualified Howl.Facebook                as Fb
 import qualified Howl.Logger                  as Logger
 import           TestsCommon
@@ -32,6 +33,8 @@ import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Resource
 import qualified Data.Default                 as D
 import           Data.Monoid                  ((<>))
+import qualified Data.Time                    as TI
+import           Data.Time.Clock
 import           Network.HTTP.Client          (Manager, defaultManagerSettings,
                                                newManager)
 import           Network.HTTP.Conduit         (tlsManagerSettings)
@@ -86,6 +89,15 @@ usersSpec (m, _, c) =
               return (i, err)
           responseStatus err `shouldBe` conflict409
 
+      context "Varius FB functions (TODO: move to separate tree)" $ do
+        it "get venueIDs from FB around a location" $ \host -> do
+          now <- liftIO TI.getCurrentTime
+          venuePager <- runResourceT $ Fb.runFacebookT c m $
+            withTestUser D.def $ \testUser -> do
+              Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
+              venuePager <- getFbVenuesIdNearby testToken 49.0069 8.4037 1000
+              return venuePager
+          Fb.pagerData venuePager `shouldSatisfy` (\x -> length x > 1)
 
       usersIdSpec
 
