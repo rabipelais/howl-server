@@ -85,18 +85,18 @@ postUsers :: Fb.UserAccessToken -> HandlerT IO (Either IDType User)
 postUsers userAT = do
   creds' <- asks creds
   manager' <- asks manager
-  u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
-  $logDebug $ "Got user from facebook: " <> (pack . show) u
-  es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 100
-  $logDebug $ "Got at leas this 5 events from facebook: " <> (pack . show . P.take 5) es
   runQuery $ do
     exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
     case exists of
-      Nothing -> Right <$> (do
-                           $logInfo $ "Inserting new user from FB: " <> (pack . show) u
-                           insert u
-                           mapM_ insertUnique es
-                           return u)
+      Nothing -> Right <$> do
+        u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
+        $logDebug $ "Got user from facebook: " <> (pack . show) u
+
+        es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 100
+        $logDebug $ "Got at least this 5 events from facebook: " <> (pack . show . P.take 5) es
+        insert u
+        mapM_ insertUnique es
+        return u
       Just entity -> return (Left (userFbID $ entityVal entity))
 
 putUsersH :: User -> Maybe Token -> HandlerT IO User
