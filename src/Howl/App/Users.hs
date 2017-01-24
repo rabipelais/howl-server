@@ -12,7 +12,7 @@ import Prelude as P
 import           Control.Exception.Lifted
 import           Control.Monad.Except
 import           Control.Monad.IO.Class
-import           Control.Monad.Logger         (MonadLogger, logError, logInfo,
+import           Control.Monad.Logger         (MonadLogger, logError, logInfo, logDebug,
                                                runStderrLoggingT)
 import           Control.Monad.Trans.Resource
 
@@ -69,11 +69,13 @@ usersHandlers =
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
 getUsersH mToken = do
+  $logInfo "Request: get all users"
   entities <- runQuery $ (select . from $ pure)
   return $ map entityVal entities
 
 postUsersH :: Fb.UserAccessToken -> HandlerT IO User
 postUsersH userAT = do
+  $logInfo $ "Request: post new user"
   mResult <- postUsers userAT
   case mResult of
     Right u -> return u
@@ -84,29 +86,35 @@ postUsers userAT = do
   creds' <- asks creds
   manager' <- asks manager
   u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
+  $logDebug $ "Got user from facebook: " <> (pack . show) u
   es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 100
+  $logDebug $ "Got at leas this 5 events from facebook: " <> (pack . show . P.take 5) es
   runQuery $ do
     exists <- selectFirst [UserFbID ==. accessTokenUserId userAT] []
     case exists of
       Nothing -> Right <$> (do
+                           $logInfo $ "Inserting new user from FB: " <> (pack . show) u
                            insert u
                            mapM_ insertUnique es
                            return u)
       Just entity -> return (Left (userFbID $ entityVal entity))
 
 putUsersH :: User -> Maybe Token -> HandlerT IO User
-putUsersH u mToken =  runQuery $ do
-  mUser <- getBy $ UniqueUserID (userFbID u)
-  case mUser of
-    Nothing -> do
-      insert u
-      return u
-    Just (Entity k _) -> do
-      Sql.replace k u --TODO Check username uniqueness
-      return u
+putUsersH u mToken = do
+  $logInfo $ "Request putting user: " <> (pack . show) u
+  runQuery $ do
+    mUser <- getBy $ UniqueUserID (userFbID u)
+    case mUser of
+      Nothing -> do
+        insert u
+        return u
+      Just (Entity k _) -> do
+        Sql.replace k u --TODO Check username uniqueness
+        return u
 
 getUsersIdH :: IDType -> Maybe Token -> HandlerT IO User
 getUsersIdH i mToken = do
+  $logInfo $ "Request get user by id: " <> (pack . show) i
   mResult <- getUsersId i
   case mResult of
     Just u -> return u
@@ -119,6 +127,7 @@ getUsersId userID = runQuery $ do
 
 putUsersIdH :: IDType -> User -> Maybe Token -> HandlerT IO User
 putUsersIdH i u mToken = do
+  $logInfo $ "Request put user by id: " <> (pack . show) i
   if userFbID u /= i
     then throwError err403
     else do
@@ -138,6 +147,7 @@ putUserId i u = runQuery $ do
 
 deleteUsersIdH :: IDType -> Maybe Token -> HandlerT IO IDType
 deleteUsersIdH i mToken = do
+  $logInfo $ "Request delete user by id: " <> (pack . show) i
   eRep <- deleteUserId i
   case eRep of
     Left e -> throwError e
@@ -154,7 +164,8 @@ deleteUserId i = runQuery $ do
 getUsersIdConnectH = undefined
 
 getUsersIdFollowsH :: IDType -> Maybe Token -> HandlerT IO [User]
-getUsersIdFollowsH i mToken =
+getUsersIdFollowsH i mToken = do
+  $logInfo $ "Request followed by user with id: " <> (pack . show) i
   getUsersIdFollows i
 
 getUsersIdFollows :: IDType -> HandlerT IO [User]
@@ -173,7 +184,8 @@ getUsersIdFollows i = runQuery $ do
 
 -- userID -> content
 postUsersIdFollowsH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
-postUsersIdFollowsH s t mToken =
+postUsersIdFollowsH s t mToken = do
+  $logInfo $ "Request post follow: " <> (pack . show) s <> " to " <> (pack . show) t
   if s == t then throwError err409
   else runQuery $ do
     checkExistsOrThrow s
@@ -185,7 +197,9 @@ postUsersIdFollowsH s t mToken =
         Right _ -> return t
 
 deleteUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
-deleteUsersIdFollowsIdH s t mToken = runQuery $ do
+deleteUsersIdFollowsIdH s t mToken = do
+  $logInfo $ "Request delete follow: " <> (pack . show) s <> " to " <> (pack . show) t
+  runQuery $ do
     checkExistsOrThrow s
     checkExistsOrThrow t
     getBy (UniqueFollowshipID s t) >>= \case
@@ -194,27 +208,32 @@ deleteUsersIdFollowsIdH s t mToken = runQuery $ do
 
 
 getUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO FollowStatus
-getUsersIdFollowsIdH s t mToken = runQuery $ do
-  checkExistsOrThrow s
-  checkExistsOrThrow t
-  getBy (UniqueFollowshipID s t) >>= \case
-    Just (Entity _ (Followship _ _ status)) -> return status
-    Nothing -> throwError err404
+getUsersIdFollowsIdH s t mToken = do
+  $logInfo $ "Request get followship: " <> (pack . show) s <> " to " <> (pack . show) t
+  runQuery $ do
+    checkExistsOrThrow s
+    checkExistsOrThrow t
+    getBy (UniqueFollowshipID s t) >>= \case
+      Just (Entity _ (Followship _ _ status)) -> return status
+      Nothing -> throwError err404
 
 getUsersIdBlockedH :: IDType -> Maybe Token -> HandlerT IO [User]
-getUsersIdBlockedH s mToken = runQuery $ do
-  checkExistsOrThrow s
-  userEntities <- E.select
+getUsersIdBlockedH s mToken = do
+  $logInfo $ "Request user blocked list: " <> (pack . show) s
+  runQuery $ do
+    checkExistsOrThrow s
+    userEntities <- E.select
         $ E.from
         $ \(user `E.InnerJoin` follow) -> do
         E.on (user^.UserFbID E.==. follow^.FollowshipTargetId
               E.&&. follow^.FollowshipSourceId E.==. E.val s)
         E.where_ (follow^.FollowshipStatus E.==. E.val Blocked)
         return user
-  return $ map entityVal userEntities
+    return $ map entityVal userEntities
 
 postUsersIdBlockedH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
-postUsersIdBlockedH s t mToken =
+postUsersIdBlockedH s t mToken = do
+  $logInfo $ "Request block user: " <> (pack . show) s <> " to " <> (pack . show) t
   if s == t then throwError err409 else runQuery $ do
     checkExistsOrThrow s
     checkExistsOrThrow t
@@ -227,43 +246,49 @@ postUsersIdBlockedH s t mToken =
         return t
 
 deleteUsersIdBlockedIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
-deleteUsersIdBlockedIdH s t mToken = runQuery $ do
-  checkExistsOrThrow s
-  checkExistsOrThrow t
-  getBy (UniqueFollowshipID s t) >>= \case
-    Just (Entity _ (Followship _ _ Blocked)) -> deleteBy (UniqueFollowshipID s t) >> return t
-    _ -> throwError err404
-
+deleteUsersIdBlockedIdH s t mToken = do
+  $logInfo $ "Request delete block: " <> (pack . show) s <> " to " <> (pack . show) t
+  runQuery $ do
+    checkExistsOrThrow s
+    checkExistsOrThrow t
+    getBy (UniqueFollowshipID s t) >>= \case
+      Just (Entity _ (Followship _ _ Blocked)) -> deleteBy (UniqueFollowshipID s t) >> return t
+      _ -> throwError err404
 
 getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
-getUsersIdEventsFollowsH i mToken = runQuery $ do
-  checkExistsOrThrow i
-  eventEntities <- E.select $ E.distinct
-    $ E.from
-    $ \(event `E.InnerJoin` rsvp `E.InnerJoin` follows) -> do
-    E.on (rsvp^.EventRSVPUserID E.==. follows^.FollowshipTargetId
+getUsersIdEventsFollowsH i mToken = do
+  $logInfo $ "Request events of followed by user with id: " <> (pack . show) i
+  runQuery $ do
+    checkExistsOrThrow i
+    eventEntities <- E.select $ E.distinct
+      $ E.from
+      $ \(event `E.InnerJoin` rsvp `E.InnerJoin` follows) -> do
+      E.on (rsvp^.EventRSVPUserID E.==. follows^.FollowshipTargetId
          E.&&. follows^.FollowshipSourceId E.==. E.val i
          E.&&. follows^.FollowshipStatus E.==. E.val Accepted)
-    E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
+      E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
-    return event
-  return $ map entityVal eventEntities
+      return event
+    return $ map entityVal eventEntities
 
 
 getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
-getUsersIdEventsH i mToken = runQuery $ do
-  checkExistsOrThrow i
-  eventEntities <- E.select
-    $ E.from
-    $ \(event `E.InnerJoin` rsvp) -> do
-    E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
+getUsersIdEventsH i mToken = do
+  $logInfo $ "Request get events of user with id: " <> (pack . show) i
+  runQuery $ do
+    checkExistsOrThrow i
+    eventEntities <- E.select
+      $ E.from
+      $ \(event `E.InnerJoin` rsvp) -> do
+      E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPUserID E.==. E.val i
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
-    return event
-  return $ map entityVal eventEntities
+      return event
+    return $ map entityVal eventEntities
 
 getUsersIdVenuesH :: IDType -> Maybe Token -> HandlerT IO [Venue]
 getUsersIdVenuesH ui mToken = do
+  $logInfo $ "Request venues of user with id: " <> (pack . show) ui
   ui' <- tokenUser mToken
   runQuery $ do
     checkExistsOrThrow ui

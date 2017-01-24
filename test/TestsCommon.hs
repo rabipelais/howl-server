@@ -112,9 +112,9 @@ withApp conf action = testWithApplication (testApp conf) $ \ port -> do
 testApp :: (Manager, Fb.UserAccessToken, Fb.Credentials) -> IO Application
 testApp (_, u, c) = do
   let logSettings = Logger.Settings
-        { Logger.filePath = "webserver.log"
+        { Logger.filePath = "webserver-tests.log"
         , Logger.logLevel = LevelDebug
-        , Logger.noConsoleLogging = False
+        , Logger.noConsoleLogging = True
         }
   Logger.withLogger logSettings $ \logFn -> do
     let port = 3000 :: Int
