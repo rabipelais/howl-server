@@ -75,9 +75,13 @@ Invite json
 Venue json
   fbID IDType
   coverPicPath FilePath Maybe
+  about Text
   description Text
   name Text
-  location Text
+  city Text Maybe
+  country Text Maybe
+  street Text Maybe
+  zip Text Maybe
   lat Double Maybe
   long Double Maybe
   rating Double Maybe

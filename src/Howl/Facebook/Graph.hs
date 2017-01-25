@@ -207,6 +207,9 @@ showBS = B.pack . show
 data Place =
   Place { placeId       :: Maybe Id         -- ^ @Page@ ID.
         , placeName     :: Maybe Text -- ^ @Page@ name.
+        , placeAbout    :: Maybe Text
+        , placeDescription :: Maybe Text
+        , placeCoverSource :: Maybe Text
         , placeLocation :: Maybe Location
         }
   deriving (Eq, Ord, Show, Read, Typeable)
@@ -215,6 +218,12 @@ instance A.FromJSON Place where
   parseJSON (A.Object v) =
     Place <$> v A..:?  "id"
           <*> v A..:? "name"
+          <*> v A..:? "about"
+          <*> v A..:? "description"
+          <*> do cover <- v A..:? "cover"
+                 case cover of
+                     Nothing -> return Nothing
+                     Just c -> c A..:? "source"
           <*> v A..:? "location"
   parseJSON _ = mzero
 

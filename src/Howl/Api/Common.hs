@@ -14,8 +14,8 @@ instance ToSchema Venue where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Venue") $
       sketchSchema
-       (Venue (FB.Id "10155182179270463") Nothing "The sweetest place in town" "Swaggy House" "Pimpstreet 4" (Just 40.08031) (Just (-70.87123)) (Just 3.3))
-      & required .~ ["fbID", "description", "name", "location"]
+       (Venue (FB.Id "10155182179270463") Nothing "Short summary" "The sweetest place in town" "Swaggy House"(Just "Karlsruhe") (Just "Germany") (Just "Karlstraße") (Just "76131") (Just 40.08031) (Just (-70.87123)) (Just 3.3))
+      & required .~ ["fbID", "description", "name"]
 
 deriving instance ToSchema FollowStatus
 

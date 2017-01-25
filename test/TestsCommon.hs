@@ -175,17 +175,25 @@ event2 = Event event2Id
 
 venue1 = Venue venue1Id
   Nothing
-  "The freshest venue on the East Side"
-  "Swag-town"
+  "Short description"
   "Left of here"
+  "Swag-town"
+  (Just "Heidelberg")
+  (Just "Germany")
+  (Just "Durlacherallee")
+  (Just "76131")
   Nothing Nothing
   (Just 4)
 
 venue2 = Venue venue2Id
   Nothing
-  "Westside is best side"
-  "Le ouest"
+  "Short summary"
   "Second star to the right"
+  "Le ouest"
+  (Just "Karlsruhe")
+  (Just "Germany")
+  (Just "Durlacherallee")
+  (Just "76131")
   Nothing Nothing
   (Just 2)
 
