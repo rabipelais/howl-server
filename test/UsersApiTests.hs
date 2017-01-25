@@ -77,6 +77,8 @@ usersSpec (m, _, c) =
               Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
               u <- liftIO $ try host (postUsers testToken)
               u' <- liftIO $ try host (getUsersId i (Just token))
+              es <- liftIO $ try host (getEvents (Just token))
+              liftIO $ mapM_ print (take 5 es)
               return (u, u')
           u `shouldBe` u'
 

@@ -31,9 +31,10 @@ import           Howl.Facebook.Types
 type EventId = Id
 
 data Event =
-  Event { eventId          :: Maybe EventId
+  Event { eventId          :: EventId
         , eventName        :: Maybe Text
         , eventCategory    :: Maybe Text
+        , eventAbout       :: Maybe Text
         , eventDescription :: Maybe Text
         , eventStartTime   :: Maybe UTCTime
         , eventEndTime     :: Maybe UTCTime
@@ -44,9 +45,10 @@ data Event =
 
 instance A.FromJSON Event where
     parseJSON (A.Object v) =
-      Event <$> v .:?  "id"
+      Event <$> v .:  "id"
            <*> v .:? "name"
            <*> v .:? "category"
+           <*> v .:? "about"
            <*> v .:? "description"
            <*> v .:? "start_time"
            <*> v .:? "end_time"

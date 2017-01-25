@@ -92,8 +92,9 @@ postUsers userAT = do
         u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
         $logDebug $ "Got user from facebook: " <> (pack . show) u
 
-        es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 100
-        $logDebug $ "Got at least this 5 events from facebook: " <> (pack . show . P.take 5) es
+        es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 10
+        -- $logDebug $ "Got at least this 5 events from facebook: " <> (pack . show . P.take 5) es
+
         insert u
         mapM_ insertUnique es
         return u
@@ -302,24 +303,16 @@ getUsersIdVenuesH ui mToken = do
       return venue
     return $ map entityVal eventEntities
 
---getNewUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
+getNewFbUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
 getNewFbUser userAT creds manager =  do
   fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name")] (Just userAT)
-  let
-    fbID = Fb.userId fbUser
-    username = fromMaybe (Fb.idCode fbID) (Fb.userUsername fbUser)
-    firstName = fromMaybe username (Fb.userFirstName fbUser)
-    lastName = Fb.userLastName fbUser
-    email = Fb.userEmail fbUser
-    profilePicPath = Nothing
-    user = User fbID username firstName lastName email profilePicPath
-  return user
+  return (fromFbUser fbUser)
 
 getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Event]
 getFbEvents userAT creds manager limit = do
   let url = "/v2.8/" <> (Fb.idCode $ accessTokenUserId userAT) <> "/" <> "events"
   eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner")] (Just userAT)
-  go eventPager []
+  map fromFbEvent <$> go eventPager []
   where go pager res =
           if P.length res < limit
           then do

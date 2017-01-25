@@ -36,9 +36,9 @@ import           Control.Monad.Logger
 import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Resource
 import           Data.Monoid                  ((<>))
-import           Network.HTTP.Client          (Manager, defaultManagerSettings,
+import           Network.HTTP.Client          (Manager(..), defaultManagerSettings,
                                                newManager)
-import           Network.HTTP.Conduit         (tlsManagerSettings)
+import           Network.HTTP.Conduit         (tlsManagerSettings, ManagerSettings(..))
 import           Network.HTTP.Types
 import           Test.Hspec                   (Spec, describe, hspec, it)
 import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
@@ -105,7 +105,8 @@ try (manager, baseUrl) action = do
 
 withApp :: (Manager, Fb.UserAccessToken, Fb.Credentials) -> (Host -> IO a) -> IO a
 withApp conf action = testWithApplication (testApp conf) $ \ port -> do
-  manager <- newManager defaultManagerSettings
+  let settings = tlsManagerSettings
+  manager <- newManager settings{managerResponseTimeout = Nothing}
   let url = BaseUrl Http "localhost" port ""
   action (manager, url)
 
@@ -120,7 +121,7 @@ testApp (_, u, c) = do
     let port = 3000 :: Int
     pool <- runNoLoggingT $ createSqlitePool ":memory:" 10
     runSqlPool (runMigrationSilent migrateAll) pool
-    manager <- liftIO $ newManager tlsManagerSettings
+    manager <- liftIO $ newManager tlsManagerSettings{managerResponseTimeout = Nothing}
     let env = LogEnv logFn $ noAuthHandlerEnv pool manager c
     return $ app env
 
@@ -151,6 +152,7 @@ venue1Id :: IDType
 venue1Id = "12345"
 
 event1 = Event event1Id
+  "Fun time"
   "Fun fun time"
   "The greatest event ever"
   (UTCTime (fromGregorian 2017 1 17) (secondsToDiffTime 40000))
@@ -164,6 +166,7 @@ venue2Id :: IDType
 venue2Id = "67890"
 
 event2 = Event event2Id
+  "Not fun"
   "Not that fun of a time"
   "The kinda cool event"
   (UTCTime (fromGregorian 2017 2 17) (secondsToDiffTime 40000))
