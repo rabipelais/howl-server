@@ -158,6 +158,7 @@ event1 = Event event1Id
   (UTCTime (fromGregorian 2017 1 17) (secondsToDiffTime 40000))
   (UTCTime (fromGregorian 2017 1 18) (secondsToDiffTime 40000))
   venue1Id
+  (Just "www.coolpic.gov")
 
 event2Id :: IDType
 event2Id = "67890"
@@ -172,6 +173,7 @@ event2 = Event event2Id
   (UTCTime (fromGregorian 2017 2 17) (secondsToDiffTime 40000))
   (UTCTime (fromGregorian 2017 2 18) (secondsToDiffTime 40000))
   venue2Id
+  (Just "www.supercoolpicsite.co.uk")
 
 venue1 = Venue venue1Id
   Nothing

@@ -53,7 +53,7 @@ instance ToSchema Event where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Event") $
       sketchSchema
-       (Event (FB.Id "10155182179270463") "Fun swaggy party." "All You Can Swag" (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463"))
+       (Event (FB.Id "10155182179270463") "The best swag" "Fun swaggy loooooong party." "All You Can Swag" (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463") (Just "www.coolpic.gov"))
       & required .~ ["fbID", "description", "name", "startTime", "endTime", "venueId"]
 
 instance ToSchema IDType where

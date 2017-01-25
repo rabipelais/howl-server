@@ -311,7 +311,7 @@ getNewFbUser userAT creds manager =  do
 getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Event]
 getFbEvents userAT creds manager limit = do
   let url = "/v2.8/" <> (Fb.idCode $ accessTokenUserId userAT) <> "/" <> "events"
-  eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner")] (Just userAT)
+  eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner,cover.fields(id,source)")] (Just userAT)
   map fromFbEvent <$> go eventPager []
   where go pager res =
           if P.length res < limit

@@ -40,6 +40,7 @@ data Event =
         , eventEndTime     :: Maybe UTCTime
         , eventPlace       :: Maybe Place
         , eventRSVP        :: Maybe RSVP
+        , eventCoverSource :: Maybe Text
         , eventOwner       :: Maybe Owner}
   deriving (Eq, Ord, Show, Read, Typeable, Generic)
 
@@ -54,6 +55,10 @@ instance A.FromJSON Event where
            <*> v .:? "end_time"
            <*> v .:? "place"
            <*> v .:? "rsvp_status"
+           <*> do cover <- v .:? "cover"
+                  case cover of
+                     Nothing -> return Nothing
+                     Just c -> c .:? "source"
            <*> v .:? "owner"
     parseJSON _ = mzero
 

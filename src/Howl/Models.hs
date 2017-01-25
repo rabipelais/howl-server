@@ -55,13 +55,8 @@ Event json
   startTime UTCTime
   endTime UTCTime
   venueId IDType
+  coverPicPath FilePath Maybe
   UniqueEventID fbID
-  deriving Eq Read Show
-
-EventCoverPic
-  eventId EventId
-  coverPicPath FilePath
-  UniqueEventCoverPic eventId coverPicPath
   deriving Eq Read Show
 
 EventRSVP json
