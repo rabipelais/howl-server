@@ -34,7 +34,6 @@ data Event =
   Event { eventId          :: EventId
         , eventName        :: Maybe Text
         , eventCategory    :: Maybe Text
-        , eventAbout       :: Maybe Text
         , eventDescription :: Maybe Text
         , eventStartTime   :: Maybe UTCTime
         , eventEndTime     :: Maybe UTCTime
@@ -49,7 +48,6 @@ instance A.FromJSON Event where
       Event <$> v .:  "id"
            <*> v .:? "name"
            <*> v .:? "category"
-           <*> v .:? "about"
            <*> v .:? "description"
            <*> v .:? "start_time"
            <*> v .:? "end_time"

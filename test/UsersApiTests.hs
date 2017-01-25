@@ -72,11 +72,14 @@ usersSpec (m, _, c) =
 
       context "POST (from FB)" $ do
         it "correctly inserts a user from facebook in the database" $ \host -> do
-          (u, u') <- runResourceT $ Fb.runFacebookT c m $
-            withTestUser D.def $ \testUser -> do
-              Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
+          (u, u') <- runResourceT $ Fb.runFacebookT c m $ do
+              --Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
+              let token = "EAACEdEose0cBAO4mNIaOpcaTL6JbusoWEp275VCjLNddfZCX1bsAKrRePjdOI5Fb7sH20pTs8AK02jFamU4BaZBc1mQlmBHmMJMImQlvUtfcLRGSQ8g1FKmGZACeqhJNDZAco7SRl2FrvWXbbOZAZC8lfRHaCrbWqjNx8wpTiJ5AZDZD"
+                  testToken = Fb.UserAccessToken i token (TI.UTCTime (TI.fromGregorian 2018 01 01) (TI.secondsToDiffTime 0))
+                  i = "10155182179270463"
               u <- liftIO $ try host (postUsers testToken)
               u' <- liftIO $ try host (getUsersId i (Just token))
+              liftIO $ print u'
               es <- liftIO $ try host (getEvents (Just token))
               liftIO $ mapM_ print (take 5 es)
               return (u, u')

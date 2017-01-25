@@ -49,7 +49,6 @@ Followship json
 
 Event json
   fbID IDType
-  about Text
   description Text
   name Text
   startTime UTCTime

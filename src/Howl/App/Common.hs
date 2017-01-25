@@ -92,14 +92,13 @@ fromFbEvent :: Fb.Event -> Event
 fromFbEvent e = event
   where
     fbID = Fb.eventId e
-    about = fromMaybe "" (Fb.eventAbout e)
     description = fromMaybe "" (Fb.eventDescription e)
     name = fromMaybe "Unnamed event" (Fb.eventName e)
     startTime = fromMaybe (UTCTime (fromGregorian 2017 01 01) (secondsToDiffTime 0)) (Fb.eventStartTime e)
     endTime = fromMaybe (UTCTime (fromGregorian 2017 01 01) (secondsToDiffTime 0)) (Fb.eventEndTime e)
     venueId = fromMaybe "" (Fb.placeId =<< Fb.eventPlace e)
     coverPicPath = unpack <$> Fb.eventCoverSource e
-    event = Event fbID about description name startTime endTime venueId coverPicPath
+    event = Event fbID description name startTime endTime venueId coverPicPath
 
 getFbVenuesIdNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Double -> Double -> Double ->  Fb.FacebookT anyAuth m (Fb.Pager IDType)
 getFbVenuesIdNearby userAT lat lon distance = do

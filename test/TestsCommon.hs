@@ -152,7 +152,6 @@ venue1Id :: IDType
 venue1Id = "12345"
 
 event1 = Event event1Id
-  "Fun time"
   "Fun fun time"
   "The greatest event ever"
   (UTCTime (fromGregorian 2017 1 17) (secondsToDiffTime 40000))
@@ -167,7 +166,6 @@ venue2Id :: IDType
 venue2Id = "67890"
 
 event2 = Event event2Id
-  "Not fun"
   "Not that fun of a time"
   "The kinda cool event"
   (UTCTime (fromGregorian 2017 2 17) (secondsToDiffTime 40000))
