@@ -14,10 +14,14 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.Typeable (Typeable)
+import Data.Maybe (catMaybes)
 
 import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as A
 import qualified Data.Conduit as C
+import qualified Data.Foldable as T
+import qualified Data.Traversable as T
 import qualified Network.HTTP.Conduit as H
 
 
@@ -58,7 +62,12 @@ data Pager a =
 instance A.FromJSON a => A.FromJSON (Pager a) where
   parseJSON (A.Object v) =
     let paging f = v A..:? "paging" >>= maybe (return Nothing) (A..:? f)
-    in Pager <$> v A..: "data"
+        data' = A.withArray "array" $ \a -> do
+          let f :: A.Value -> A.Parser (Maybe a)
+              f v = ((Just <$> A.parseJSON v) <|> return Nothing)
+          catMaybes . T.toList <$> (T.mapM f a)
+
+    in Pager <$> (v A..: "data" >>= data')
              <*> paging "previous"
              <*> paging "next"
   parseJSON _ = mzero

@@ -216,7 +216,7 @@ data Place =
 
 instance A.FromJSON Place where
   parseJSON (A.Object v) =
-    Place <$> v A..:?  "id"
+    Place <$> v A..:  "id"
           <*> v A..:? "name"
           <*> v A..:? "about"
           <*> v A..:? "description"

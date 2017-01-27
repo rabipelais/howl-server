@@ -74,6 +74,7 @@ library
                      , monad-logger
                      , monad-control
                      , mtl
+                     , split
                      , string-conversions
                      , persistent
                      , persistent-template
