@@ -31,8 +31,10 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Logger
 import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Resource
+import qualified Data.Aeson                   as A
 import qualified Data.Default                 as D
 import           Data.Monoid                  ((<>))
+import qualified Data.Text                    as T
 import qualified Data.Time                    as TI
 import           Data.Time.Clock
 import           Network.HTTP.Client          (Manager, defaultManagerSettings,
@@ -72,11 +74,9 @@ usersSpec (m, _, c) =
 
       context "POST (from FB)" $ do
         it "correctly inserts a user from facebook in the database" $ \host -> do
-          (u, u') <- runResourceT $ Fb.runFacebookT c m $ do
-              --Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
-              let token = "EAACEdEose0cBAO4mNIaOpcaTL6JbusoWEp275VCjLNddfZCX1bsAKrRePjdOI5Fb7sH20pTs8AK02jFamU4BaZBc1mQlmBHmMJMImQlvUtfcLRGSQ8g1FKmGZACeqhJNDZAco7SRl2FrvWXbbOZAZC8lfRHaCrbWqjNx8wpTiJ5AZDZD"
-                  testToken = Fb.UserAccessToken i token (TI.UTCTime (TI.fromGregorian 2018 01 01) (TI.secondsToDiffTime 0))
-                  i = "10155182179270463"
+          (u, u') <- runResourceT $ Fb.runFacebookT c m $
+            withTestUser D.def $ \testUser -> do
+              Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
               u <- liftIO $ try host (postUsers testToken)
               u' <- liftIO $ try host (getUsersId i (Just token))
               liftIO $ print u'
@@ -100,9 +100,17 @@ usersSpec (m, _, c) =
           venuePager <- runResourceT $ Fb.runFacebookT c m $
             withTestUser D.def $ \testUser -> do
               Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
-              venuePager <- getFbVenuesIdNearby testToken 49.0069 8.4037 1000
+              venuePager <- getFbVenuesIdNearby testToken 49.0069 8.4037 1000 1000
               return venuePager
           Fb.pagerData venuePager `shouldSatisfy` (\x -> length x > 1)
+
+        it "get venues and events from around a location" $ \host -> do
+          ves <- runResourceT $ Fb.runFacebookT c m $
+            withTestUser D.def $ \testUser -> do
+              Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
+              venuePager <- getFbVenuesIdNearby testToken 49.0069 8.4037 1000 10
+              getEventsFromVenuesNearby testToken venuePager Nothing
+          ves `shouldSatisfy` (\x -> length x > 0)
 
       usersIdSpec
 
