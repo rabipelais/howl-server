@@ -31,7 +31,7 @@ build_job:
       - "~/.local"
       - "~/.stack"
   script:
-    - stack --no-terminal howl-backend
+    - stack build --no-terminal howl-backend
   only:
      - branches
   except:
