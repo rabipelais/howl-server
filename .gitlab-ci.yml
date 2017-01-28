@@ -86,8 +86,5 @@ deploy-job:
       - "~/.local"
       - "~/.stack"
   # Applies only to tags matching the regex: ie: v1.0.0-My-App-Release
-  only:
-    - /^v\d+\.\d+\.\d+-.*$/
   except:
-    - branches
     - triggers
