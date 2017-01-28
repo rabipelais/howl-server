@@ -139,7 +139,6 @@ getFbVenuesIdNearby userAT lat lon distance limit = do
 
 getEventsFromVenuesNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Fb.Pager IDType -> Maybe Day -> Fb.FacebookT anyAuth m [(Venue, Maybe (Fb.Pager Fb.Event))]
 getEventsFromVenuesNearby userAT vPager mSince = do
-  liftIO $ print args
   (L.concat . catMaybes . map (parseMaybe parseEach)) <$> sequence requests
   where
     since = case mSince of

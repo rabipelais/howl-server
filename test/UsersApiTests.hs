@@ -79,9 +79,7 @@ usersSpec (m, _, c) =
               Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
               u <- liftIO $ try host (postUsers testToken)
               u' <- liftIO $ try host (getUsersId i (Just token))
-              liftIO $ print u'
               es <- liftIO $ try host (getEvents (Just token))
-              liftIO $ mapM_ print (take 5 es)
               return (u, u')
           u `shouldBe` u'
 
@@ -111,6 +109,16 @@ usersSpec (m, _, c) =
               venuePager <- getFbVenuesIdNearby testToken 49.0069 8.4037 1000 10
               getEventsFromVenuesNearby testToken venuePager Nothing
           ves `shouldSatisfy` (\x -> length x > 0)
+
+        it "get events for user, friends, and nearby" $ \host -> do
+          es <- runResourceT $ Fb.runFacebookT c m $
+            withTestUser D.def $ \testUser -> do
+              Just testToken@(Fb.UserAccessToken i token exp) <- getTestToken testUser
+              liftIO $ try host (postUsers testToken)
+              liftIO $ try host (putEvents event1 (Just $ Fb.idCode i))
+              liftIO $ try host (putEventsIdRSVPUsersId event1Id i Fb.Created (Just $ Fb.idCode i))
+              liftIO $ try host (getUsersIdSuggested i (Just 49.0069) (Just 8.4037) (Just 1000) (Just token))
+          es `shouldSatisfy` (\x -> length x > 0)
 
       usersIdSpec
 

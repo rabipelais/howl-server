@@ -335,13 +335,13 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mToken = do
   token <- case mToken of
     Nothing -> throwError err402
     Just t -> return t
-  runQuery $ do
+  es <- runQuery $ do
     checkExistsOrThrow ui
     us <- fromUser
     fs <- fromFriends
     ns <- fromNearby creds' manager' token
     return $ us ++ fs ++ ns
-  return []
+  return es
   where
     fromUser = map entityVal <$> usersEvents ui
     fromFriends = map entityVal <$> friendsEvents ui
