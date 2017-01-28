@@ -6,12 +6,14 @@
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE LambdaCase           #-}
 
 module Howl.Monad where
 
 import           Prelude
 
 import           Control.Monad.Base          (MonadBase, liftBase)
+import Control.Exception.Lifted
 import           Control.Monad.Except        (MonadError, catchError,
                                               throwError)
 import           Control.Monad.IO.Class      (MonadIO (..))
@@ -51,8 +53,8 @@ data HandlerEnv = HandlerEnv
   { db :: ConnectionPool
   , manager :: Manager
   , creds :: FB.Credentials
-  , valFunction :: IDType -> Maybe Token -> DienerT ServantErr HandlerEnv IO ()
-  , idFromToken :: Maybe Token -> DienerT ServantErr HandlerEnv IO IDType
+  , valFunction :: IDType -> Maybe Token -> HandlerT IO ()
+  , idFromToken :: Maybe Token -> HandlerT IO IDType
   }
 
 -- Diener
@@ -133,8 +135,17 @@ tokenUser mt = asks idFromToken >>= \f -> f mt
 validateId _ _ = liftIO $ putStrLn "Validation"
 noValidation _ _ = liftIO $ putStrLn "NoValidation"
 
+idTokenLookup :: Maybe Token -> HandlerT IO IDType
 idTokenLookup Nothing = throwError err400
-idTokenLookup (Just t) = undefined
+idTokenLookup (Just t) = do
+  c <- asks creds
+  m <- asks manager
+  mId <- liftIO $ runResourceT $ FB.runFacebookT c m $ do
+    appToken <- FB.getAppAccessToken
+    FB.dtUserId <$> FB.debugToken appToken t
+  case mId of
+    Nothing -> throwError err401
+    Just i -> return i
 
 noopToken Nothing = throwError err400
 noopToken (Just t) = return (FB.Id t)
