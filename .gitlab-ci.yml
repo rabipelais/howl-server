@@ -1,5 +1,8 @@
 image: haskell:8.0.1
 
+services:
+  - postgres:latest
+
 cache:
   untracked: true
   paths:
@@ -10,7 +13,8 @@ cache:
     - "~/.stack"
 
 before_script:
-  - apt-get --quiet install --yes libpq-dev
+  - apt-get update -qq;
+  - apt-get install -y -qq libpq-dev
   - stack setup;
 
 # Defines the stages in the Gitlab-CI Pipeline
