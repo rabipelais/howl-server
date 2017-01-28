@@ -38,6 +38,8 @@ import           Data.Monoid                  ((<>))
 import           Data.Text                    hiding (foldl, map)
 import           Data.Text.Lazy               (fromStrict)
 import           Data.Text.Lazy.Encoding      (encodeUtf8)
+import qualified Data.Time                    as TI
+import           Data.Time.Clock
 
 import           Howl.Api.Users
 import           Howl.App.Common
@@ -54,7 +56,7 @@ usersHandlers =
   :<|> getUsersIdH
   :<|> putUsersIdH
   :<|> deleteUsersIdH
-  -- :<|> getUsersIdConnectH
+  :<|> getUsersIdConnectH
   :<|> getUsersIdFollowsH
   :<|> postUsersIdFollowsH
   :<|> getUsersIdFollowsIdH
@@ -65,6 +67,7 @@ usersHandlers =
   :<|> getUsersIdEventsH
   :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdVenuesH
+  :<|> getUsersIdSuggestedH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -261,7 +264,10 @@ getUsersIdEventsFollowsH i mToken = do
   $logInfo $ "Request events of followed by user with id: " <> (pack . show) i
   runQuery $ do
     checkExistsOrThrow i
-    eventEntities <- E.select $ E.distinct
+    eventEntities <- friendsEvents i
+    return $ map entityVal eventEntities
+
+friendsEvents i =  E.select $ E.distinct
       $ E.from
       $ \(event `E.InnerJoin` rsvp `E.InnerJoin` follows) -> do
       E.on (rsvp^.EventRSVPUserID E.==. follows^.FollowshipTargetId
@@ -270,22 +276,22 @@ getUsersIdEventsFollowsH i mToken = do
       E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
       return event
-    return $ map entityVal eventEntities
-
 
 getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
 getUsersIdEventsH i mToken = do
   $logInfo $ "Request get events of user with id: " <> (pack . show) i
   runQuery $ do
     checkExistsOrThrow i
-    eventEntities <- E.select
+    eventEntities <- usersEvents i
+    return $ map entityVal eventEntities
+
+usersEvents i = E.select
       $ E.from
       $ \(event `E.InnerJoin` rsvp) -> do
       E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPUserID E.==. E.val i
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
       return event
-    return $ map entityVal eventEntities
 
 getUsersIdVenuesH :: IDType -> Maybe Token -> HandlerT IO [Venue]
 getUsersIdVenuesH ui mToken = do
@@ -320,3 +326,32 @@ getFbEvents userAT creds manager limit = do
               Just nextPager -> go nextPager (res ++ (Fb.pagerData pager))
               Nothing -> return res
           else return res
+
+getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Event]
+getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mToken = do
+  $logInfo $ "Request suggested events of user with id: " <> (pack . show) ui <> " with lat, lon, dist: " <> (pack . show) [lat, lon, distance]
+  creds' <- asks creds
+  manager' <- asks manager
+  token <- case mToken of
+    Nothing -> throwError err402
+    Just t -> return t
+  runQuery $ do
+    checkExistsOrThrow ui
+    us <- fromUser
+    fs <- fromFriends
+    ns <- fromNearby creds' manager' token
+    return $ us ++ fs ++ ns
+  return []
+  where
+    fromUser = map entityVal <$> usersEvents ui
+    fromFriends = map entityVal <$> friendsEvents ui
+    fromNearby creds' manager' token = do
+      now <- liftIO TI.getCurrentTime
+      let userAT = Fb.UserAccessToken ui token now
+      ves <- liftIO $ runResourceT $ Fb.runFacebookT creds' manager' (getVenuesAndEventsNearby userAT lat lon distance 1000 (Just . utctDay $ now))
+      mapM_ (\(v, _) -> insertBy v) ves
+      mapM_ (\(_, es) -> mapM_ (insertBy . fromFbEvent) es) ves
+      return $ P.concat $ map (\(_, es) -> map fromFbEvent es) ves
+
+    distance = fromMaybe 1000 distance'
+getUsersIdSuggestedH _ _ _ _ _ = throwError err400

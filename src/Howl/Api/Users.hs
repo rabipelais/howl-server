@@ -28,7 +28,7 @@ type UsersAPI =
   :<|> UsersIdGet
   :<|> UsersIdPut
   :<|> UsersIdDelete
-                -- :<|> UsersIdConnectGet
+  :<|> UsersIdConnectGet
   :<|> UsersIdFollowsGet
   :<|> UsersIdFollowsPost
   :<|> UsersIdFollowsIdGet
@@ -39,6 +39,7 @@ type UsersAPI =
   :<|> UsersIdEventsGet
   :<|> UsersIdEventsFollowsGet
   :<|> UsersIdVenuesGet
+  :<|> UsersIdSuggestedGet
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -123,3 +124,11 @@ type UsersIdVenuesGet = "users" :> Capture "userID" IDType
                         :> "venues"
                         :> Header "token" Token
                         :> Get '[JSON] [Venue]
+
+type UsersIdSuggestedGet = "users" :> Capture "userID" IDType
+                           :> "suggested"
+                           :> QueryParam "lat" Double
+                           :> QueryParam "lon" Double
+                           :> QueryParam "distance" Double
+                           :> Header "token" Token
+                           :> Get '[JSON] [Event]

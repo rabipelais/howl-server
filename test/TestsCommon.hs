@@ -52,6 +52,7 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   :<|> getUsersId
   :<|> putUsersId
   :<|> deleteUsersId
+  :<|> getUsersIdConnect
   :<|> getUsersIdFollows
   :<|> postUsersIdFollows
   :<|> getUsersIdFollowsId
@@ -61,7 +62,8 @@ import           Test.Hspec.Wai               (WaiExpectation, WaiSession,
   :<|> deleteUsersIdBlockedId
   :<|> getUsersIdEvents
   :<|> getUsersIdEventsFollows
-  :<|> getUsersIdVenues) :<|>
+  :<|> getUsersIdVenues
+  :<|> getUsersIdSuggested) :<|>
   (getEvents
   :<|> putEvents
   :<|> getEventsNearby

@@ -79,7 +79,7 @@ type VenuesIdEventsGet = Prefix :> Capture "venueID" IDType
 
 type VenuesNearbyGet = Prefix :> "nearby"
                      :> QueryParam "lat" Double
-                     :> QueryParam "long" Double
+                     :> QueryParam "lon" Double
                      :> QueryParam "distance" Double
                      :> Header "token" Token
                      :> Get '[JSON] [Venue]

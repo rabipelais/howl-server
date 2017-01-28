@@ -57,6 +57,7 @@ library
                      , cereal
                      , http-conduit
                      , conduit
+                     , conduit-combinators
                      , conduit-extra
                      , crypto-api
                      , cryptohash-cryptoapi

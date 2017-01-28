@@ -99,7 +99,7 @@ type EventsIdRSVPUserIdDelete = Prefix :> Capture "eventID" IDType
 
 type EventsNearbyGet = Prefix :> "nearby"
                      :> QueryParam "lat" Double
-                     :> QueryParam "long" Double
+                     :> QueryParam "lon" Double
                      :> QueryParam "distance" Double
                      :> Header "token" Token
                      :> Get '[JSON] [Event]

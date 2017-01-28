@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE TemplateHaskell   #-}
@@ -31,6 +32,10 @@ import qualified Database.Esqueleto           as E
 import           Database.Persist
 import           Database.Persist.Sql
 import           Database.Persist.Sqlite      as Sql
+
+import Data.Conduit as CL
+import qualified Data.Conduit.List as CL
+import qualified Data.Conduit.Combinators as CL
 
 import           Network.HTTP.Conduit         (Manager, newManager,
                                                tlsManagerSettings)
@@ -178,3 +183,15 @@ getEventsFromVenuesNearby userAT vPager mSince = do
         obj <- parseJSON ve
         (eventsPager :: Maybe (Fb.Pager Fb.Event)) <- obj.:?"events"
         return $ (fromFbVenue venue, eventsPager)
+
+getVenuesAndEventsNearby userAT lat lon distance limit mSince = do
+  venuePager <- getFbVenuesIdNearby userAT lat lon distance limit
+  ves <- getEventsFromVenuesNearby userAT venuePager mSince
+  ves' <- for ves $ \(v, mp) -> do
+    let es = case mp of
+          Nothing -> return $ CL.sourceList []
+          Just p -> Fb.fetchAllNextPages p
+    es' <- es
+    es'' <- CL.runConduit $ es' CL.=$ CL.sinkList
+    return $ (v, es'')
+  return ves'
