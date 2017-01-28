@@ -10,7 +10,7 @@ cache:
     - "~/.stack"
 
 before_script:
-    - stack setup;
+  - stack setup;
 
 # Defines the stages in the Gitlab-CI Pipeline
 stages:
@@ -63,8 +63,10 @@ test_job:
 
 ### DEPLOY ####################################################
 deploy-job:
+  stage: deploy #assigns the stage as deploy
   # Script to run for deploying application to AWS
   script:
+    - curl -sSL https://get.docker.com/ | sh
     - apt-get --quiet install --yes python-pip # AWS CLI requires python-pip, python is installed by default
     - pip install -U pip  # pip update
     - pip install awscli  # AWS CLI installation
@@ -73,7 +75,6 @@ deploy-job:
     - ./deploy.sh $CI_BUILD_REF
   # requires previous CI stages to succeed in order to execute
   when: on_success
-  stage: deploy #assigns the stage as deploy
   environment: production # Assign the Gitlab Environment for tracking purposes
   cache:
     key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"

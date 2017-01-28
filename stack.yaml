@@ -1,6 +1,4 @@
 flags: {}
-docker:
-  enable: true
 packages:
 - '.'
 extra-deps:
