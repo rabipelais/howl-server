@@ -10,6 +10,7 @@ cache:
     - "~/.stack"
 
 before_script:
+  - apt-get --quiet install --yes libpq-dev
   - stack setup;
 
 # Defines the stages in the Gitlab-CI Pipeline
