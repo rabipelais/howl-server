@@ -3,15 +3,90 @@ image: haskell:8.0.1
 cache:
   untracked: true
   paths:
-    - .stack-work
+    - .stack-work/
+    - "~/docker"
+    - "~/.cabal"
+    - "~/.local"
+    - "~/.stack"
 
 before_script:
     - stack setup;
 
-howl_test:
+# Defines the stages in the Gitlab-CI Pipeline
+stages:
+  - build
+  - cleanup_build
+  - test
+  - deploy
+
+build_job:
+  stage: build
   cache:
+    key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"
     untracked: true
     paths:
-      - .stack-work
+      - .stack-work/
+      - "~/docker"
+      - "~/.cabal"
+      - "~/.local"
+      - "~/.stack"
+  script:
+    - stack --no-terminal howl-backend
+  only:
+     - branches
+  except:
+    - triggers
+
+build-clean-job:
+  script:
+    - stack --no-terminal clean
+  when: on_failure
+
+test_job:
+  stage: test
+  cache:
+    key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"
+    untracked: true
+    paths:
+      - .stack-work/
+      - "~/docker"
+      - "~/.cabal"
+      - "~/.local"
+      - "~/.stack"
   script:
     - stack --no-terminal test howl-backend:howl-backend-test --coverage
+  only:
+     - branches
+     - /^v\d+\.\d+\.\d+-.*$/
+  except:
+    - triggers
+
+### DEPLOY ####################################################
+deploy-job:
+  # Script to run for deploying application to AWS
+  script:
+    - apt-get --quiet install --yes python-pip # AWS CLI requires python-pip, python is installed by default
+    - pip install -U pip  # pip update
+    - pip install awscli  # AWS CLI installation
+    - stack --no-terminal install --local-bin-path .
+    - docker build --rm=false -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$AWS_REPO_NAME:$CI_BUILD_REF -f Dockerfile.deploy .
+    - ./deploy.sh $CI_BUILD_REF
+  # requires previous CI stages to succeed in order to execute
+  when: on_success
+  stage: deploy #assigns the stage as deploy
+  environment: production # Assign the Gitlab Environment for tracking purposes
+  cache:
+    key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"
+    untracked: true
+    paths:
+      - .stack-work/
+      - "~/docker"
+      - "~/.cabal"
+      - "~/.local"
+      - "~/.stack"
+  # Applies only to tags matching the regex: ie: v1.0.0-My-App-Release
+  only:
+    - /^v\d+\.\d+\.\d+-.*$/
+  except:
+    - branches
+    - triggers

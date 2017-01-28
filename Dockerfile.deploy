@@ -1,0 +1,10 @@
+FROM fpco/stack-run:latest
+
+RUN mkdir -p /bin
+WORKDIR /bin
+
+ADD howl-backend /bin
+
+EXPOSE 3000
+
+CMD ["/bin/howl-backend"]
