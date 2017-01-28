@@ -118,10 +118,11 @@ executable howl-backend
                      , howl-backend
                      , configurator
                      , conduit
+                     , bytestring
                      , http-conduit
                      , monad-logger
                      , persistent
-                     , persistent-sqlite
+                     , persistent-postgresql
                      , string-conversions
                      , wai
                      , warp
