@@ -64,7 +64,7 @@ type UsersIdPut = "users" :> Capture "userID" IDType
 type UsersIdConnectGet = "users" :> Capture "userID" IDType
                        :> "connect"
                        :> Header "token" Token
-                       :> Get '[JSON] [User]
+                       :> Get '[JSON] [ConnectCard]
 
 type UsersIdDelete = "users" :> Capture "userID" IDType
                           :> Header "token" Token

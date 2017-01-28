@@ -93,4 +93,16 @@ VenueFollower json
   userID IDType
   UniqueVenueFollower venueID userID
   deriving Eq Read Show
+
+Connect json
+  userID IDType
+  eventID IDType
+  UniqueConnect userID eventID
+  deriving Eq Read Show
+
+ConnectFriends json
+  connect ConnectId
+  friendID IDType
+  UniqueConnectFriends connect friendID
+  deriving Eq Read Show
 |]

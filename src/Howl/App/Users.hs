@@ -165,7 +165,7 @@ deleteUserId i = runQuery $ do
       Sql.delete k
       return $ Right i
 
-getUsersIdConnectH = undefined
+getUsersIdConnectH _ _ = throwError err405
 
 getUsersIdFollowsH :: IDType -> Maybe Token -> HandlerT IO [User]
 getUsersIdFollowsH i mToken = do
