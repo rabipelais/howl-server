@@ -1,6 +1,7 @@
 FROM fpco/stack-run:latest
 
 RUN mkdir -p /bin
+RUN mkdir -p .ebextensions
 WORKDIR /bin
 
 RUN apt-get update
