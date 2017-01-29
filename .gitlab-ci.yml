@@ -37,6 +37,7 @@ build_deps:
     expire_in: 1 week
     paths:
       - /root/.stack/
+      - .stack-work/
 
 build_job:
   stage: build
