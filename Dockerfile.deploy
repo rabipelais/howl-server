@@ -3,6 +3,9 @@ FROM fpco/stack-run:latest
 RUN mkdir -p /bin
 WORKDIR /bin
 
+RUN apt-get update
+RUN apt-get install -y libpq-dev
+
 COPY howl-backend /bin/howl-backend
 COPY app.cfg      /bin/app.cfg
 

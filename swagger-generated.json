@@ -11,12 +11,13 @@
     "definitions": {
         "Event": {
             "example": {
+                "coverPicPath": "www.coolpic.gov",
                 "startTime": "2015-12-31T00:00:00Z",
                 "fbID": "10155182179270463",
                 "name": "All You Can Swag",
                 "endTime": "2515-12-31T00:00:00Z",
                 "venueId": "901579654279270463",
-                "description": "Fun swaggy party."
+                "description": "Fun swaggy loooooong party."
             },
             "required": [
                 "fbID",
@@ -28,6 +29,9 @@
             ],
             "type": "object",
             "properties": {
+                "coverPicPath": {
+                    "type": "string"
+                },
                 "startTime": {
                     "type": "string"
                 },
@@ -64,17 +68,20 @@
                 "rating": 3.3,
                 "long": -70.87123,
                 "coverPicPath": null,
-                "location": "Pimpstreet 4",
+                "country": "Germany",
+                "zip": "76131",
+                "street": "Karlstraße",
                 "lat": 40.08031,
                 "fbID": "10155182179270463",
                 "name": "Swaggy House",
+                "city": "Karlsruhe",
+                "about": "Short summary",
                 "description": "The sweetest place in town"
             },
             "required": [
                 "fbID",
                 "description",
-                "name",
-                "location"
+                "name"
             ],
             "type": "object",
             "properties": {
@@ -87,7 +94,13 @@
                 "coverPicPath": {
                     "type": "null"
                 },
-                "location": {
+                "country": {
+                    "type": "string"
+                },
+                "zip": {
+                    "type": "string"
+                },
+                "street": {
                     "type": "string"
                 },
                 "lat": {
@@ -97,6 +110,12 @@
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "about": {
                     "type": "string"
                 },
                 "description": {
@@ -237,6 +256,79 @@
                 }
             }
         },
+        "ConnectCard": {
+            "example": {
+                "userID": "23412345123",
+                "eventCoverURL": "www.coolpix.zh",
+                "eventName": "Swaggity Spot",
+                "friends": [
+                    {
+                        "email": "make-it-so@yahoo.com",
+                        "profilePicPath": null,
+                        "lastName": "Picard",
+                        "username": "theCaptain",
+                        "fbID": "10155182179270463",
+                        "firstName": "Jean-Luc"
+                    }
+                ],
+                "eventID": "109890804920"
+            },
+            "required": [
+                "userID",
+                "eventID",
+                "eventName",
+                "friends"
+            ],
+            "type": "object",
+            "properties": {
+                "userID": {
+                    "type": "string"
+                },
+                "eventCoverURL": {
+                    "type": "string"
+                },
+                "eventName": {
+                    "type": "string"
+                },
+                "friends": {
+                    "items": {
+                        "required": [
+                            "email",
+                            "profilePicPath",
+                            "lastName",
+                            "username",
+                            "fbID",
+                            "firstName"
+                        ],
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": "string"
+                            },
+                            "profilePicPath": {
+                                "type": "null"
+                            },
+                            "lastName": {
+                                "type": "string"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "fbID": {
+                                "type": "string"
+                            },
+                            "firstName": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "type": "array"
+                },
+                "eventID": {
+                    "type": "string"
+                }
+            }
+        },
         "FollowStatus": {
             "type": "string",
             "enum": [
@@ -252,7 +344,7 @@
             "get": {
                 "responses": {
                     "400": {
-                        "description": "Invalid `token` or `distance` or `long` or `lat`"
+                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
                     },
                     "200": {
                         "schema": {
@@ -277,7 +369,7 @@
                     {
                         "format": "double",
                         "in": "query",
-                        "name": "long",
+                        "name": "lon",
                         "type": "number"
                     },
                     {
@@ -285,6 +377,39 @@
                         "in": "query",
                         "name": "distance",
                         "type": "number"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/search/users": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `q`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "type": "string"
                     },
                     {
                         "in": "header",
@@ -411,11 +536,66 @@
                 ]
             }
         },
+        "/v1/users/{userID}/suggested": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lat",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lon",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "distance",
+                        "type": "number"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
         "/v1/venues/nearby": {
             "get": {
                 "responses": {
                     "400": {
-                        "description": "Invalid `token` or `distance` or `long` or `lat`"
+                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
                     },
                     "200": {
                         "schema": {
@@ -440,7 +620,7 @@
                     {
                         "format": "double",
                         "in": "query",
-                        "name": "long",
+                        "name": "lon",
                         "type": "number"
                     },
                     {
@@ -564,6 +744,39 @@
                         "required": true,
                         "in": "path",
                         "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/search/venues": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `q`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Venue"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
                         "type": "string"
                     },
                     {
@@ -780,6 +993,43 @@
                         },
                         "in": "body",
                         "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/connect": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/ConnectCard"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
                     },
                     {
                         "in": "header",
@@ -1578,6 +1828,39 @@
                         "required": true,
                         "in": "path",
                         "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/search/events": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `q`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
                         "type": "string"
                     },
                     {

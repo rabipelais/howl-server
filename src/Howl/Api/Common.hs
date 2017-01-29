@@ -30,7 +30,7 @@ instance ToSchema ConnectCard where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "ConnectCard") $
       sketchSchema
-       (ConnectCard (FB.Id "23412345123") (FB.Id "109890804920") "Swaggity Spot" (Just "www.coolpix.zh") [])
+       (ConnectCard (FB.Id "23412345123") (FB.Id "109890804920") "Swaggity Spot" (Just "www.coolpix.zh") [User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing])
       & required .~ ["userID", "eventID", "eventName", "friends"]
 
 instance ToSchema Venue where
