@@ -3,7 +3,8 @@ FROM fpco/stack-run:latest
 RUN mkdir -p /bin
 WORKDIR /bin
 
-ADD howl-backend /bin
+COPY howl-backend /bin/howl-backend
+COPY app.cfg      /bin/app.cfg
 
 EXPOSE 3000
 
