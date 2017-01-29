@@ -68,8 +68,9 @@ deploy-job:
   stage: deploy #assigns the stage as deploy
   # Script to run for deploying application to AWS
   script:
-    - curl -sSL https://get.docker.com/ | sh
     - apt-get --quiet install --yes python-pip # AWS CLI requires python-pip, python is installed by default
+    - apt-get --quiet install --yes curl
+    - curl -sSL https://get.docker.com/ | sh
     - pip install -U pip  # pip update
     - pip install awscli  # AWS CLI installation
     - stack --no-terminal install --local-bin-path .
