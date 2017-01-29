@@ -4,6 +4,7 @@ services:
   - postgres:latest
 
 cache:
+  key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"
   untracked: true
   paths:
     - .stack-work/
@@ -19,22 +20,26 @@ before_script:
 
 # Defines the stages in the Gitlab-CI Pipeline
 stages:
+  - prepare
   - build
   - cleanup_build
   - test
   - deploy
 
+build_deps:
+  stage: prepare
+  script:
+    - echo "Artifacts in " "~/.stack"
+    - stack setup;
+    - stack build --only-dependencies
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - /root/.stack/
+
 build_job:
   stage: build
-  cache:
-    key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"
-    untracked: true
-    paths:
-      - .stack-work/
-      - "~/docker"
-      - "~/.cabal"
-      - "~/.local"
-      - "~/.stack"
   script:
     - stack build --no-terminal howl-backend
   only:
@@ -49,15 +54,6 @@ build-clean-job:
 
 test_job:
   stage: test
-  cache:
-    key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"
-    untracked: true
-    paths:
-      - .stack-work/
-      - "~/docker"
-      - "~/.cabal"
-      - "~/.local"
-      - "~/.stack"
   script:
     - stack --no-terminal test howl-backend:howl-backend-test --coverage
   only:
@@ -81,15 +77,6 @@ deploy-job:
   # requires previous CI stages to succeed in order to execute
   when: on_success
   environment: production # Assign the Gitlab Environment for tracking purposes
-  cache:
-    key: "$CI_BUILD_NAME/$CI_BUILD_REF_NAME"
-    untracked: true
-    paths:
-      - .stack-work/
-      - "~/docker"
-      - "~/.cabal"
-      - "~/.local"
-      - "~/.stack"
   # Applies only to tags matching the regex: ie: v1.0.0-My-App-Release
   only:
     - master
