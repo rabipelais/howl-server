@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings, LambdaCase #-}
 module Howl.Facebook.Object.User
     ( User(..)
     , Gender(..)
@@ -45,6 +45,7 @@ data User =
          , userVerified   :: Maybe Bool
          , userEmail      :: Maybe Text
          , userLocation   :: Maybe Place
+         , userPicSource :: Maybe Text
          }
     deriving (Eq, Ord, Show, Read, Typeable)
 
@@ -61,6 +62,14 @@ instance A.FromJSON User where
            <*> v .:? "verified"
            <*> v .:? "email"
            <*> v .:? "location"
+           <*> do picture <- v .:? "picture"
+                  case picture of
+                     Nothing -> return Nothing
+                     Just d -> d .:? "data" >>= \case
+                       Nothing -> return Nothing
+                       Just s -> s .:? "url"
+
+
     parseJSON _ = mzero
 
 

@@ -98,7 +98,7 @@ fromFbUser u = user
     firstName = fromMaybe username (Fb.userFirstName u)
     lastName = Fb.userLastName u
     email = Fb.userEmail u
-    profilePicPath = Nothing
+    profilePicPath = unpack <$> Fb.userPicSource u
     user = User fbID username firstName lastName email profilePicPath
 
 fromFbEvent :: Fb.Event -> Event

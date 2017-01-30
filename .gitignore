@@ -4,3 +4,8 @@ sqlite.*
 /app.cfg
 *.cfg
 sqlite*
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
