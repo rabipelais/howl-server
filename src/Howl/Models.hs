@@ -83,7 +83,7 @@ Venue json
   street Text Maybe
   zip Text Maybe
   lat Double Maybe
-  long Double Maybe
+  lon Double Maybe
   rating Double Maybe
   UniqueVenueID fbID
   deriving Eq Read Show
