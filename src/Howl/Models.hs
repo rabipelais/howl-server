@@ -51,6 +51,9 @@ Event json
   fbID IDType
   description Text
   name Text
+  attendingCount Int default=0
+  maybeCount Int default=0
+  declinedCount Int default=0
   startTime UTCTime
   endTime UTCTime
   venueId IDType
@@ -75,6 +78,8 @@ Invite json
 Venue json
   fbID IDType
   coverPicPath FilePath Maybe
+  profilePicPath FilePath Maybe
+  category Text Maybe
   about Text
   description Text
   name Text

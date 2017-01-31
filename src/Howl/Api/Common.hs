@@ -37,7 +37,7 @@ instance ToSchema Venue where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Venue") $
       sketchSchema
-       (Venue (FB.Id "10155182179270463") Nothing "Short summary" "The sweetest place in town" "Swaggy House"(Just "Karlsruhe") (Just "Germany") (Just "Karlstraße") (Just "76131") (Just 40.08031) (Just (-70.87123)) (Just 3.3))
+       (Venue (FB.Id "10155182179270463") Nothing Nothing (Just "Nightlife") "Short summary" "The sweetest place in town" "Swaggy House"(Just "Karlsruhe") (Just "Germany") (Just "Karlstraße") (Just "76131") (Just 40.08031) (Just (-70.87123)) (Just 3.3))
       & required .~ ["fbID", "description", "name"]
 
 deriving instance ToSchema FollowStatus
@@ -76,7 +76,7 @@ instance ToSchema Event where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Event") $
       sketchSchema
-       (Event (FB.Id "10155182179270463") "Fun swaggy loooooong party." "All You Can Swag" (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463") (Just "www.coolpic.gov"))
+       (Event (FB.Id "10155182179270463") "Fun swaggy loooooong party." "All You Can Swag" 0 0 0 (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463") (Just "www.coolpic.gov"))
       & required .~ ["fbID", "description", "name", "startTime", "endTime", "venueId"]
 
 instance ToSchema IDType where

@@ -33,6 +33,9 @@ type EventId = Id
 data Event =
   Event { eventId          :: EventId
         , eventName        :: Maybe Text
+        , eventAttending   :: Int
+        , eventMaybe       :: Int
+        , eventDeclined    :: Int
         , eventCategory    :: Maybe Text
         , eventDescription :: Maybe Text
         , eventStartTime   :: Maybe UTCTime
@@ -47,6 +50,9 @@ instance A.FromJSON Event where
     parseJSON (A.Object v) =
       Event <$> v .:  "id"
            <*> v .:? "name"
+           <*> (v .:? "attending_count" .!= 0)
+           <*> (v .:? "attending_maybe" .!= 0)
+           <*> (v .:? "attending_declined" .!= 0)
            <*> v .:? "category"
            <*> v .:? "description"
            <*> v .:? "start_time"

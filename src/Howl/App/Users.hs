@@ -303,6 +303,7 @@ usersEvents i = E.select
       E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPUserID E.==. E.val i
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
+      E.orderBy [E.desc (event^.EventStartTime)]
       return event
 
 getUsersIdVenuesH :: IDType -> Maybe Token -> HandlerT IO [Venue]
@@ -329,7 +330,7 @@ getNewFbUser userAT creds manager =  do
 getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Event]
 getFbEvents userAT creds manager limit = do
   let url = "/v2.8/" <> (Fb.idCode $ accessTokenUserId userAT) <> "/" <> "events"
-  eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner,cover.fields(id,source)")] (Just userAT)
+  eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner,cover.fields(id,source),attending_count,maybe_count,declined_count")] (Just userAT)
   map fromFbEvent <$> go eventPager []
   where go pager res =
           if P.length res < limit
@@ -341,7 +342,7 @@ getFbEvents userAT creds manager limit = do
 
 getFbVenue userAT creds manager venueId = do
   let url = "/v2.8/" <> venueId
-  venue <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields","id,name,about,emails,cover.fields(id,source),picture.type(large),location")] (Just userAT)
+  venue <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields","id,name,about,emails,cover.fields(id,source),picture.type(normal),location,category")] (Just userAT)
   return (fromFbVenue venue)
 
 getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Event]

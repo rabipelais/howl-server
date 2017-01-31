@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, CPP, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE ConstraintKinds, CPP, DeriveDataTypeable, FlexibleContexts, OverloadedStrings, LambdaCase #-}
 module Howl.Facebook.Graph
     ( getObject
     , postObject
@@ -209,6 +209,8 @@ data Place =
         , placeName     :: Maybe Text -- ^ @Page@ name.
         , placeAbout    :: Maybe Text
         , placeDescription :: Maybe Text
+        , placeCategory :: Maybe Text
+        , placePicSource :: Maybe Text
         , placeCoverSource :: Maybe Text
         , placeLocation :: Maybe Location
         }
@@ -220,6 +222,13 @@ instance A.FromJSON Place where
           <*> v A..:? "name"
           <*> v A..:? "about"
           <*> v A..:? "description"
+          <*> v A..:? "category"
+          <*> do picture <- v A..:? "picture"
+                 case picture of
+                     Nothing -> return Nothing
+                     Just d -> d A..:? "data" >>= \case
+                       Nothing -> return Nothing
+                       Just s -> s A..:? "url"
           <*> do cover <- v A..:? "cover"
                  case cover of
                      Nothing -> return Nothing

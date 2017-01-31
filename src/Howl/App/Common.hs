@@ -107,17 +107,22 @@ fromFbEvent e = event
     fbID = Fb.eventId e
     description = fromMaybe "" (Fb.eventDescription e)
     name = fromMaybe "Unnamed event" (Fb.eventName e)
+    attending = Fb.eventAttending e
+    maybeCount = Fb.eventMaybe e
+    declined = Fb.eventDeclined e
     startTime = fromMaybe (UTCTime (fromGregorian 2017 01 01) (secondsToDiffTime 0)) (Fb.eventStartTime e)
     endTime = fromMaybe (UTCTime (fromGregorian 2017 01 01) (secondsToDiffTime 0)) (Fb.eventEndTime e)
     venueId = fromMaybe "" (Fb.placeId =<< Fb.eventPlace e)
     coverPicPath = unpack <$> Fb.eventCoverSource e
-    event = Event fbID description name startTime endTime venueId coverPicPath
+    event = Event fbID description name attending maybeCount declined startTime endTime venueId coverPicPath
 
 fromFbVenue :: Fb.Place -> Venue
 fromFbVenue v = venue
   where
     fbID = fromMaybe "" $ Fb.placeId v
     coverPicPath = unpack <$> Fb.placeCoverSource v
+    profilePicPath = unpack <$> Fb.placePicSource v
+    category = Fb.placeCategory v
     about = fromMaybe "" (Fb.placeAbout v)
     description = fromMaybe "" (Fb.placeDescription v)
     name = fromMaybe "Unnamed event" (Fb.placeName v)
@@ -126,7 +131,7 @@ fromFbVenue v = venue
     street = Fb.placeLocation v >>= Fb.locationStreet
     zip = Fb.placeLocation v >>= Fb.locationZip
     geo = Fb.placeLocation v >>= Fb.locationCoords
-    venue = Venue fbID coverPicPath about description name city country street zip (Fb.latitude <$> geo) (Fb.longitude <$> geo) Nothing
+    venue = Venue fbID coverPicPath profilePicPath category about description name city country street zip (Fb.latitude <$> geo) (Fb.longitude <$> geo) Nothing
 
 getFbVenuesIdNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Double -> Double -> Double -> Double -> Fb.FacebookT anyAuth m (Fb.Pager IDType)
 getFbVenuesIdNearby userAT lat lon distance limit = do
@@ -167,8 +172,9 @@ getEventsFromVenuesNearby userAT vPager mSince = do
               "name",
               "about",
               "emails",
+              "category",
               "cover.fields(id,source)",
-              "picture.type(large)",
+              "picture.type(normal)",
               "location",
               "events.fields(" <> (fold $ L.intersperse (B.pack ",") eventsFields) <> ")"]
     args = [ ("fields", (fold $ L.intersperse (B.pack ",") fields) <> since)
