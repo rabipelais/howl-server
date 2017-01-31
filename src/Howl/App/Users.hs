@@ -96,10 +96,13 @@ postUsers userAT = do
         $logDebug $ "Got user from facebook: " <> (pack . show) u
 
         es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 10
+        vs <- mapM (liftIO . runResourceT . getFbVenue userAT creds' manager' . Fb.idCode .  eventVenueId) es
+
         -- $logDebug $ "Got at least this 5 events from facebook: " <> (pack . show . P.take 5) es
 
         insert u
         mapM_ insertUnique es
+        mapM_ insertUnique vs
         mapM_ (attendEvent u) es
         return u
       Just entity -> return (Left (userFbID $ entityVal entity))
@@ -335,6 +338,11 @@ getFbEvents userAT creds manager limit = do
               Just nextPager -> go nextPager (res ++ (Fb.pagerData pager))
               Nothing -> return res
           else return res
+
+getFbVenue userAT creds manager venueId = do
+  let url = "/v2.8/" <> venueId
+  venue <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields","id,name,about,emails,cover.fields(id,source),picture.type(large),location")] (Just userAT)
+  return (fromFbVenue venue)
 
 getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Event]
 getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mToken = do
