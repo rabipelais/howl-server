@@ -100,9 +100,18 @@ postUsers userAT = do
 
         insert u
         mapM_ insertUnique es
+        mapM_ (attendEvent u) es
         return u
       Just entity -> return (Left (userFbID $ entityVal entity))
-
+  where
+    attendEvent u e = do
+      let rsvp = EventRSVP ui ei Fb.Unsure
+          ui = userFbID u
+          ei = eventFbID e
+      getBy (UniqueEventRSVP ui ei) >>= \case
+        Just (Entity k _) -> Sql.replace k rsvp
+        Nothing -> insert_ rsvp
+      return rsvp
 putUsersH :: User -> Maybe Token -> HandlerT IO User
 putUsersH u mToken = do
   $logInfo $ "Request putting user: " <> (pack . show) u
