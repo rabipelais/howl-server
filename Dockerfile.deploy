@@ -9,6 +9,6 @@ RUN apt-get install -y libpq-dev
 COPY howl-backend /bin/howl-backend
 COPY app.cfg      /bin/app.cfg
 
-EXPOSE 3001
+EXPOSE 3000
 
 CMD ["/bin/howl-backend"]
