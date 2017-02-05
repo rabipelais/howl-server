@@ -33,13 +33,13 @@ build_deps:
     when: always
     expire_in: 1 week
     paths:
-      - ~/.stack/
+      - /root/.stack/
       - .stack-work/
   script:
-    - echo "Artifacts in " ~/.stack
+    - echo "Artifacts in " /root/.stack
     - stack setup;
     - stack build --only-dependencies
-    - ls ~/.stack/
+    - ls /root/.stack/
     - ls .stack-work/
 
 build_job:
