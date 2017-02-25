@@ -23,12 +23,14 @@ library
                      , Howl.Api.Venues
                      , Howl.Api.Common
                      , Howl.Api.Search
+                     , Howl.Api.Static
                      , Howl.App
                      , Howl.App.Common
                      , Howl.App.Users
                      , Howl.App.Events
                      , Howl.App.Venues
                      , Howl.App.Search
+                     , Howl.App.Static
                      , Howl.Facebook
                      , Howl.Facebook.Object.Event
                      , Howl.Facebook.Monad

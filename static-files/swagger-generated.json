@@ -1,0 +1,1915 @@
+{
+    "swagger": "2.0",
+    "schemes": [
+        "https"
+    ],
+    "info": {
+        "version": "1.0",
+        "title": "Howl Server API",
+        "description": "This is an API that tests swagger integration"
+    },
+    "definitions": {
+        "Event": {
+            "example": {
+                "coverPicPath": "www.coolpic.gov",
+                "startTime": "2015-12-31T00:00:00Z",
+                "fbID": "10155182179270463",
+                "name": "All You Can Swag",
+                "endTime": "2515-12-31T00:00:00Z",
+                "venueId": "901579654279270463",
+                "description": "Fun swaggy loooooong party."
+            },
+            "required": [
+                "fbID",
+                "description",
+                "name",
+                "startTime",
+                "endTime",
+                "venueId"
+            ],
+            "type": "object",
+            "properties": {
+                "coverPicPath": {
+                    "type": "string"
+                },
+                "startTime": {
+                    "type": "string"
+                },
+                "fbID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "endTime": {
+                    "type": "string"
+                },
+                "venueId": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "RSVP": {
+            "type": "string",
+            "enum": [
+                "Unsure",
+                "Maybe",
+                "Created",
+                "Declined",
+                "NotReplied",
+                "Attending"
+            ]
+        },
+        "Venue": {
+            "example": {
+                "rating": 3.3,
+                "long": -70.87123,
+                "coverPicPath": null,
+                "country": "Germany",
+                "zip": "76131",
+                "street": "Karlstraße",
+                "lat": 40.08031,
+                "fbID": "10155182179270463",
+                "name": "Swaggy House",
+                "city": "Karlsruhe",
+                "about": "Short summary",
+                "description": "The sweetest place in town"
+            },
+            "required": [
+                "fbID",
+                "description",
+                "name"
+            ],
+            "type": "object",
+            "properties": {
+                "rating": {
+                    "type": "number"
+                },
+                "long": {
+                    "type": "number"
+                },
+                "coverPicPath": {
+                    "type": "null"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "zip": {
+                    "type": "string"
+                },
+                "street": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "fbID": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "about": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "VenueFollower": {
+            "example": {
+                "userID": "097955182179125125",
+                "venueID": "10155182179270463"
+            },
+            "required": [
+                "venueID",
+                "userID"
+            ],
+            "type": "object",
+            "properties": {
+                "userID": {
+                    "type": "string"
+                },
+                "venueID": {
+                    "type": "string"
+                }
+            }
+        },
+        "EventRSVP": {
+            "example": {
+                "rsvp": "attending",
+                "userID": "10155182179270463",
+                "eventID": "81731981379127"
+            },
+            "required": [
+                "userID",
+                "eventID",
+                "rsvp"
+            ],
+            "type": "object",
+            "properties": {
+                "rsvp": {
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                }
+            }
+        },
+        "UserAccessToken": {
+            "example": {
+                "kind": "user",
+                "expires": "2015-12-31T00:00:00Z",
+                "token": "EAACEdEose0cBAIM1ZBWcOfQl3Gw03XZCY1yxzQZAZCA1HUuaqfaIUmhWRWfZCtDafrX0n6VaU8dGUggn7H0dpGe93eFUfVg5Ew4HxDdjb5jbNuFFuqcMbiKpMPdZAeoZATBVF1j8R5xTrWjiFnDJYLcjuhZCTccZCPqMIwUXZBm0lPNwZDZD",
+                "id": "10155182179270463"
+            },
+            "required": [
+                "kind",
+                "expires",
+                "token",
+                "id"
+            ],
+            "type": "object",
+            "description": "`id` is the FB app user ID, `token` the user access token, and `expires` is the token expiration date in `%FT%T%z` format",
+            "properties": {
+                "kind": {
+                    "type": "string"
+                },
+                "expires": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "Invite": {
+            "example": {
+                "targetID": "81731981379127",
+                "sourceID": "10155182179270463",
+                "eventID": "81787816817678"
+            },
+            "required": [
+                "sourceID",
+                "targetID",
+                "eventID"
+            ],
+            "type": "object",
+            "properties": {
+                "targetID": {
+                    "type": "string"
+                },
+                "sourceID": {
+                    "type": "string"
+                },
+                "eventID": {
+                    "type": "string"
+                }
+            }
+        },
+        "User": {
+            "example": {
+                "email": "make-it-so@yahoo.com",
+                "profilePicPath": null,
+                "lastName": "Picard",
+                "username": "theCaptain",
+                "fbID": "10155182179270463",
+                "firstName": "Jean-Luc"
+            },
+            "required": [
+                "fbID",
+                "username",
+                "firstName"
+            ],
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "profilePicPath": {
+                    "type": "null"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "fbID": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                }
+            }
+        },
+        "ConnectCard": {
+            "example": {
+                "userID": "23412345123",
+                "eventCoverURL": "www.coolpix.zh",
+                "eventName": "Swaggity Spot",
+                "friends": [
+                    {
+                        "email": "make-it-so@yahoo.com",
+                        "profilePicPath": null,
+                        "lastName": "Picard",
+                        "username": "theCaptain",
+                        "fbID": "10155182179270463",
+                        "firstName": "Jean-Luc"
+                    }
+                ],
+                "eventID": "109890804920"
+            },
+            "required": [
+                "userID",
+                "eventID",
+                "eventName",
+                "friends"
+            ],
+            "type": "object",
+            "properties": {
+                "userID": {
+                    "type": "string"
+                },
+                "eventCoverURL": {
+                    "type": "string"
+                },
+                "eventName": {
+                    "type": "string"
+                },
+                "friends": {
+                    "items": {
+                        "required": [
+                            "email",
+                            "profilePicPath",
+                            "lastName",
+                            "username",
+                            "fbID",
+                            "firstName"
+                        ],
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": "string"
+                            },
+                            "profilePicPath": {
+                                "type": "null"
+                            },
+                            "lastName": {
+                                "type": "string"
+                            },
+                            "username": {
+                                "type": "string"
+                            },
+                            "fbID": {
+                                "type": "string"
+                            },
+                            "firstName": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "type": "array"
+                },
+                "eventID": {
+                    "type": "string"
+                }
+            }
+        },
+        "FollowStatus": {
+            "type": "string",
+            "enum": [
+                "Pending",
+                "Ignored",
+                "Blocked",
+                "Accepted"
+            ]
+        }
+    },
+    "paths": {
+        "/v1/events/nearby": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lat",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lon",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "distance",
+                        "type": "number"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/search/users": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `q`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/blocked": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "201": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/venues/{venueID}/followers": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`venueID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "venueID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/suggested": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lat",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lon",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "distance",
+                        "type": "number"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/venues/nearby": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Venue"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lat",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "lon",
+                        "type": "number"
+                    },
+                    {
+                        "format": "double",
+                        "in": "query",
+                        "name": "distance",
+                        "type": "number"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/events/follows": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/follows": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "202": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/search/venues": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `q`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Venue"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/rsvp": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/EventRSVP"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/invites/{friendID}": {
+            "post": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` or `friendID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "201": {
+                        "schema": {
+                            "$ref": "#/definitions/Invite"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` or `friendID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Invite"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` or `friendID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Invite"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/venues": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Venue"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Venue"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Venue"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/connect": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/ConnectCard"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/venues": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Venue"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/venues/{venueID}/followers/{userID}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`venueID` or `userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/VenueFollower"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "venueID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`venueID` or `userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/VenueFollower"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "venueID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "responses": {
+                    "404": {
+                        "description": "`venueID` or `userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/VenueFollower"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "venueID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid `body`"
+                    },
+                    "201": {
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserAccessToken"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    }
+                ]
+            },
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/User"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/rsvp/{userID}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` or `userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/EventRSVP"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` or `userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/EventRSVP"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`eventID` or `userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/EventRSVP"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RSVP"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/invites": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Invite"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Event"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/venues/{venueID}/events": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`venueID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "venueID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/events": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/venues/{venueID}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`venueID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Venue"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "venueID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Event"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Event"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/follows/{friendID}": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` or `friendID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/FollowStatus"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` or `friendID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/search/events": {
+            "get": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid `token` or `q`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "q",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/blocked/{friendID}": {
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` or `friendID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        }
+    }
+}

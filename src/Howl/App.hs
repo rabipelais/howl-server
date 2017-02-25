@@ -22,6 +22,7 @@ import           Data.Text
 import           Howl.Api
 import           Howl.App.Events
 import           Howl.App.Search
+import           Howl.App.Static
 import           Howl.App.Users
 import           Howl.App.Venues
 import           Howl.Models
@@ -32,8 +33,8 @@ import           Howl.Utils
 handlers :: ServerT Api (HandlerT IO)
 handlers = usersHandlers :<|> eventsHandlers :<|> venuesHandlers :<|> searchHandlers
 
-server :: LogEnv HandlerEnv -> Server Api
-server env = enter dienerToEither handlers
+server :: LogEnv HandlerEnv -> Server ApiRaw
+server env = enter dienerToEither handlers :<|> staticHandlers
   where
     dienerToEither :: HandlerT IO :~> ExceptT ServantErr IO
     dienerToEither = Nat $ \ar ->
