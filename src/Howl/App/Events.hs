@@ -83,7 +83,7 @@ eventsNearbyGet (Just lat) (Just lon) d mToken = do
         "SELECT ?? \
         \FROM event INNER JOIN venue \
         \ON event.venue_id=venue.fb_i_d \
-        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.long - ?) * 112000) * ((venue.long - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.long IS NOT NULL"
+        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.lon - ?) * 112000) * ((venue.lon - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.lon IS NOT NULL"
         [toPersistValue lat, toPersistValue lat, toPersistValue lon, toPersistValue lon, toPersistValue d', toPersistValue d']
   return $ map entityVal eventEntities
   where
