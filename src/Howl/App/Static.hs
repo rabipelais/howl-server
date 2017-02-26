@@ -53,4 +53,4 @@ staticHandlers =
   staticFiles
 
 
-staticFiles = serveDirectory "static-files"
+staticFiles = serveDirectory "/static-files"

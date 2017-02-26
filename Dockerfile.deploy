@@ -8,6 +8,7 @@ RUN apt-get install -y libpq-dev
 
 COPY howl-backend /bin/howl-backend
 COPY app.cfg      /bin/app.cfg
+COPY swagger-generated.json      /static-files/swagger-generated.json
 
 EXPOSE 3000
 
