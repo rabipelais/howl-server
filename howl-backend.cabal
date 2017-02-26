@@ -97,6 +97,7 @@ library
                      , time
                      , unordered-containers
                      , wai
+                     , wai-cors
                      , warp
   default-extensions:
     DeriveDataTypeable

@@ -10,10 +10,11 @@ import           Database.Persist
 import           Database.Persist.Sql
 import           Database.Persist.Sqlite
 
-import           Network.HTTP.Conduit       (Manager, newManager,
-                                             tlsManagerSettings)
+import           Network.HTTP.Conduit        (Manager, newManager,
+                                              tlsManagerSettings)
+import           Network.Wai.Middleware.Cors
 
-import qualified Howl.Facebook              as Fb
+import qualified Howl.Facebook               as Fb
 
 import           Servant
 
@@ -43,4 +44,4 @@ server env = enter dienerToEither handlers :<|> staticHandlers
         Right a -> return a
 
 app :: LogEnv HandlerEnv -> Application
-app = serve api . server
+app = simpleCors . serve api . server
