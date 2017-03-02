@@ -24,7 +24,29 @@ To run the tests, use
 ```
 $ stack test howl-backend:howl-backend-test
 ```
-be sure the variables `APP_NAME`, `APP_SECRET`, and `APP_ID` are in the environment. In bash you do this with `$ export APP_NAME="example"`, in fish with `$ set -g -x APP_NAME "example"`
+be sure the following variables are in the environment:
+```
+APP_SECRET            Facebook app secret key
+APP_ID                Facebook app ID
+APP_NAME              Facebook app name (Howl)
+AWS_ACCESS_KEY_ID     AWS secret key ID
+AWS_ACCOUNT_ID        AWS account ID
+AWS_DEFAULT_REGION    AWS region (eu-central-1)
+AWS_REPO_NAME         AWS docker repo (howl-docker-repo)
+AWS_S3_LOCATION       AWS S3 bucket location
+AWS_SECRET_ACCESS_KEY AWS secret key
+AMQP_HOST             RabbitMQ Host
+AMQP_VHOST            RabbitMQ Virtual Host
+AMQP_USER             RabbitMQ User
+AMQP_PASSWORD         RabbitMQ password
+DB_NAME               DB name
+DB_USER               DB user
+DB_HOST               DB host
+DB_PASSWORD           DB password
+DB_PORT               DB port (5432)
+DB_POOLSIZE           DB connection pool size
+```
+In `bash` you do this with `$ export APP_NAME="example"`, in fish with `$ set -g -x APP_NAME "example"`
 
 ## Documentation
 To auto-generate the `Swagger` JSON for the Web API, run `stack exec howl-swagger`
