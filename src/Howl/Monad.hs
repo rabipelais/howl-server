@@ -37,6 +37,7 @@ import           Control.Monad.Writer        (WriterT)
 
 import           Database.Persist.Sql        (ConnectionPool)
 import           Network.HTTP.Conduit        (Manager)
+import           Network.AMQP                (Channel)
 
 import qualified Howl.Facebook               as FB
 import           Howl.Logger                 (LogFunction, withLogger)
@@ -55,6 +56,7 @@ data HandlerEnv = HandlerEnv
   , creds :: FB.Credentials
   , valFunction :: IDType -> Maybe Token -> HandlerT IO ()
   , idFromToken :: Maybe Token -> HandlerT IO IDType
+  , queueChan :: Channel
   }
 
 -- Diener
@@ -131,6 +133,8 @@ asks f = f <$> Reader.asks logEnv
 auth i mt = asks valFunction >>= \f -> (f i mt)
 
 tokenUser mt = asks idFromToken >>= \f -> f mt
+
+--qChan = asks queueChan
 
 validateId _ _ = liftIO $ putStrLn "Validation"
 noValidation _ _ = liftIO $ putStrLn "NoValidation"

@@ -54,7 +54,9 @@ library
                      , Howl.Types
                      , Howl.Utils
                      , Howl.Logger
+                     , Howl.Queue
   build-depends:       base
+                     , amqp
                      , ansi-terminal
                      , base64-bytestring
                      , base16-bytestring

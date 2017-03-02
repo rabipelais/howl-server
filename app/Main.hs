@@ -6,6 +6,7 @@ import qualified Data.Text                   as T
 import           Howl
 import qualified Howl.Facebook               as Fb
 import qualified Howl.Logger                 as Logger
+import qualified Howl.Queue                  as Q
 
 import qualified Control.Exception.Lifted    as E
 import           Control.Monad.IO.Class
@@ -39,21 +40,24 @@ main = do
         , Logger.noConsoleLogging = False
         }
       connString = pack $ "host=" <> dbHost <> " dbname=" <> dbName <> " user=" <> dbUser <> " password=" <> dbPassword <> " port=" <> dbPort
+      queueSetting = Q.Settings mqHost mqVHost mqUser mqPassword
+      queues = [Q.newQueue{Q.queueName = "notifications_task", Q.queueAutoDelete = False, Q.queueDurable = True}]
   putStrLn "Starting server"
   Logger.withLogger logSettings $ \logFn -> do
+    liftIO $ Q.withConnection queueSetting queues $ \(conn, chan) -> do
       let port = 3000 :: Int
       liftIO $ putStrLn $ "Listening on port " ++ show port ++ " ..."
       runStderrLoggingT $ withPostgresqlPool connString poolSize $ \pool -> do
         runSqlPool (runMigration migrateAll) pool
         manager <- liftIO $ newManager tlsManagerSettings
-        let env = LogEnv logFn $ authHandlerEnv pool manager creds
+        let env = LogEnv logFn $ authHandlerEnv pool manager creds chan
         liftIO $ Warp.run port $ app env
 
 getConfig = tryToGet `E.catch` showHelp
   where
     tryToGet = do
       [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, appName, appId, appSecret, mqHost, mqVHost, mqUser, mqPassword] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "APP_NAME", "APP_ID", "APP_SECRET", "AMQP_HOST", "AMQP_VHOST", "AMQP_USER", "AMQP_PASSWORD"]
-      return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, mqVHost, mqUser, mqPassword, Fb.Credentials (T.pack appName) (T.pack appId)  (T.pack appSecret))
+      return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, T.pack mqVHost, T.pack mqUser, T.pack mqPassword, Fb.Credentials (T.pack appName) (T.pack appId)  (T.pack appSecret))
     showHelp exc | not (isDoesNotExistError exc) = E.throw exc
     showHelp _ = do
       putStrLn $ unlines
