@@ -5,9 +5,10 @@ WORKDIR /bin
 
 RUN apt-get update
 RUN apt-get install -y libpq-dev
+RUN ln -sf /proc/1/fd/1 /var/log/webserver.log
+
 
 COPY howl-backend /bin/howl-backend
-COPY app.cfg      /bin/app.cfg
 COPY swagger-generated.json      /static-files/swagger-generated.json
 
 EXPOSE 3000

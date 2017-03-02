@@ -34,7 +34,7 @@ main = do
   putStrLn "Reading config..."
   (dbName, dbHost, dbUser, dbPassword, dbPort, poolSize, mqHost, mqVHost, mqUser, mqPassword, creds) <- getConfig
   let logSettings = Logger.Settings
-        { Logger.filePath = "webserver.log"
+        { Logger.filePath = "/var/log/webserver.log"
         , Logger.logLevel = LevelDebug
         , Logger.noConsoleLogging = False
         }
