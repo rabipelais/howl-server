@@ -52,7 +52,7 @@ main = do
 getConfig = tryToGet `E.catch` showHelp
   where
     tryToGet = do
-      [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, appName, appId, appSecret, mqHost, mqVHost, mqUser, mqPassword] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "APP_NAME", "APP_ID", "APP_SECRET", "AMPQ_HOST", "AMPQ_VHOST", "AMPQ_USER", "AMPQ_PASSWORD"]
+      [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, appName, appId, appSecret, mqHost, mqVHost, mqUser, mqPassword] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "APP_NAME", "APP_ID", "APP_SECRET", "AMQP_HOST", "AMQP_VHOST", "AMQP_USER", "AMQP_PASSWORD"]
       return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, mqVHost, mqUser, mqPassword, Fb.Credentials (T.pack appName) (T.pack appId)  (T.pack appSecret))
     showHelp exc | not (isDoesNotExistError exc) = E.throw exc
     showHelp _ = do
@@ -69,10 +69,10 @@ getConfig = tryToGet `E.catch` showHelp
           , "AWS_REPO_NAME         AWS docker repo (howl-docker-repo)"
           , "AWS_S3_LOCATION       AWS S3 bucket location"
           , "AWS_SECRET_ACCESS_KEY AWS secret key"
-          , "AMPQ_HOST             RabbitMQ Host"
-          , "AMPQ_VHOST            RabbitMQ Virtual Host"
-          , "AMPQ_USER             RabbitMQ User"
-          , "AMPQ_PASSWORD         RabbitMQ password"
+          , "AMQP_HOST             RabbitMQ Host"
+          , "AMQP_VHOST            RabbitMQ Virtual Host"
+          , "AMQP_USER             RabbitMQ User"
+          , "AMQP_PASSWORD         RabbitMQ password"
           , "DB_NAME               DB name"
           , "DB_USER               DB user"
           , "DB_HOST               DB host"
