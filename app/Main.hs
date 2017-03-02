@@ -2,11 +2,12 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
-import           Data.Configurator           as C
+import qualified Data.Text                   as T
 import           Howl
 import qualified Howl.Facebook               as Fb
 import qualified Howl.Logger                 as Logger
 
+import qualified Control.Exception.Lifted    as E
 import           Control.Monad.IO.Class
 import           Control.Monad.Logger
 
@@ -17,6 +18,10 @@ import           Database.Persist
 import           Database.Persist.Postgresql
 import           Database.Persist.Sql
 
+import           System.Environment          (getEnv)
+import           System.Exit                 (exitFailure)
+import           System.IO.Error             (isDoesNotExistError)
+
 import           Network.HTTP.Conduit        (Manager, newManager,
                                               tlsManagerSettings)
 import           Network.Wai
@@ -24,24 +29,10 @@ import           Network.Wai.Handler.Warp    as Warp
 
 --------------------------------------------------
 
-getCredentials config = do
-  appName <- C.lookup config "credentials.appName"
-  appId <- C.lookup config "credentials.appId"
-  appSecret <- C.lookup config "credentials.appSecret"
-  return $ Fb.Credentials <$> appName <*> appId <*> appSecret
-
 main :: IO ()
 main = do
-  let configPath = "app.cfg"
   putStrLn "Reading config..."
-  config <- load [Required configPath]
-  mCreds <- getCredentials config
-  (Just (dbName :: String)) <- C.lookup config "database.name"
-  (Just (dbHost :: String)) <- C.lookup config "database.host"
-  (Just (dbUser :: String)) <- C.lookup config "database.user"
-  (Just (dbPassword :: String)) <- C.lookup config "database.password"
-  (Just (dbPort :: String)) <- C.lookup config "database.port"
-  (Just poolSize) <- C.lookup config "database.poolSize"
+  (dbName, dbHost, dbUser, dbPassword, dbPort, poolSize, mqHost, mqVHost, mqUser, mqPassword, creds) <- getConfig
   let logSettings = Logger.Settings
         { Logger.filePath = "webserver.log"
         , Logger.logLevel = LevelDebug
@@ -49,9 +40,7 @@ main = do
         }
       connString = pack $ "host=" <> dbHost <> " dbname=" <> dbName <> " user=" <> dbUser <> " password=" <> dbPassword <> " port=" <> dbPort
   putStrLn "Starting server"
-  case mCreds of
-    Nothing -> print "ERROR reading config file"
-    Just creds -> Logger.withLogger logSettings $ \logFn -> do
+  Logger.withLogger logSettings $ \logFn -> do
       let port = 3000 :: Int
       liftIO $ putStrLn $ "Listening on port " ++ show port ++ " ..."
       runStderrLoggingT $ withPostgresqlPool connString poolSize $ \pool -> do
@@ -59,3 +48,54 @@ main = do
         manager <- liftIO $ newManager tlsManagerSettings
         let env = LogEnv logFn $ authHandlerEnv pool manager creds
         liftIO $ Warp.run port $ app env
+
+getConfig = tryToGet `E.catch` showHelp
+  where
+    tryToGet = do
+      [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, appName, appId, appSecret, mqHost, mqVHost, mqUser, mqPassword] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "APP_NAME", "APP_ID", "APP_SECRET", "AMPQ_HOST", "AMPQ_VHOST", "AMPQ_USER", "AMPQ_PASSWORD"]
+      return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, mqVHost, mqUser, mqPassword, Fb.Credentials (T.pack appName) (T.pack appId)  (T.pack appSecret))
+    showHelp exc | not (isDoesNotExistError exc) = E.throw exc
+    showHelp _ = do
+      putStrLn $ unlines
+          [ "In order to run the webserver, you need"
+          , "the following configuration environment variables:"
+          , ""
+          , "APP_SECRET            Facebook app secret key"
+          , "APP_ID                Facebook app ID"
+          , "APP_NAME              Facebook app name (Howl)"
+          , "AWS_ACCESS_KEY_ID     AWS secret key ID"
+          , "AWS_ACCOUNT_ID        AWS account ID"
+          , "AWS_DEFAULT_REGION    AWS region (eu-central-1)"
+          , "AWS_REPO_NAME         AWS docker repo (howl-docker-repo)"
+          , "AWS_S3_LOCATION       AWS S3 bucket location"
+          , "AWS_SECRET_ACCESS_KEY AWS secret key"
+          , "AMPQ_HOST             RabbitMQ Host"
+          , "AMPQ_VHOST            RabbitMQ Virtual Host"
+          , "AMPQ_USER             RabbitMQ User"
+          , "AMPQ_PASSWORD         RabbitMQ password"
+          , "DB_NAME               DB name"
+          , "DB_USER               DB user"
+          , "DB_HOST               DB host"
+          , "DB_PASSWORD           DB password"
+          , "DB_PORT               DB port (5432)"
+          , "DB_POOLSIZE           DB connection pool size"
+          , ""
+          , "For example, before running the webserver you could run in the shell:"
+          , ""
+          , "  $ export APP_NAME=\"example\""
+          , "  $ export APP_ID=\"458798571203498\""
+          , "  $ export APP_SECRET=\"28a9d0fa4272a14a9287f423f90a48f2304\""
+          , "  ..."
+          , ""
+          , "or if you're using fish:"
+          , ""
+          , "  $ set -g -x APP_NAME \"example\""
+          , "  $ set -g -x APP_ID \"458798571203498\""
+          , "  $ set -g -x APP_SECRET \"28a9d0fa4272a14a9287f423f90a48f2304\""
+          , "  ..."
+          , ""
+          , "Of course, the values above aren't valid and you need to"
+          , "replace them with your own."
+          , ""
+          , "(Exiting now with a failure code.)"]
+      exitFailure

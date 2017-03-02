@@ -122,11 +122,13 @@ executable howl-backend
                      , configurator
                      , conduit
                      , bytestring
+                     , lifted-base
                      , http-conduit
                      , monad-logger
                      , persistent
                      , persistent-postgresql
                      , string-conversions
+                     , text
                      , wai
                      , warp
   default-language:    Haskell2010
