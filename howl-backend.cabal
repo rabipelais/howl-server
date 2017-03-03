@@ -55,6 +55,8 @@ library
                      , Howl.Utils
                      , Howl.Logger
                      , Howl.Queue
+                     , Howl.Downloader
+                     , Howl.Message
   build-depends:       base
                      , amqp
                      , ansi-terminal

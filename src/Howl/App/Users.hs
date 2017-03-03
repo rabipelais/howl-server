@@ -47,6 +47,7 @@ import           Howl.Models
 import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
+import           Howl.Downloader
 
 usersHandlers :: ServerT UsersAPI (HandlerT IO)
 usersHandlers =
