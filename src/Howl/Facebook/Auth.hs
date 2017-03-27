@@ -70,8 +70,7 @@ getAppAccessToken =
     lift $
       H.responseBody response C.$$+-
       CT.decode CT.utf8 C.=$
-      C.sinkParser (AppAccessToken <$  A.string "access_token="
-                                   <*> A.takeText)
+      C.sinkParser (AppAccessToken . T.pack <$ A.string "{\"access_token\":\"" <*> A.manyTill A.anyChar (A.string "\""))
 
 
 -- | The first step to get an user access token.  Returns the
