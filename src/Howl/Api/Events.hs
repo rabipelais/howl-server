@@ -35,6 +35,9 @@ type EventsAPI =
   :<|> EventsIdInviteIdGet
   :<|> EventsIdInviteIdPost
   :<|> EventsIdInviteIdDelete
+  :<|> EventsIdGoingGet
+  :<|> EventsIdInterestedGet
+  :<|> EventsIdInvitedGet
   :<|> EventsIdRSVPGet
   :<|> EventsIdRSVPUserIdGet
   :<|> EventsIdRSVPUserIdPut
@@ -75,6 +78,21 @@ type EventsIdInviteIdDelete = Prefix :> Capture "eventID" IDType
                           :> Capture "friendID" IDType
                           :> Header "token" Token
                           :> Delete '[JSON] Invite
+
+type EventsIdGoingGet = Prefix :> Capture "eventID" IDType
+                       :> "going"
+                       :> Header "token" Token
+                       :> Get '[JSON] [User]
+
+type EventsIdInterestedGet = Prefix :> Capture "eventID" IDType
+                       :> "interested"
+                       :> Header "token" Token
+                       :> Get '[JSON] [User]
+
+type EventsIdInvitedGet = Prefix :> Capture "eventID" IDType
+                       :> "invited"
+                       :> Header "token" Token
+                       :> Get '[JSON] [User]
 
 type EventsIdRSVPGet = Prefix :> Capture "eventID" IDType
                        :> "rsvp"

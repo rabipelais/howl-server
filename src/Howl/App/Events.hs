@@ -13,8 +13,11 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Logger         (MonadLogger, logError, logInfo,
                                                runStderrLoggingT)
 import           Control.Monad.Trans.Resource
+import           Prelude                      as P
 
 import           Data.String.Conversions
+import qualified Data.Time                    as TI
+import           Data.Time.Clock
 
 import           Database.Esqueleto           (from, on, select, where_, (?.),
                                                (^.))
@@ -52,6 +55,9 @@ eventsHandlers =
   :<|> eventsIdInvitesIdGet
   :<|> eventsIdInvitesIdPost
   :<|> eventsIdInvitesIdDelete
+  :<|> eventsIdGoingGet
+  :<|> eventsIdInterestedGet
+  :<|> eventsIdInvitedGet
   :<|> eventsIdRSVPGet
   :<|> eventsIdRSVPUsersIdGet
   :<|> eventsIdRSVPUsersIdPut
@@ -147,6 +153,36 @@ eventsIdInvitesIdDelete ei fi mToken =  do
     getBy uniqueInvite >>= \case
       Just entity -> deleteBy uniqueInvite >> return (Invite ui fi ei)
       Nothing -> throwError err404
+
+eventsIdGoingGet :: IDType -> Maybe Token -> HandlerT IO [User]
+eventsIdGoingGet ei mToken = do
+  $logInfo $ "Request attendees to the event: " <> (pack . show) ei
+  token <- case mToken of
+    Nothing -> throwError err402
+    Just t -> return t
+  $logInfo $ "Got token"
+  ui <- tokenUser mToken
+  $logInfo $ "Got user id "
+  now <- liftIO TI.getCurrentTime
+  let userAT = Fb.UserAccessToken ui token now
+  $logInfo $ "Build userAT"
+  creds' <- asks creds
+  manager' <- asks manager
+  $logInfo $ "Got creds and manager"
+  let url = "/v2.8/" <> (Fb.idCode ei) <> "/" <> "attending"
+  $logInfo $ "Got url: " <> url
+  --users <-  do
+  $logInfo $ "Getting data... "
+  (usersPager :: Fb.Pager Fb.User) <- liftIO $ runResourceT $ Fb.runFacebookT creds' manager' $ Fb.getObject url [("fields", "id,name,email,first_name,last_name,picture{url}")] (Just userAT)
+  let us = Fb.pagerData usersPager
+  $logInfo $ "Got at least following guests " <> (pack . show . P.head) us
+  return $ map fromFbUser $ Fb.pagerData usersPager --go usersPager [] creds' manager'
+  --return users
+
+
+eventsIdInterestedGet = undefined
+
+eventsIdInvitedGet = undefined
 
 eventsIdRSVPGet :: IDType -> Maybe Token -> HandlerT IO [EventRSVP]
 eventsIdRSVPGet ei mToken = do
