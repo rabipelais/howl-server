@@ -42,8 +42,8 @@ deriving instance ToJSON ApiUser
 
 deriving instance FromJSON ApiUser
 
-toApiUser :: User -> Maybe FollowStatus -> ApiUser
-toApiUser u follow = ApiUser (userFbID u) (userUsername u) (userFirstName u) (userLastName u) (userEmail u) (userProfilePicPath u) follow
+toApiUser :: Maybe FollowStatus -> User -> ApiUser
+toApiUser follow u = ApiUser (userFbID u) (userUsername u) (userFirstName u) (userLastName u) (userEmail u) (userProfilePicPath u) follow
 
 fromApiUser :: ApiUser -> User
 fromApiUser u = User (fbID u) (username u) (firstName u) (lastName u) (email u) (profilePicPath u)
@@ -85,6 +85,13 @@ instance ToSchema User where
     return $ NamedSchema (Just "User") $
       sketchSchema
        (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing)
+      & required .~ ["fbID", "username", "firstName"]
+
+instance ToSchema ApiUser where
+  declareNamedSchema proxy =
+    return $ NamedSchema (Just "ApiUser") $
+      sketchSchema
+       (ApiUser (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing (Just Blocked))
       & required .~ ["fbID", "username", "firstName"]
 
 instance ToSchema VenueFollower where

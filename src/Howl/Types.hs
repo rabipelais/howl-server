@@ -16,7 +16,9 @@ import           Servant
 import           Servant.API
 
 -- FollowStatus
-data FollowStatus = Pending | Accepted | Ignored | Blocked
+-- `None` is meant for people on Howl, so we can differentiate
+-- with `Maybe Followstatus` Nothing people not on Howl
+data FollowStatus = Pending | Accepted | Ignored | Blocked | None
   deriving (Show, Read, Eq, Generic)
 
 instance ToJSON FollowStatus where

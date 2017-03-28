@@ -42,6 +42,7 @@ import qualified Data.Time                    as TI
 import           Data.Time.Clock
 
 import           Howl.Api.Users
+import           Howl.Api.Common
 import           Howl.App.Common
 import           Howl.Models
 import           Howl.Monad
@@ -129,18 +130,27 @@ putUsersH u mToken = do
         Sql.replace k u --TODO Check username uniqueness
         return u
 
-getUsersIdH :: IDType -> Maybe Token -> HandlerT IO User
-getUsersIdH i mToken = do
-  $logInfo $ "Request get user by id: " <> (pack . show) i
-  mResult <- getUsersId i
+getUsersIdH :: IDType -> Maybe Token -> HandlerT IO ApiUser
+getUsersIdH target mToken = do
+  $logInfo $ "Request get user by id: " <> (pack . show) target
+  source <- tokenUser mToken
+  mResult <- getUsersId source target
   case mResult of
     Just u -> return u
     Nothing -> throwError err404
 
-getUsersId :: IDType -> HandlerT IO (Maybe User)
-getUsersId userID = runQuery $ do
-  mUser <- selectFirst [UserFbID ==. userID] []
-  return $ entityVal <$> mUser
+getUsersId :: IDType -> IDType -> HandlerT IO (Maybe ApiUser)
+getUsersId source target = runQuery $ do
+  res <- E.select
+    $ E.from
+    $ \(user `E.InnerJoin` follow) -> do
+    E.on (user^.UserFbID E.==. follow^.FollowshipTargetId)
+    E.where_ (follow^.FollowshipSourceId E.==. E.val source
+             E.&&. user^.UserFbID E.==. E.val target)
+    return (user, follow)
+  return $ headMaybe $ map (\(u, f) -> toApiUser (Just $ followshipStatus $ entityVal f) (entityVal u)) res
+  where headMaybe [] = Nothing
+        headMaybe (x:xs) = Just x
 
 putUsersIdH :: IDType -> User -> Maybe Token -> HandlerT IO User
 putUsersIdH i u mToken = do
@@ -180,12 +190,12 @@ deleteUserId i = runQuery $ do
 
 getUsersIdConnectH _ _ = throwError err405
 
-getUsersIdFollowsH :: IDType -> Maybe Token -> HandlerT IO [User]
+getUsersIdFollowsH :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
 getUsersIdFollowsH i mToken = do
   $logInfo $ "Request followed by user with id: " <> (pack . show) i
   getUsersIdFollows i
 
-getUsersIdFollows :: IDType -> HandlerT IO [User]
+getUsersIdFollows :: IDType -> HandlerT IO [ApiUser]
 getUsersIdFollows i = runQuery $ do
   selectFirst [UserFbID ==. i] [] >>= \case
     Nothing -> throwError err404
@@ -197,9 +207,8 @@ getUsersIdFollows i = runQuery $ do
               E.&&. follow^.FollowshipSourceId E.==. E.val i)
         E.where_ (follow^.FollowshipStatus E.==. E.val Accepted)
         return user
-      return $ map entityVal userEntities
+      return $ map (toApiUser (Just Accepted) . entityVal) userEntities
 
--- userID -> content
 postUsersIdFollowsH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 postUsersIdFollowsH s t mToken = do
   $logInfo $ "Request post follow: " <> (pack . show) s <> " to " <> (pack . show) t
@@ -234,7 +243,7 @@ getUsersIdFollowsIdH s t mToken = do
       Just (Entity _ (Followship _ _ status)) -> return status
       Nothing -> throwError err404
 
-getUsersIdBlockedH :: IDType -> Maybe Token -> HandlerT IO [User]
+getUsersIdBlockedH :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
 getUsersIdBlockedH s mToken = do
   $logInfo $ "Request user blocked list: " <> (pack . show) s
   runQuery $ do
@@ -246,7 +255,7 @@ getUsersIdBlockedH s mToken = do
               E.&&. follow^.FollowshipSourceId E.==. E.val s)
         E.where_ (follow^.FollowshipStatus E.==. E.val Blocked)
         return user
-    return $ map entityVal userEntities
+    return $ map (toApiUser (Just Blocked) . entityVal) userEntities
 
 postUsersIdBlockedH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 postUsersIdBlockedH s t mToken = do

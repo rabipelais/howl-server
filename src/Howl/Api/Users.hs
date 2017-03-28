@@ -54,7 +54,7 @@ type UsersPut = "users" :> ReqBody '[JSON] User
 
 type UsersIdGet = "users" :> Capture "userID" IDType
                           :> Header "token" Token
-                          :> Get '[JSON] User
+                          :> Get '[JSON] ApiUser
 
 type UsersIdPut = "users" :> Capture "userID" IDType
                           :> ReqBody '[JSON] User
@@ -73,7 +73,7 @@ type UsersIdDelete = "users" :> Capture "userID" IDType
 type UsersIdFollowsGet = "users" :> Capture "userID" IDType
                           :> "follows"
                           :> Header "token" Token
-                          :> Get '[JSON] [User]
+                          :> Get '[JSON] [ApiUser]
 
 type UsersIdFollowsPost = "users" :> Capture "userID" IDType
                           :> "follows"
@@ -101,7 +101,7 @@ type UsersIdFollowsIdDelete = "users" :> Capture "userID" IDType
 type UsersIdBlockedGet = "users" :> Capture "userID" IDType
                          :> "blocked"
                          :> Header "token" Token
-                         :> Get '[JSON] [User]
+                         :> Get '[JSON] [ApiUser]
 
 type UsersIdBlockedPost = "users" :> Capture "userID" IDType
                           :> "blocked"
