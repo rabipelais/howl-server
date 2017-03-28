@@ -154,9 +154,8 @@ eventsIdInvitesIdDelete ei fi mToken =  do
       Just entity -> deleteBy uniqueInvite >> return (Invite ui fi ei)
       Nothing -> throwError err404
 
-eventsIdGoingGet :: IDType -> Maybe Token -> HandlerT IO [User]
-eventsIdGoingGet ei mToken = do
-  $logInfo $ "Request attendees to the event: " <> (pack . show) ei
+getGuestList ei mToken list = do
+  $logInfo $ "Request " <> list <> " to the event: " <> (pack . show) ei
   ui <- tokenUser mToken
   token <- case mToken of
     Nothing -> throwError err402
@@ -165,7 +164,7 @@ eventsIdGoingGet ei mToken = do
   let userAT = Fb.UserAccessToken ui token now
   creds' <- asks creds
   manager' <- asks manager
-  let url = "/v2.8/" <> (Fb.idCode ei) <> "/" <> "attending"
+  let url = "/v2.8/" <> (Fb.idCode ei) <> "/" <> list
   users <-  liftIO $ runResourceT $ do
     usersPager <- Fb.runFacebookT creds' manager' $ Fb.getObject url [("fields", "id,name,email,first_name,last_name,picture{url}")] (Just userAT)
     map fromFbUser <$> go usersPager [] creds' manager'
@@ -179,9 +178,14 @@ eventsIdGoingGet ei mToken = do
           else return res
         limit = 500
 
-eventsIdInterestedGet = undefined
+eventsIdGoingGet :: IDType -> Maybe Token -> HandlerT IO [User]
+eventsIdGoingGet ei mToken = getGuestList ei mToken "attending"
 
-eventsIdInvitedGet = undefined
+eventsIdInterestedGet :: IDType -> Maybe Token -> HandlerT IO [User]
+eventsIdInterestedGet ei mToken = getGuestList ei mToken "interested"
+
+eventsIdInvitedGet :: IDType -> Maybe Token -> HandlerT IO [User]
+eventsIdInvitedGet ei mToken = getGuestList ei mToken "noreply"
 
 eventsIdRSVPGet :: IDType -> Maybe Token -> HandlerT IO [EventRSVP]
 eventsIdRSVPGet ei mToken = do
