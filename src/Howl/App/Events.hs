@@ -35,6 +35,7 @@ import qualified Howl.Facebook                as Fb
 
 import           Servant
 
+import qualified Data.List                    as L
 import           Data.Maybe
 import           Data.Text                    hiding (foldl, map, replace)
 
@@ -157,18 +158,20 @@ eventsIdInvitesIdDelete ei fi mToken =  do
 getGuestList ei mToken list = do
   $logInfo $ "Request " <> list <> " to the event: " <> (pack . show) ei
   ui <- tokenUser mToken
+  creds' <- asks creds
+  manager' <- asks manager
   token <- case mToken of
     Nothing -> throwError err402
     Just t -> return t
   now <- liftIO TI.getCurrentTime
   let userAT = Fb.UserAccessToken ui token now
-  creds' <- asks creds
-  manager' <- asks manager
   let url = "/v2.8/" <> (Fb.idCode ei) <> "/" <> list
   users <-  liftIO $ runResourceT $ do
     usersPager <- Fb.runFacebookT creds' manager' $ Fb.getObject url [("fields", "id,name,email,first_name,last_name,picture{url}")] (Just userAT)
     map fromFbUser <$> go usersPager [] creds' manager'
-  return users
+  (howlUsers, others) <- runQuery $ do
+    partitionHowl users
+  return (howlUsers ++ others)
   where go pager res creds manager =
           if P.length res < limit
           then do
@@ -177,6 +180,18 @@ getGuestList ei mToken list = do
               Nothing -> return res
           else return res
         limit = 500
+        --partitionHowl :: [User] -> ([User], [User])
+        partitionHowl fs = partitionM pred fs
+        pred u = do
+          mUser <- getBy $ UniqueUserID (userFbID u)
+          case mUser of
+            Nothing -> return False
+            Just _ -> return True
+        partitionM :: Monad m => (a -> m Bool) -> [a] -> m ([a], [a])
+        partitionM p []     = return ([], [])
+        partitionM p (x:xs) = do b  <- p x
+                                 (ts, fs) <- partitionM p xs
+                                 return (if b then (x:ts, fs) else (ts, x:fs))
 
 eventsIdGoingGet :: IDType -> Maybe Token -> HandlerT IO [User]
 eventsIdGoingGet ei mToken = getGuestList ei mToken "attending"
