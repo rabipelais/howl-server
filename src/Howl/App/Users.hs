@@ -18,7 +18,7 @@ import           Control.Monad.Trans.Resource
 
 import           Data.String.Conversions
 
-import           Database.Esqueleto           (from, select, (^.))
+import           Database.Esqueleto           (from, select, (^.), (?.))
 import qualified Database.Esqueleto           as E
 import           Database.Persist
 import           Database.Persist.Sql
@@ -143,12 +143,13 @@ getUsersId :: IDType -> IDType -> HandlerT IO (Maybe ApiUser)
 getUsersId source target = runQuery $ do
   res <- E.select
     $ E.from
-    $ \(user `E.InnerJoin` follow) -> do
-    E.on (user^.UserFbID E.==. follow^.FollowshipTargetId)
-    E.where_ (follow^.FollowshipSourceId E.==. E.val source
-             E.&&. user^.UserFbID E.==. E.val target)
+    $ \(user `E.LeftOuterJoin` follow) -> do
+    E.on (E.just (user^.UserFbID) E.==. follow?.FollowshipTargetId
+          E.&&. follow?.FollowshipSourceId E.==. E.just (E.val source))
+    E.where_ (user^.UserFbID E.==. E.val target)
     return (user, follow)
-  return $ headMaybe $ map (\(u, f) -> toApiUser (Just $ followshipStatus $ entityVal f) (entityVal u)) res
+  let status f = fromMaybe None (followshipStatus . entityVal <$> f)
+  return $ headMaybe $ map (\(u, f) -> toApiUser (Just (status f)) (entityVal u)) res
   where headMaybe [] = Nothing
         headMaybe (x:xs) = Just x
 
