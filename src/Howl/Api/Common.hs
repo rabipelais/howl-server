@@ -3,8 +3,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Howl.Api.Common where
 
+import           Prelude as P
 import           Control.Lens
-import           Data.Swagger    hiding (Header)
+import           Data.Swagger    hiding (Header, email)
 import           Data.Time
 import           Data.Text
 import           Data.Aeson
@@ -25,6 +26,27 @@ data ConnectCard =
 
 deriving instance ToJSON ConnectCard
 deriving instance FromJSON ConnectCard
+
+data ApiUser =
+  ApiUser {
+    fbID           :: IDType
+  , username       :: Text
+  , firstName      :: Text
+  , lastName       :: Maybe Text
+  , email          :: Maybe Text
+  , profilePicPath :: Maybe FilePath
+  , following      :: Maybe FollowStatus }
+  deriving (Eq, Read, Show, Generic)
+
+deriving instance ToJSON ApiUser
+
+deriving instance FromJSON ApiUser
+
+toApiUser :: User -> Maybe FollowStatus -> ApiUser
+toApiUser u follow = ApiUser (userFbID u) (userUsername u) (userFirstName u) (userLastName u) (userEmail u) (userProfilePicPath u) follow
+
+fromApiUser :: ApiUser -> User
+fromApiUser u = User (fbID u) (username u) (firstName u) (lastName u) (email u) (profilePicPath u)
 
 instance ToSchema ConnectCard where
   declareNamedSchema proxy =
