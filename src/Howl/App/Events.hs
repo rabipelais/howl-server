@@ -39,6 +39,7 @@ import qualified Data.List                    as L
 import           Data.Maybe
 import           Data.Text                    hiding (foldl, map, replace)
 
+import           Howl.Api.Common
 import           Howl.Api.Events
 import           Howl.App.Common
 import           Howl.Models
@@ -170,7 +171,7 @@ getGuestList ei mToken list = do
     usersPager <- Fb.runFacebookT creds' manager' $ Fb.getObject url [("fields", "id,name,email,first_name,last_name,picture{url}")] (Just userAT)
     map fromFbUser <$> go usersPager [] creds' manager'
   (howlUsers, others) <- runQuery $ do
-    partitionHowl users
+    partitionHowl ui users
   return (howlUsers ++ others)
   where go pager res creds manager =
           if P.length res < limit
@@ -181,25 +182,37 @@ getGuestList ei mToken list = do
           else return res
         limit = 500
         --partitionHowl :: [User] -> ([User], [User])
-        partitionHowl fs = partitionM pred fs
-        pred u = do
-          mUser <- getBy $ UniqueUserID (userFbID u)
-          case mUser of
-            Nothing -> return False
-            Just _ -> return True
-        partitionM :: Monad m => (a -> m Bool) -> [a] -> m ([a], [a])
-        partitionM p []     = return ([], [])
-        partitionM p (x:xs) = do b  <- p x
-                                 (ts, fs) <- partitionM p xs
-                                 return (if b then (x:ts, fs) else (ts, x:fs))
+        partitionHowl ui fs = partitionM (pred ui) fs
+        pred source u = do
+          let target = userFbID u
+          res <- E.select
+            $ E.from
+            $ \(user `E.LeftOuterJoin` follow) -> do
+            E.on (E.just (user^.UserFbID) E.==. follow?.FollowshipTargetId
+                  E.&&. follow?.FollowshipSourceId E.==. E.just (E.val source))
+            E.where_ (user^.UserFbID E.==. E.val target)
+            return (user, follow)
+          let status f = fromMaybe None (followshipStatus . entityVal <$> f)
+          return $ headMaybe $ map (\(u, f) -> toApiUser (Just (status f)) (entityVal u)) res
+          where headMaybe [] = Nothing
+                headMaybe (x:_) = Just x
 
-eventsIdGoingGet :: IDType -> Maybe Token -> HandlerT IO [User]
+        --partitionM :: Monad m => (a -> m (Maybe a)) -> [a] -> m ([a], [a])
+        partitionM p []     = return ([], [])
+        partitionM p (x:xs) = do
+          b <- p x
+          (ts, fs) <- partitionM p xs
+          case b of
+            Nothing -> return (ts, (toApiUser Nothing x):fs)
+            Just u -> return (u:ts, fs)
+
+eventsIdGoingGet :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
 eventsIdGoingGet ei mToken = getGuestList ei mToken "attending"
 
-eventsIdInterestedGet :: IDType -> Maybe Token -> HandlerT IO [User]
+eventsIdInterestedGet :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
 eventsIdInterestedGet ei mToken = getGuestList ei mToken "interested"
 
-eventsIdInvitedGet :: IDType -> Maybe Token -> HandlerT IO [User]
+eventsIdInvitedGet :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
 eventsIdInvitedGet ei mToken = getGuestList ei mToken "noreply"
 
 eventsIdRSVPGet :: IDType -> Maybe Token -> HandlerT IO [EventRSVP]

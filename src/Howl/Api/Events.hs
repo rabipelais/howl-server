@@ -82,17 +82,17 @@ type EventsIdInviteIdDelete = Prefix :> Capture "eventID" IDType
 type EventsIdGoingGet = Prefix :> Capture "eventID" IDType
                        :> "going"
                        :> Header "token" Token
-                       :> Get '[JSON] [User]
+                       :> Get '[JSON] [ApiUser]
 
 type EventsIdInterestedGet = Prefix :> Capture "eventID" IDType
                        :> "interested"
                        :> Header "token" Token
-                       :> Get '[JSON] [User]
+                       :> Get '[JSON] [ApiUser]
 
 type EventsIdInvitedGet = Prefix :> Capture "eventID" IDType
                        :> "invited"
                        :> Header "token" Token
-                       :> Get '[JSON] [User]
+                       :> Get '[JSON] [ApiUser]
 
 type EventsIdRSVPGet = Prefix :> Capture "eventID" IDType
                        :> "rsvp"
