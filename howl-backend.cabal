@@ -79,6 +79,8 @@ library
                      , data-default
                      , directory
                      , servant
+                     , nano-http
+                     , firebase
                      , servant-server
                      , transformers
                      , monad-logger
@@ -146,11 +148,14 @@ executable howl-notifications
   other-modules:
   build-depends:       base
                      , howl-backend
+                     , aeson
+                     , mtl
                      , conduit
                      , bytestring
                      , firebase
                      , lifted-base
                      , http-conduit
+                     , nano-http
                      , monad-logger
                      , persistent
                      , persistent-postgresql

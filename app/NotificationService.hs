@@ -9,12 +9,17 @@ import           Howl.Notifications
 import qualified Howl.Queue                  as Q
 
 import qualified Control.Exception.Lifted    as E
+import           Control.Monad
+import           Control.Monad.Except
 import           Control.Monad.IO.Class
 import           Control.Monad.Logger
+import           Control.Monad.Reader
 
+import           Data.Aeson
 import           Data.String.Conversions
 
 import           Data.ByteString.Char8       (pack)
+import           Database.Firebase
 import           Database.Persist
 import           Database.Persist.Postgresql
 import           Database.Persist.Sql
@@ -25,13 +30,15 @@ import           System.IO.Error             (isDoesNotExistError)
 
 import           Network.HTTP.Conduit        (Manager, newManager,
                                               tlsManagerSettings)
+import           Network.HTTP.Nano
 import           Network.Wai
 import           Network.Wai.Handler.Warp    as Warp
 
 main :: IO ()
 main = do
   putStrLn "Reading config..."
-  (dbName, dbHost, dbUser, dbPassword, dbPort, poolSize, mqHost, mqVHost, mqUser, mqPassword) <- getConfig
+  (dbName, dbHost, dbUser, dbPassword, dbPort, poolSize, mqHost, mqVHost, mqUser, mqPassword, fbKey, fbUrl) <- getConfig
+  mgr <- newManager tlsManagerSettings
   let logSettings = Logger.Settings
         { Logger.filePath = "/var/log/webserver.log"
         , Logger.logLevel = LevelDebug
@@ -40,8 +47,16 @@ main = do
       connString = pack $ "host=" <> dbHost <> " dbname=" <> dbName <> " user=" <> dbUser <> " password=" <> dbPassword <> " port=" <> dbPort
       queueSetting = Q.Settings mqHost mqVHost mqUser mqPassword
       queues = [Q.newQueue{Q.queueName = "notifications_task", Q.queueAutoDelete = False, Q.queueDurable = True}]
+      endpoint = "cSF_Nz26xQ8:APA91bF38u0E06PvIpL_MGd5Y2BYLu7U7Xf-4g-sEpz2WPt8eP13ye-JE98Q7iZSukitV5XR7L3MgHcLXSAkMVMQhrBxa9gdu9FEYtrjnvAggh3dnayMfIoHKN7cliLERF-ADnAptns4"
+      payload = object ["type" .= ("user" :: String), "body" .= ("Someone decided to follow you" :: String)]
+      fb = Firebase fbKey fbUrl
+      httpc = HttpCfg mgr
+      env = NotificationEnv fb httpc
   putStrLn "Starting notification service"
-  sendNotification
+  res <- runExceptT $ flip runReaderT env (sendNotification endpoint payload)
+  case res of
+    Left e -> error $ show e
+    Right r -> return ()
   -- Logger.withLogger logSettings $ \logFn -> do
   --   liftIO $ Q.withConnection queueSetting queues $ \(conn, chan) -> do
   --     let port = 3000 :: Int
@@ -53,12 +68,12 @@ main = do
   --       --let env = LogEnv logFn $ authHandlerEnv pool manager creds chan
         --liftIO $ Warp.run port $ app env
 
-getConfig :: IO (String, String, String, String, String, Int, String, T.Text, T.Text, T.Text)
+getConfig :: IO (String, String, String, String, String, Int, String, T.Text, T.Text, T.Text, String, String)
 getConfig = tryToGet `E.catch` showHelp
   where
     tryToGet = do
-      [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, mqHost, mqVHost, mqUser, mqPassword] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "AMQP_HOST", "AMQP_VHOST", "AMQP_USER", "AMQP_PASSWORD"]
-      return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, T.pack mqVHost, T.pack mqUser, T.pack mqPassword)
+      [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, mqHost, mqVHost, mqUser, mqPassword, fbKey, fbUrl] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "AMQP_HOST", "AMQP_VHOST", "AMQP_USER", "AMQP_PASSWORD", "FIREBASE_KEY", "FIREBASE_URL"]
+      return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, T.pack mqVHost, T.pack mqUser, T.pack mqPassword, fbKey, fbUrl)
     showHelp exc | not (isDoesNotExistError exc) = E.throw exc
     showHelp _ = do
       putStrLn $ unlines
@@ -69,6 +84,8 @@ getConfig = tryToGet `E.catch` showHelp
           , "AMQP_VHOST            RabbitMQ Virtual Host"
           , "AMQP_USER             RabbitMQ User"
           , "AMQP_PASSWORD         RabbitMQ password"
+          , "FIREBASE_KEY          Firebase server key"
+          , "FIREBASE_URL          Firebase REST url"
           , "DB_NAME               DB name"
           , "DB_USER               DB user"
           , "DB_HOST               DB host"
