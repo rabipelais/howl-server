@@ -77,7 +77,7 @@ type UsersIdFollowsGet = "users" :> Capture "userID" IDType
 
 type UsersIdFollowsPost = "users" :> Capture "userID" IDType
                           :> "follows"
-                          :> ReqBody '[JSON] IDType
+                          :> Capture "friendID" IDType
                           :> Header "token" Token
                           :> PostAccepted '[JSON] IDType
 

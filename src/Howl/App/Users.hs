@@ -49,6 +49,7 @@ import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
 import           Howl.Downloader
+import           Howl.Notifications
 
 usersHandlers :: ServerT UsersAPI (HandlerT IO)
 usersHandlers =
@@ -213,6 +214,7 @@ getUsersIdFollows i = runQuery $ do
 postUsersIdFollowsH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 postUsersIdFollowsH s t mToken = do
   $logInfo $ "Request post follow: " <> (pack . show) s <> " to " <> (pack . show) t
+  ch <- asks queueChan
   if s == t then throwError err409
   else runQuery $ do
     checkExistsOrThrow s
@@ -221,7 +223,7 @@ postUsersIdFollowsH s t mToken = do
       Just (Entity _ (Followship _ _ Blocked)) -> throwError err403
       _ -> insertBy (Followship s t Accepted) >>= \case
         Left _ -> throwError err409
-        Right _ -> return t
+        Right _ -> liftIO $ sendFollowTask ch s t >> return t
 
 deleteUsersIdFollowsIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 deleteUsersIdFollowsIdH s t mToken = do
