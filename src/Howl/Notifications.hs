@@ -13,7 +13,13 @@ import           Control.Monad
 import           Control.Monad.Except
 import           Control.Monad.Reader
 
+
+import           Control.Concurrent (threadDelay)
+import qualified Data.ByteString.Lazy.Char8 as BL
+import           Data.Monoid ((<>))
+
 import           Network.HTTP.Nano
+import           Network.AMQP
 
 import           Data.Aeson
 
@@ -21,6 +27,7 @@ import           Howl.Message
 import           Howl.Models
 import           Howl.Monad
 import           Howl.Types
+import           Howl.Queue
 import           Howl.Utils
 
 import qualified Database.Firebase          as F
@@ -53,9 +60,35 @@ createMessage endpoint payload =
   Nothing -- time_to_live
   (F.Data payload) -- data
 
-
 sendNotification :: (ToJSON a, Show a) => String -> a -> NotificationM ()
 sendNotification endpoint payload = do
   let msg = createMessage endpoint payload
-  liftIO $ print $ encode msg
   F.sendMessage $ msg
+
+
+notificationsService conn ch qName = do
+  declareQueue ch newQueue{queueName       = qName,
+                            queueAutoDelete = False,
+                            queueDurable    = True}
+
+  qos ch 0 1 False
+
+  BL.putStrLn " [*] Waiting for messages. To exit press CTRL+C"
+  consumeMsgs ch qName Ack deliveryHandler
+
+  -- waits for keypresses
+  getLine
+  closeConnection conn
+
+deliveryHandler :: (Message, Envelope) -> IO ()
+deliveryHandler (msg, metadata) = do
+  BL.putStrLn $ " [x] Received " <> body
+  threadDelay (1000000 * n)
+  BL.putStrLn " [x] Done"
+  ackEnv metadata
+  where
+    body = msgBody msg
+    n    = countDots body
+
+countDots :: BL.ByteString -> Int
+countDots = fromIntegral . BL.count '.'

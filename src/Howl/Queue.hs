@@ -1,6 +1,7 @@
 module Howl.Queue
   ( Settings(..)
   , withConnection
+  , Queues (..)
   , module Export) where
 
 import           Control.Exception.Base (bracket)
@@ -26,3 +27,8 @@ withConnection (Settings host vhost user password) queueOpts action =
       mapM (putStrLn . show) queues
       return (conn, chan)
     cleanup (conn, chan) = closeConnection conn
+
+data Queues = NotificationsTask
+
+instance Show Queues where
+  show NotificationsTask = "notifications_task"

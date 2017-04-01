@@ -46,17 +46,14 @@ main = do
         }
       connString = pack $ "host=" <> dbHost <> " dbname=" <> dbName <> " user=" <> dbUser <> " password=" <> dbPassword <> " port=" <> dbPort
       queueSetting = Q.Settings mqHost mqVHost mqUser mqPassword
-      queues = [Q.newQueue{Q.queueName = "notifications_task", Q.queueAutoDelete = False, Q.queueDurable = True}]
-      endpoint = "cSF_Nz26xQ8:APA91bF38u0E06PvIpL_MGd5Y2BYLu7U7Xf-4g-sEpz2WPt8eP13ye-JE98Q7iZSukitV5XR7L3MgHcLXSAkMVMQhrBxa9gdu9FEYtrjnvAggh3dnayMfIoHKN7cliLERF-ADnAptns4"
-      payload = object ["type" .= ("user" :: String), "body" .= ("Someone decided to follow you" :: String)]
-      fb = Firebase fbKey fbUrl
-      httpc = HttpCfg mgr
-      env = NotificationEnv fb httpc
-  putStrLn "Starting notification service"
-  res <- runExceptT $ flip runReaderT env (sendNotification endpoint payload)
-  case res of
-    Left e -> error $ show e
-    Right r -> return ()
+      queues = [Q.newQueue{Q.queueName = T.pack $ show Q.NotificationsTask, Q.queueAutoDelete = False, Q.queueDurable = True}]
+  Q.withConnection queueSetting queues $ \(conn, chan) -> do
+    notificationsService conn chan (T.pack $ show Q.NotificationsTask)
+  --putStrLn "Starting notification service"
+  --res <- runExceptT $ flip runReaderT env (sendNotification endpoint payload)
+  -- case res of
+  --   Left e -> error $ show e
+  --   Right r -> return ()
   -- Logger.withLogger logSettings $ \logFn -> do
   --   liftIO $ Q.withConnection queueSetting queues $ \(conn, chan) -> do
   --     let port = 3000 :: Int
