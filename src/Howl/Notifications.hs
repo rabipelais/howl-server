@@ -1,11 +1,12 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 module Howl.Notifications where
 
 import qualified Howl.Facebook              as Fb
 
 import qualified Data.ByteString.Lazy.Char8 as BL
-import           Data.Text
+import           Data.Text as T
 import           GHC.Generics
 
 import           Control.Lens.Lens
@@ -92,3 +93,34 @@ deliveryHandler (msg, metadata) = do
 
 countDots :: BL.ByteString -> Int
 countDots = fromIntegral . BL.count '.'
+
+sendFollowTask ch source target = do
+  publishMsg ch "" (T.pack $ show NotificationsTask)
+    (newMsg {msgBody         = body,
+             msgDeliveryMode = Just Persistent})
+  where
+    body = BL.pack $ show (FollowNotification $ FollowN source target)
+
+
+data Notification =
+  FollowNotification FollowN
+  | EventNotification EventN
+  deriving (Eq, Show, Generic)
+
+deriving instance ToJSON Notification
+deriving instance FromJSON Notification
+
+data FollowN = FollowN { followSourceId :: IDType
+                       , followTargetId :: IDType}
+  deriving (Eq, Show, Generic)
+
+deriving instance ToJSON FollowN
+deriving instance FromJSON FollowN
+
+data EventN = EventN { eventSourceId :: IDType
+                     , eventTargetId :: IDType
+                     , eventID :: IDType}
+  deriving (Eq, Show, Generic)
+
+deriving instance ToJSON EventN
+deriving instance FromJSON EventN

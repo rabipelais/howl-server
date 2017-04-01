@@ -134,6 +134,7 @@ auth i mt = asks valFunction >>= \f -> (f i mt)
 
 tokenUser mt = asks idFromToken >>= \f -> f mt
 
+
 --qChan = asks queueChan
 
 validateId _ _ = liftIO $ putStrLn "Validation"
