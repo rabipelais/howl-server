@@ -18,7 +18,8 @@ import           Prelude                      as P
 
 import           Data.String.Conversions
 
-import           Database.Esqueleto           (from, select, (^.))
+import           Database.Esqueleto           (from, ilike, just, select, val,
+                                               where_, (%), (++.), (?.), (^.))
 import qualified Database.Esqueleto           as E
 import           Database.Persist
 import           Database.Persist.Sql
@@ -55,8 +56,37 @@ searchHandlers =
   :<|> getSearchVenues
 
 getSearchUsers :: Maybe Text -> Maybe Token -> HandlerT IO [User]
-getSearchUsers _ _ = throwError err405
+getSearchUsers mq _ =
+  case mq of
+    Nothing -> throwError err400
+    Just q -> runQuery $ do
+      res <- select
+        $ from
+        $ \user -> do
+        where_ (user^.UserFirstName  `ilike` (%) ++. val q ++. (%))
+        return user
+      return $ map entityVal res
+
 getSearchEvents :: Maybe Text -> Maybe Token -> HandlerT IO [Event]
-getSearchEvents _ _ = throwError err405
+getSearchEvents mq _ =
+  case mq of
+    Nothing -> throwError err400
+    Just q -> runQuery $ do
+      res <- select
+        $ from
+        $ \event -> do
+        where_ (event^.EventName  `ilike` (%) ++. val q ++. (%))
+        return event
+      return $ map entityVal res
+
 getSearchVenues :: Maybe Text -> Maybe Token -> HandlerT IO [Venue]
-getSearchVenues _ _ = throwError err405
+getSearchVenues mq _ =
+  case mq of
+    Nothing -> throwError err400
+    Just q -> runQuery $ do
+      res <- select
+        $ from
+        $ \venue -> do
+        where_ (venue^.VenueName  `ilike` (%) ++. val q ++. (%))
+        return venue
+      return $ map entityVal res
