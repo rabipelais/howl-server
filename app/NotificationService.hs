@@ -47,23 +47,13 @@ main = do
       connString = pack $ "host=" <> dbHost <> " dbname=" <> dbName <> " user=" <> dbUser <> " password=" <> dbPassword <> " port=" <> dbPort
       queueSetting = Q.Settings mqHost mqVHost mqUser mqPassword
       queues = [Q.newQueue{Q.queueName = T.pack $ show Q.NotificationsTask, Q.queueAutoDelete = False, Q.queueDurable = True}]
+      fb = Firebase fbKey fbUrl
+      httpc = HttpCfg mgr
+  putStrLn "Starting notification service"
   Q.withConnection queueSetting queues $ \(conn, chan) -> do
-    notificationsService conn chan (T.pack $ show Q.NotificationsTask)
-  --putStrLn "Starting notification service"
-  --res <- runExceptT $ flip runReaderT env (sendNotification endpoint payload)
-  -- case res of
-  --   Left e -> error $ show e
-  --   Right r -> return ()
-  -- Logger.withLogger logSettings $ \logFn -> do
-  --   liftIO $ Q.withConnection queueSetting queues $ \(conn, chan) -> do
-  --     let port = 3000 :: Int
-  --     liftIO $ putStrLn $ "Listening on port " ++ show port ++ " ..."
-  --     runStderrLoggingT $ withPostgresqlPool connString poolSize $ \pool -> do
-  --       sendNotification
-  --       --runSqlPool (runMigration migrateAll) pool
-  --       --manager <- liftIO $ newManager tlsManagerSettings
-  --       --let env = LogEnv logFn $ authHandlerEnv pool manager creds chan
-        --liftIO $ Warp.run port $ app env
+    runStderrLoggingT $ withPostgresqlPool connString poolSize $ \pool -> do
+      let env = NotificationEnv fb httpc pool
+      liftIO $ notificationsService env conn chan (T.pack $ show Q.NotificationsTask)
 
 getConfig :: IO (String, String, String, String, String, Int, String, T.Text, T.Text, T.Text, String, String)
 getConfig = tryToGet `E.catch` showHelp

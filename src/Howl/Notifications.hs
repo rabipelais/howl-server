@@ -1,13 +1,26 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 
-module Howl.Notifications where
+module Howl.Notifications (
+  sendFollowTask,
+  notificationsService,
+  NotificationEnv(..),
+  NotificationM
+) where
 
+import Prelude as P
 import qualified Howl.Facebook              as Fb
 
 import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.Text as T
 import           GHC.Generics
+
+import           Database.Esqueleto           (from, select, (^.))
+import qualified Database.Esqueleto           as E
+import           Database.Persist
+import           Database.Persist.Sql
 
 import           Control.Lens.Lens
 import           Control.Monad
@@ -26,7 +39,7 @@ import           Data.Aeson
 
 import           Howl.Message
 import           Howl.Models
-import           Howl.Monad
+import           Howl.Monad hiding (asks)
 import           Howl.Types
 import           Howl.Queue
 import           Howl.Utils
@@ -37,7 +50,8 @@ type NotificationM = ReaderT NotificationEnv (ExceptT HttpError IO)
 
 data NotificationEnv = NotificationEnv {
   notifFirebase :: F.Firebase,
-  notifHttp     :: HttpCfg
+  notifHttp     :: HttpCfg,
+  notifPool :: ConnectionPool
 }
 
 instance HasHttpCfg NotificationEnv where
@@ -50,10 +64,10 @@ deriving instance (Show a) => Show (F.Message a)
 deriving instance (Show a) => Show (F.MessageBody a)
 deriving instance Show F.Priority
 
-createMessage endpoint payload =
+createMessage endpoints payload =
   F.Message
   Nothing -- to
-  [endpoint] -- registrationIDs
+  endpoints -- registrationIDs
   Nothing -- collapseKeys
   F.High -- Priority
   Nothing -- content_available
@@ -61,13 +75,27 @@ createMessage endpoint payload =
   Nothing -- time_to_live
   (F.Data payload) -- data
 
-sendNotification :: (ToJSON a, Show a) => String -> a -> NotificationM ()
-sendNotification endpoint payload = do
-  let msg = createMessage endpoint payload
-  F.sendMessage $ msg
+sendNotification :: Notification -> NotificationM ()
+sendNotification = send
+  where
+    send (FollowNotification (FollowN source target)) = do
+      (endpoints, sourceUser) <- runQuery $ do
+        eEntities <- selectList [DeviceUserId ==. target] []
+        (Just (Entity k u)) <- getBy $ UniqueUserID source
+        return (P.map entityVal eEntities, u)
+      let
+        payload = object [ "type" .= ("follow" :: String)
+                         , "source" .= source
+                         , "sourceName" .= userFirstName sourceUser
+                         , "target" .= target]
+        endpoints' = (P.map (T.unpack . deviceDeviceId) endpoints)
+        msg = createMessage endpoints' payload
+      liftIO $ print endpoints'
+      liftIO $ print payload
+      F.sendMessage $ msg
+    send _ = liftIO $ putStrLn "Unknown notification type"
 
-
-notificationsService conn ch qName = do
+notificationsService env conn ch qName = do
   declareQueue ch newQueue{queueName       = qName,
                             queueAutoDelete = False,
                             queueDurable    = True}
@@ -75,23 +103,27 @@ notificationsService conn ch qName = do
   qos ch 0 1 False
 
   BL.putStrLn " [*] Waiting for messages. To exit press CTRL+C"
-  consumeMsgs ch qName Ack deliveryHandler
+  consumeMsgs ch qName Ack (deliveryHandler env)
 
   -- waits for keypresses
   getLine
   closeConnection conn
 
-deliveryHandler :: (Message, Envelope) -> IO ()
-deliveryHandler (msg, metadata) = do
+deliveryHandler :: NotificationEnv -> (Message, Envelope) -> IO ()
+deliveryHandler env (msg, metadata) = do
   BL.putStrLn $ " [x] Received " <> body
-  putStrLn $ "  [x] As JSON: " <> (show jsonBody)
-  threadDelay (1000000 * n)
+  putStrLn $ "  [x] As JSON: " <> (show notification)
+  case notification of
+    Nothing -> putStrLn "  [x] Couldn't decode payload"
+    Just n -> (runExceptT $ flip runReaderT env (sendNotification n)) >>= \case
+      Left e -> error $ show e
+      Right r -> return ()
   BL.putStrLn " [x] Done"
   ackEnv metadata
   where
     body = msgBody msg
-    jsonBody :: Maybe Notification = decode body
-    n    = countDots body
+    notification :: Maybe Notification = decode body
+    n = countDots body
 
 countDots :: BL.ByteString -> Int
 countDots = fromIntegral . BL.count '.'
@@ -126,3 +158,10 @@ data EventN = EventN { eventSourceId :: IDType
 
 deriving instance ToJSON EventN
 deriving instance FromJSON EventN
+
+runQuery query = do
+  pool <- asks notifPool
+  (runSqlPool query pool)
+
+runQuery' query pool = do
+  (runSqlPool query pool)
