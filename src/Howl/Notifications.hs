@@ -84,11 +84,13 @@ notificationsService conn ch qName = do
 deliveryHandler :: (Message, Envelope) -> IO ()
 deliveryHandler (msg, metadata) = do
   BL.putStrLn $ " [x] Received " <> body
+  putStrLn $ "  [x] As JSON: " <> (show jsonBody)
   threadDelay (1000000 * n)
   BL.putStrLn " [x] Done"
   ackEnv metadata
   where
     body = msgBody msg
+    jsonBody :: Maybe Notification = decode body
     n    = countDots body
 
 countDots :: BL.ByteString -> Int
@@ -99,7 +101,7 @@ sendFollowTask ch source target = do
     (newMsg {msgBody         = body,
              msgDeliveryMode = Just Persistent})
   where
-    body = BL.pack $ show (FollowNotification $ FollowN source target)
+    body = encode (FollowNotification $ FollowN source target)
 
 
 data Notification =
