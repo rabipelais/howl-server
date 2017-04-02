@@ -71,6 +71,8 @@ instance ToSchema Device where
       (Device Android (FB.Id "10155182179270463") "ARITN01909830190-iniasortn#$#@inrtsinars")
       & required .~ ["type", "userId", "deviceId"]
 
+instance ToParamSchema DeviceType
+
 instance ToSchema Invite where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Invite") $

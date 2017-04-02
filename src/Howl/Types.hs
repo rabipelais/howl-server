@@ -6,7 +6,9 @@
 module Howl.Types where
 
 import           Data.Aeson
-import           Data.Text
+import           Data.Aeson.Types
+import           Data.Char
+import           Data.Text           hiding (toLower)
 import           Database.Persist.TH
 import           GHC.Generics
 import           Prelude
@@ -41,7 +43,21 @@ data DeviceType = Android | Iphone
   deriving (Show, Read, Eq, Generic)
 
 instance ToJSON DeviceType where
-  toEncoding = genericToEncoding defaultOptions
+  toJSON Android = String "android"
+  toJSON Iphone = String "iphone"
 
-instance FromJSON DeviceType
+instance FromJSON DeviceType where
+  parseJSON (String "android") = return Android
+  parseJSON (String "iphone") = return Iphone
+
 derivePersistField "DeviceType"
+
+instance ToHttpApiData DeviceType where
+  toUrlPiece Android = "android"
+  toUrlPiece Iphone = "iphone"
+
+instance FromHttpApiData DeviceType where
+  parseUrlPiece t = case t of
+    "android" -> Right Android
+    "iphone" -> Right Iphone
+    otherwise -> Left "invalid DeviceType"

@@ -115,6 +115,6 @@ Device json
   type DeviceType
   userId IDType
   deviceId Text
-  UniqueUserDevice userId deviceId
+  UniqueUserDevice type userId deviceId
   deriving Eq Read Show
 |]

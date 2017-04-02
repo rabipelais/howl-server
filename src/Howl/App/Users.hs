@@ -391,6 +391,35 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mToken = do
 getUsersIdSuggestedH _ _ _ _ _ = throwError err400
 
 
-getUsersIdDevicesH = undefined
-putUsersIdDevicesIdH = undefined
-deleteUsersIdDevicesIdH = undefined
+getUsersIdDevicesH ui mToken = do
+  $logInfo $ "Request get all user devices for: " <> (pack.show) ui
+  ui' <- tokenUser mToken
+  runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    map entityVal <$> selectList [DeviceUserId ==. ui] []
+
+putUsersIdDevicesIdH ui device@(Device t du di) mToken = do
+  $logInfo $ "Request put user device id: " <> (pack.show) ui <> ", " <> (pack.show) di
+  ui' <- tokenUser mToken
+  runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    when (ui' /= (deviceUserId device)) (throwError err403)
+    insert_ device
+    return device
+
+deleteUsersIdDevicesIdH ui device@(Device t du di) mToken = do
+  $logInfo $ "Request delete user device id: " <> (pack.show) ui <> ", " <> (pack.show) di
+  ui' <- tokenUser mToken
+  runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    when (ui' /= du) (throwError err403)
+    let uniqueDevice = (UniqueUserDevice t du di)
+    getBy uniqueDevice >>= \case
+      Just _ -> deleteBy uniqueDevice >> return device
+      _ -> throwError err404

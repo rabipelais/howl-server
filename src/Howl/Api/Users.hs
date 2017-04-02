@@ -143,12 +143,12 @@ type UsersIdDevicesGet = "users" :> Capture "userID" IDType
 
 type UsersIdDevicesIdPut = "users" :> Capture "userID" IDType
                         :> "devices"
-                        :> Capture "deviceID" Text
+                        :> ReqBody '[JSON] Device
                         :> Header "token" Token
                         :> Put '[JSON] Device
 
 type UsersIdDevicesIdDelete = "users" :> Capture "userID" IDType
                         :> "devices"
-                        :> Capture "deviceID" Text
+                        :> ReqBody '[JSON] Device
                         :> Header "token" Token
                         :> Delete '[JSON] Device
