@@ -40,6 +40,9 @@ type UsersAPI =
   :<|> UsersIdEventsFollowsGet
   :<|> UsersIdVenuesGet
   :<|> UsersIdSuggestedGet
+  :<|> UsersIdDevicesGet
+  :<|> UsersIdDevicesIdPut
+  :<|> UsersIdDevicesIdDelete
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -132,3 +135,20 @@ type UsersIdSuggestedGet = "users" :> Capture "userID" IDType
                            :> QueryParam "distance" Double
                            :> Header "token" Token
                            :> Get '[JSON] [Event]
+
+type UsersIdDevicesGet = "users" :> Capture "userID" IDType
+                        :> "devices"
+                        :> Header "token" Token
+                        :> Get '[JSON] [Device]
+
+type UsersIdDevicesIdPut = "users" :> Capture "userID" IDType
+                        :> "devices"
+                        :> Capture "deviceID" Text
+                        :> Header "token" Token
+                        :> Put '[JSON] Device
+
+type UsersIdDevicesIdDelete = "users" :> Capture "userID" IDType
+                        :> "devices"
+                        :> Capture "deviceID" Text
+                        :> Header "token" Token
+                        :> Delete '[JSON] Device

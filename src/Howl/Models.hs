@@ -110,4 +110,11 @@ ConnectFriends json
   friendID IDType
   UniqueConnectFriends connect friendID
   deriving Eq Read Show
+
+Device json
+  type DeviceType
+  userId IDType
+  deviceId Text
+  UniqueUserDevice userId deviceId
+  deriving Eq Read Show
 |]

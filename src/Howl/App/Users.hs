@@ -71,6 +71,9 @@ usersHandlers =
   :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdVenuesH
   :<|> getUsersIdSuggestedH
+  :<|> getUsersIdDevicesH
+  :<|> putUsersIdDevicesIdH
+  :<|> deleteUsersIdDevicesIdH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -386,3 +389,8 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mToken = do
 
     distance = fromMaybe 1000 distance'
 getUsersIdSuggestedH _ _ _ _ _ = throwError err400
+
+
+getUsersIdDevicesH = undefined
+putUsersIdDevicesIdH = undefined
+deleteUsersIdDevicesIdH = undefined

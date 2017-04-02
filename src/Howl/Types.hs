@@ -36,3 +36,12 @@ instance ToHttpApiData FB.Id where
 
 instance FromHttpApiData FB.Id where
   parseUrlPiece = Right . FB.Id
+
+data DeviceType = Android | Iphone
+  deriving (Show, Read, Eq, Generic)
+
+instance ToJSON DeviceType where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON DeviceType
+derivePersistField "DeviceType"
