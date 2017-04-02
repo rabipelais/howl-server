@@ -36,6 +36,7 @@ User json
   lastName Text Maybe
   email Text Maybe
   profilePicPath FilePath Maybe
+  private Bool default=true
   UniqueUserID fbID
   UniqueUsername username
   deriving Eq Read Show Generic

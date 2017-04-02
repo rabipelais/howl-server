@@ -99,7 +99,7 @@ fromFbUser u = user
     lastName = Fb.userLastName u
     email = Fb.userEmail u
     profilePicPath = unpack <$> Fb.userPicSource u
-    user = User fbID username firstName lastName email profilePicPath
+    user = User fbID username firstName lastName email profilePicPath True
 
 fromFbEvent :: Fb.Event -> Event
 fromFbEvent e = event

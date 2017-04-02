@@ -35,6 +35,7 @@ data ApiUser =
   , lastName       :: Maybe Text
   , email          :: Maybe Text
   , profilePicPath :: Maybe FilePath
+  , private        :: Bool
   , following      :: Maybe FollowStatus }
   deriving (Eq, Read, Show, Generic)
 
@@ -43,16 +44,16 @@ deriving instance ToJSON ApiUser
 deriving instance FromJSON ApiUser
 
 toApiUser :: Maybe FollowStatus -> User -> ApiUser
-toApiUser follow u = ApiUser (userFbID u) (userUsername u) (userFirstName u) (userLastName u) (userEmail u) (userProfilePicPath u) follow
+toApiUser follow u = ApiUser (userFbID u) (userUsername u) (userFirstName u) (userLastName u) (userEmail u) (userProfilePicPath u) (userPrivate u) follow
 
 fromApiUser :: ApiUser -> User
-fromApiUser u = User (fbID u) (username u) (firstName u) (lastName u) (email u) (profilePicPath u)
+fromApiUser u = User (fbID u) (username u) (firstName u) (lastName u) (email u) (profilePicPath u) (private u)
 
 instance ToSchema ConnectCard where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "ConnectCard") $
       sketchSchema
-       (ConnectCard (FB.Id "23412345123") (FB.Id "109890804920") "Swaggity Spot" (Just "www.coolpix.zh") [User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing])
+       (ConnectCard (FB.Id "23412345123") (FB.Id "109890804920") "Swaggity Spot" (Just "www.coolpix.zh") [User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing True])
       & required .~ ["userID", "eventID", "eventName", "friends"]
 
 instance ToSchema Venue where
@@ -93,14 +94,14 @@ instance ToSchema User where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "User") $
       sketchSchema
-       (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing)
+       (User (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing True)
       & required .~ ["fbID", "username", "firstName"]
 
 instance ToSchema ApiUser where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "ApiUser") $
       sketchSchema
-       (ApiUser (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing (Just Blocked))
+       (ApiUser (FB.Id "10155182179270463") "theCaptain" "Jean-Luc" (Just "Picard") (Just "make-it-so@yahoo.com") Nothing True (Just Blocked))
       & required .~ ["fbID", "username", "firstName"]
 
 instance ToSchema VenueFollower where
