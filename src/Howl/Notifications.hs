@@ -105,10 +105,6 @@ notificationsService env conn ch qName = do
   BL.putStrLn " [*] Waiting for messages. To exit press CTRL+C"
   consumeMsgs ch qName Ack (deliveryHandler env)
 
-  -- waits for keypresses
-  getLine
-  closeConnection conn
-
 deliveryHandler :: NotificationEnv -> (Message, Envelope) -> IO ()
 deliveryHandler env (msg, metadata) = do
   BL.putStrLn $ " [x] Received " <> body
