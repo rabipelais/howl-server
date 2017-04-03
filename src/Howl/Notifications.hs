@@ -105,7 +105,9 @@ notificationsService env conn ch qName = do
 
   BL.putStrLn " [*] Waiting for messages. To exit press CTRL+C"
   consumeMsgs ch qName Ack (deliveryHandler env)
-  threadWaitRead (Fd 0)
+
+  getLine
+  closeConnection conn
   where
     loop l = body
       where
