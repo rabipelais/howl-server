@@ -28,7 +28,8 @@ import           Control.Monad.Except
 import           Control.Monad.Reader
 
 
-import           Control.Concurrent (threadDelay)
+import           Control.Concurrent
+import System.Posix.Types
 import qualified Data.ByteString.Lazy.Char8 as BL
 import           Data.Monoid ((<>))
 
@@ -104,7 +105,7 @@ notificationsService env conn ch qName = do
 
   BL.putStrLn " [*] Waiting for messages. To exit press CTRL+C"
   consumeMsgs ch qName Ack (deliveryHandler env)
-  loop $ while True
+  threadWaitRead (Fd 0)
   where
     loop l = body
       where
@@ -121,7 +122,7 @@ deliveryHandler env (msg, metadata) = do
   case notification of
     Nothing -> putStrLn "  [x] Couldn't decode payload"
     Just n -> (runExceptT $ flip runReaderT env (sendNotification n)) >>= \case
-      Left e -> error $ show e
+      Left e -> putStrLn " [x] Error delivering notification."
       Right r -> return ()
   BL.putStrLn " [x] Done"
   ackEnv metadata
