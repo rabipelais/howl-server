@@ -104,6 +104,15 @@ notificationsService env conn ch qName = do
 
   BL.putStrLn " [*] Waiting for messages. To exit press CTRL+C"
   consumeMsgs ch qName Ack (deliveryHandler env)
+  loop $ while True
+  where
+    loop l = body
+      where
+        body = do x <-  l
+                  when (isJust x) body
+    while b = return $ if b then Just () else Nothing
+    isJust (Just _) = True
+    isJust _ = False
 
 deliveryHandler :: NotificationEnv -> (Message, Envelope) -> IO ()
 deliveryHandler env (msg, metadata) = do
