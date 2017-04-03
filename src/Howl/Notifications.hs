@@ -103,11 +103,11 @@ notificationsService env conn ch qName = do
 
   qos ch 0 1 False
 
+  done <- newEmptyMVar
   BL.putStrLn " [*] Waiting for messages. To exit press CTRL+C"
-  consumeMsgs ch qName Ack (deliveryHandler env)
-
-  getLine
-  closeConnection conn
+  consumeMsgs ch qName Ack (deliveryHandler env done)
+  takeMVar done
+  return ()
   where
     loop l = body
       where
@@ -117,14 +117,15 @@ notificationsService env conn ch qName = do
     isJust (Just _) = True
     isJust _ = False
 
-deliveryHandler :: NotificationEnv -> (Message, Envelope) -> IO ()
-deliveryHandler env (msg, metadata) = do
+deliveryHandler :: NotificationEnv -> MVar Bool -> (Message, Envelope) -> IO ()
+deliveryHandler env mvar (msg, metadata) = do
   BL.putStrLn $ " [x] Received " <> body
   putStrLn $ "  [x] As JSON: " <> (show notification)
   case notification of
     Nothing -> putStrLn "  [x] Couldn't decode payload"
     Just n -> (runExceptT $ flip runReaderT env (sendNotification n)) >>= \case
-      Left e -> putStrLn " [x] Error delivering notification."
+      Left (ResponseParseError "impossible") -> putMVar mvar True
+      Left e -> putStrLn $ "  [x] Error sending notification: " <> (show e)
       Right r -> return ()
   BL.putStrLn " [x] Done"
   ackEnv metadata

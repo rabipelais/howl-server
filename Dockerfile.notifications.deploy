@@ -6,8 +6,6 @@ WORKDIR /bin
 RUN apt-get update
 RUN apt-get install -y libpq-dev
 RUN ln -sf /proc/1/fd/1 /var/log/webserver.log
-RUN touch /var/log/empty
-RUN ln -sf /var/log/empty /dev/stdin
 
 
 COPY howl-notifications /bin/howl-notifications
