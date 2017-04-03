@@ -33,6 +33,8 @@ type UsersAPI =
   :<|> UsersIdFollowsPost
   :<|> UsersIdFollowsIdGet
   :<|> UsersIdFollowsIdDelete
+  :<|> UsersIdFollowingCountGet
+  :<|> UsersIdFollowersCountGet
   :<|> UsersIdBlockedGet
   :<|> UsersIdBlockedPost
   :<|> UsersIdBlockedFollowsIdDelete
@@ -94,6 +96,18 @@ type UsersIdFollowsIdGet = "users" :> Capture "userID" IDType
                            :> Capture "friendID" IDType
                            :> Header "token" Token
                            :> Get '[JSON] FollowStatus
+
+type UsersIdFollowingCountGet = "users" :> Capture "userID" IDType
+                           :> "following"
+                           :> "count"
+                           :> Header "token" Token
+                           :> Get '[JSON] Int
+
+type UsersIdFollowersCountGet = "users" :> Capture "userID" IDType
+                           :> "followers"
+                           :> "count"
+                           :> Header "token" Token
+                           :> Get '[JSON] Int
 
 type UsersIdFollowsIdDelete = "users" :> Capture "userID" IDType
                               :> "follows"

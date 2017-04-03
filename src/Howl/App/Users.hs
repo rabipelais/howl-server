@@ -64,6 +64,8 @@ usersHandlers =
   :<|> postUsersIdFollowsH
   :<|> getUsersIdFollowsIdH
   :<|> deleteUsersIdFollowsIdH
+  :<|> getUsersIdFollowingCountH
+  :<|> getUsersIdFollowersCountH
   :<|> getUsersIdBlockedH
   :<|> postUsersIdBlockedH
   :<|> deleteUsersIdBlockedIdH
@@ -248,6 +250,28 @@ getUsersIdFollowsIdH s t mToken = do
     getBy (UniqueFollowshipID s t) >>= \case
       Just (Entity _ (Followship _ _ status)) -> return status
       Nothing -> throwError err404
+
+selectCount q = do
+  res <- select $ from $ (\x -> q x >> return E.countRows)
+  return $ fromMaybe 0 . listToMaybe . fmap (\(E.Value v) -> v) $ res
+
+getUsersIdFollowingCountH :: IDType -> Maybe Token -> HandlerT IO Int
+getUsersIdFollowingCountH ui mToken = do
+  $logInfo $ "Request get following count: " <> (pack . show) ui
+  runQuery $ do
+    checkExistsOrThrow ui
+    selectCount $ \follow -> do
+        E.where_ (E.val ui E.==. follow^.FollowshipSourceId
+                  E.&&. follow^.FollowshipStatus E.==. E.val Accepted)
+
+getUsersIdFollowersCountH :: IDType -> Maybe Token -> HandlerT IO Int
+getUsersIdFollowersCountH ui mToken = do
+  $logInfo $ "Request get follower count: " <> (pack . show) ui
+  runQuery $ do
+    checkExistsOrThrow ui
+    selectCount $ \follow -> do
+        E.where_ (E.val ui E.==. follow^.FollowshipTargetId
+                  E.&&. follow^.FollowshipStatus E.==. E.val Accepted)
 
 getUsersIdBlockedH :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
 getUsersIdBlockedH s mToken = do
