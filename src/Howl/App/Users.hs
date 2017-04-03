@@ -101,15 +101,17 @@ postUsers userAT = do
     case exists of
       Nothing -> Right <$> do
         u <- liftIO $ runResourceT $ getNewFbUser userAT creds' manager'
+        insert u
         $logDebug $ "Got user from facebook: " <> (pack . show) u
 
         es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 10
+        mapM_ insertUnique es
+        $logDebug $ "Got user from facebook (events): " <> (pack . show) u
         vs <- mapM (liftIO . runResourceT . getFbVenue userAT creds' manager' . Fb.idCode .  eventVenueId) es
+        $logDebug $ "Got user from facebook (venues): " <> (pack . show) u
 
         -- $logDebug $ "Got at least this 5 events from facebook: " <> (pack . show . P.take 5) es
 
-        insert u
-        mapM_ insertUnique es
         mapM_ insertUnique vs
         mapM_ (attendEvent u) es
         return u
