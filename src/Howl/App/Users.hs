@@ -35,7 +35,7 @@ import           Servant
 
 import           Data.Maybe
 import           Data.Monoid                  ((<>))
-import           Data.Text                    hiding (foldl, map)
+import Data.Text as T                  hiding (foldl, map)
 import           Data.Text.Lazy               (fromStrict)
 import           Data.Text.Lazy.Encoding      (encodeUtf8)
 import qualified Data.Time                    as TI
@@ -82,7 +82,7 @@ getUsersH :: Maybe Token -> HandlerT IO [User]
 getUsersH mToken = do
   $logInfo "Request: get all users"
   entities <- runQuery $ (select . from $ pure)
-  return $ map entityVal entities
+  return $ P.map entityVal entities
 
 postUsersH :: Fb.UserAccessToken -> HandlerT IO User
 postUsersH userAT = do
@@ -107,7 +107,8 @@ postUsers userAT = do
         es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 10
         mapM_ insertUnique es
         $logDebug $ "Got user from facebook (events): " <> (pack . show) u
-        vs <- mapM (liftIO . runResourceT . getFbVenue userAT creds' manager' . Fb.idCode .  eventVenueId) es
+        let venueIds = P.filter (not . T.null) $ P.map (Fb.idCode .  eventVenueId) es
+        vs <- mapM (liftIO . runResourceT . getFbVenue userAT creds' manager') venueIds
         $logDebug $ "Got user from facebook (venues): " <> (pack . show) u
 
         -- $logDebug $ "Got at least this 5 events from facebook: " <> (pack . show . P.take 5) es
