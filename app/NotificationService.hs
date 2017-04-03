@@ -90,7 +90,7 @@ getConfig = tryToGet `E.catch` showHelp
           , "or if you're using fish:"
           , ""
           , "  $ set -g -x APP_NAME \"example\""
-          , "  $ set -g -x APP_ID \"458798571203498\""
+          , "  $ set -g -x APP_ID \"45879857103498\""
           , "  $ set -g -x APP_SECRET \"28a9d0fa4272a14a9287f423f90a48f2304\""
           , "  ..."
           , ""
