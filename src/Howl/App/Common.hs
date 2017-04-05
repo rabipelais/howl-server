@@ -94,12 +94,13 @@ fromFbUser :: Fb.User -> User
 fromFbUser u = user
   where
     fbID = Fb.userId u
+    fullName = fromMaybe (Fb.idCode fbID) (Fb.userName u)
     username = fromMaybe (Fb.idCode fbID) (Fb.userUsername u)
-    firstName = fromMaybe username (Fb.userFirstName u)
+    firstName = Fb.userFirstName u
     lastName = Fb.userLastName u
     email = Fb.userEmail u
     profilePicPath = unpack <$> Fb.userPicSource u
-    user = User fbID username firstName lastName email profilePicPath True
+    user = User fbID fullName username firstName lastName email profilePicPath True
 
 fromFbEvent :: Fb.Event -> Event
 fromFbEvent e = event

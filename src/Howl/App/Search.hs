@@ -63,7 +63,7 @@ getSearchUsers mq _ =
       res <- select
         $ from
         $ \user -> do
-        where_ (user^.UserFirstName  `ilike` (%) ++. val q ++. (%))
+        where_ (user^.UserFirstName  `ilike`  (%) ++. (just $ val q) ++. (%))
         return user
       return $ map entityVal res
 

@@ -31,8 +31,9 @@ import           Howl.Types
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User json
   fbID IDType
+  name Text
   username Text
-  firstName Text
+  firstName Text Maybe
   lastName Text Maybe
   email Text Maybe
   profilePicPath FilePath Maybe
