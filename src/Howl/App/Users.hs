@@ -367,7 +367,7 @@ getUsersIdVenuesH ui mToken = do
 
 getNewFbUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
 getNewFbUser userAT creds manager =  do
-  fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name,picture{url}")] (Just userAT)
+  fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name,picture.type(large){url}")] (Just userAT)
   return (fromFbUser fbUser)
 
 getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Event]
