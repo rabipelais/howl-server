@@ -19,11 +19,12 @@ import           Prelude                      as P
 import           Data.String.Conversions
 
 import           Database.Esqueleto           (from, ilike, just, select, val,
-                                               where_, (%), (++.), (?.), (^.))
+                                               where_, (%), (++.), (?.), (^.),
+                                               (||.))
 import qualified Database.Esqueleto           as E
 import           Database.Persist
-import           Database.Persist.Sql
-import           Database.Persist.Sqlite      as Sql
+import           Database.Persist.Sql         hiding ((||.))
+import qualified Database.Persist.Sqlite      as Sql
 
 import           Network.HTTP.Conduit         (Manager, newManager,
                                                tlsManagerSettings)
@@ -63,7 +64,10 @@ getSearchUsers mq _ =
       res <- select
         $ from
         $ \user -> do
-        where_ (user^.UserFirstName  `ilike`  (%) ++. (just $ val q) ++. (%))
+        where_ ((user^.UserFirstName  `ilike`  (%) ++. (just $ val q) ++. (%))
+                E.||. (user^.UserLastName  `ilike`  (%) ++. (just $ val q) ++. (%))
+                E.||. (user^.UserName `ilike `(%) ++. val q ++. (%))
+                E.||. (user^.UserUsername `ilike `(%) ++. val q ++. (%)))
         return user
       return $ map entityVal res
 
