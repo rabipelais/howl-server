@@ -4,13 +4,13 @@ files:
     owner: root
     group: root
     content: |
-     [logstash-2.3]
-     name=Logstash repository for 2.3.x packages
-     baseurl=https://packages.elastic.co/logstash/2.3/centos
-     gpgcheck=1
-     gpgkey=https://packages.elastic.co/GPG-KEY-elasticsearch
-     enabled=1
+      [logstash-2.3]
+      name=Logstash repository for 2.3.x packages
+      baseurl=https://packages.elastic.co/logstash/2.3/centos
+      gpgcheck=1
+      gpgkey=https://packages.elastic.co/GPG-KEY-elasticsearch
+      enabled=1
 
 commands:
   100-install-logstash:
-      command: "sudo yum -y install logstash"
+      command: "echo \"INSTALLING LOGSTASH ==============\"; sudo yum -y install logstash"
