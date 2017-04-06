@@ -10,3 +10,7 @@ files:
      gpgcheck=1
      gpgkey=https://packages.elastic.co/GPG-KEY-elasticsearch
      enabled=1
+
+commands:
+  100-install-logstash:
+      command: "sudo yum -y install logstash"
