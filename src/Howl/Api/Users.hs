@@ -45,6 +45,7 @@ type UsersAPI =
   :<|> UsersIdDevicesGet
   :<|> UsersIdDevicesIdPut
   :<|> UsersIdDevicesIdDelete
+  :<|> UsersIdAgendaGet
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -166,3 +167,8 @@ type UsersIdDevicesIdDelete = "users" :> Capture "userID" IDType
                         :> ReqBody '[JSON] Device
                         :> Header "token" Token
                         :> Delete '[JSON] Device
+
+type UsersIdAgendaGet = "users" :> Capture "userID" IDType
+                        :> "agenda"
+                        :> Header "token" Token
+                        :> Get '[JSON] [Event]

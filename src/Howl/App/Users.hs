@@ -76,6 +76,7 @@ usersHandlers =
   :<|> getUsersIdDevicesH
   :<|> putUsersIdDevicesIdH
   :<|> deleteUsersIdDevicesIdH
+  :<|> getUsersIdAgendaH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -450,3 +451,21 @@ deleteUsersIdDevicesIdH ui device@(Device t du di) mToken = do
     getBy uniqueDevice >>= \case
       Just _ -> deleteBy uniqueDevice >> return device
       _ -> throwError err404
+
+getUsersIdAgendaH ui mToken = do
+  $logInfo $ "Request agenda: " <> (pack.show) ui
+  ui' <- tokenUser mToken
+  runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    eventEntities <- E.select $
+      E.from
+      $ \(event `E.InnerJoin` rsvp) -> do
+      E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
+           E.&&. rsvp^.EventRSVPUserID E.==. (E.val ui)
+           E.&&. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Attending)
+                E.||. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Created))
+                E.||. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Maybe))))
+      return event
+    return $ map entityVal eventEntities
