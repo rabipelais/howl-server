@@ -46,7 +46,9 @@ type EventsAPI =
 type Prefix = "events"
 
 type EventsGet = Prefix :> Header "token" Token
-                :> Get '[JSON] [Event]
+                 :> QueryParam "limit" Int
+                 :> QueryParam "offset" Int
+                 :> Get '[JSON] [Event]
 
 type EventsPut = Prefix :> ReqBody '[JSON] Event
                 :> Header "token" Token
@@ -81,16 +83,22 @@ type EventsIdInviteIdDelete = Prefix :> Capture "eventID" IDType
 
 type EventsIdGoingGet = Prefix :> Capture "eventID" IDType
                        :> "going"
+                       :> QueryParam "limit" Int
+                       :> QueryParam "offset" Int
                        :> Header "token" Token
                        :> Get '[JSON] [ApiUser]
 
 type EventsIdInterestedGet = Prefix :> Capture "eventID" IDType
                        :> "interested"
+                       :> QueryParam "limit" Int
+                       :> QueryParam "offset" Int
                        :> Header "token" Token
                        :> Get '[JSON] [ApiUser]
 
 type EventsIdInvitedGet = Prefix :> Capture "eventID" IDType
                        :> "invited"
+                       :> QueryParam "limit" Int
+                       :> QueryParam "offset" Int
                        :> Header "token" Token
                        :> Get '[JSON] [ApiUser]
 
@@ -119,5 +127,7 @@ type EventsNearbyGet = Prefix :> "nearby"
                      :> QueryParam "lat" Double
                      :> QueryParam "lon" Double
                      :> QueryParam "distance" Double
+                     :> QueryParam "limit" Int
+                     :> QueryParam "offset" Int
                      :> Header "token" Token
                      :> Get '[JSON] [Event]

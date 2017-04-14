@@ -19,8 +19,8 @@ import           Data.String.Conversions
 import qualified Data.Time                    as TI
 import           Data.Time.Clock
 
-import           Database.Esqueleto           (from, on, select, where_, (?.),
-                                               (^.))
+import           Database.Esqueleto           (from, limit, offset, on, select,
+                                               where_, (?.), (^.))
 import qualified Database.Esqueleto           as E
 import           Database.Persist
 import           Database.Persist.Sql
@@ -65,11 +65,17 @@ eventsHandlers =
   :<|> eventsIdRSVPUsersIdPut
   :<|> eventsIdRSVPUsersIdDelete
 
-eventsGetH :: Maybe Token -> HandlerT IO [Event]
-eventsGetH mToken = do
+eventsGetH :: Maybe Token -> Maybe Int -> Maybe Int -> HandlerT IO [Event]
+eventsGetH mToken mLimit mOffset = do
   $logInfo $ "Request all events"
-  entities <- runQuery $ (select . from $ pure)
+  entities <- runQuery $ (select . from $ \es -> do
+                             limit l
+                             offset o
+                             return es)
   return $ map entityVal entities
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
 
 eventsPutH :: Event -> Maybe Token -> HandlerT IO Event
@@ -80,8 +86,8 @@ eventsPutH event mToken = do
       Just (Entity k _) -> replace k event >> return event
       Nothing -> insert event >> return event
 
-eventsNearbyGet :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Event]
-eventsNearbyGet (Just lat) (Just lon) d mToken = do
+eventsNearbyGet :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+eventsNearbyGet (Just lat) (Just lon) d mLimit mOffset mToken = do
   $logInfo $ "Request events nearby: lat=" <> (pack . show) lat <> ", lon=" <> (pack . show) lon <> ", dist=" <> (pack . show) d
   ui <- tokenUser mToken
   eventEntities <- runQuery $ do
@@ -98,7 +104,9 @@ eventsNearbyGet (Just lat) (Just lon) d mToken = do
     nearby (Just lat1, Just lon1) (lat2, lon2) = (haversine (lat1, lon1) (lat2, lon2)) <= d'
     nearby _ _ = False
     d' = fromMaybe 1000 d
-eventsNearbyGet _ _ _ _ = throwError err400
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
+eventsNearbyGet _ _ _ _ _ _ = throwError err400
 
 eventsIdGet :: IDType -> Maybe Token -> HandlerT IO Event
 eventsIdGet i mToken = runQuery $ do
@@ -206,14 +214,23 @@ getGuestList ei mToken list = do
             Nothing -> return (ts, (toApiUser Nothing x):fs)
             Just u -> return (u:ts, fs)
 
-eventsIdGoingGet :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
-eventsIdGoingGet ei mToken = getGuestList ei mToken "attending"
+eventsIdGoingGet :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [ApiUser]
+eventsIdGoingGet ei mLimit mOffset mToken = getGuestList ei mToken "attending"
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
-eventsIdInterestedGet :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
-eventsIdInterestedGet ei mToken = getGuestList ei mToken "interested"
+eventsIdInterestedGet :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [ApiUser]
+eventsIdInterestedGet ei mLimit mOffset mToken = getGuestList ei mToken "interested"
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
-eventsIdInvitedGet :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
-eventsIdInvitedGet ei mToken = getGuestList ei mToken "noreply"
+eventsIdInvitedGet :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [ApiUser]
+eventsIdInvitedGet ei mLimit mOffset mToken = getGuestList ei mToken "noreply"
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
 eventsIdRSVPGet :: IDType -> Maybe Token -> HandlerT IO [EventRSVP]
 eventsIdRSVPGet ei mToken = do
