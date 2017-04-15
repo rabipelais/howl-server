@@ -201,10 +201,13 @@ deleteUserId i = runQuery $ do
 
 getUsersIdConnectH _ _ = throwError err405
 
-getUsersIdFollowsH :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
-getUsersIdFollowsH i mToken = do
+getUsersIdFollowsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [ApiUser]
+getUsersIdFollowsH i mLimit mOffset mToken = do
   $logInfo $ "Request followed by user with id: " <> (pack . show) i
   getUsersIdFollows i
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
 getUsersIdFollows :: IDType -> HandlerT IO [ApiUser]
 getUsersIdFollows i = runQuery $ do
@@ -277,8 +280,8 @@ getUsersIdFollowersCountH ui mToken = do
         E.where_ (E.val ui E.==. follow^.FollowshipTargetId
                   E.&&. follow^.FollowshipStatus E.==. E.val Accepted)
 
-getUsersIdBlockedH :: IDType -> Maybe Token -> HandlerT IO [ApiUser]
-getUsersIdBlockedH s mToken = do
+getUsersIdBlockedH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [ApiUser]
+getUsersIdBlockedH s mLimit mOffset mToken = do
   $logInfo $ "Request user blocked list: " <> (pack . show) s
   runQuery $ do
     checkExistsOrThrow s
@@ -290,6 +293,9 @@ getUsersIdBlockedH s mToken = do
         E.where_ (follow^.FollowshipStatus E.==. E.val Blocked)
         return user
     return $ map (toApiUser (Just Blocked) . entityVal) userEntities
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
 postUsersIdBlockedH :: IDType -> IDType -> Maybe Token -> HandlerT IO IDType
 postUsersIdBlockedH s t mToken = do
@@ -315,13 +321,16 @@ deleteUsersIdBlockedIdH s t mToken = do
       Just (Entity _ (Followship _ _ Blocked)) -> deleteBy (UniqueFollowshipID s t) >> return t
       _ -> throwError err404
 
-getUsersIdEventsFollowsH :: IDType -> Maybe Token -> HandlerT IO [Event]
-getUsersIdEventsFollowsH i mToken = do
+getUsersIdEventsFollowsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+getUsersIdEventsFollowsH i mLimit mOffset mToken = do
   $logInfo $ "Request events of followed by user with id: " <> (pack . show) i
   runQuery $ do
     checkExistsOrThrow i
     eventEntities <- friendsEvents i
     return $ map entityVal eventEntities
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
 friendsEvents i =  E.select $ E.distinct
       $ E.from
@@ -333,13 +342,16 @@ friendsEvents i =  E.select $ E.distinct
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
       return event
 
-getUsersIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
-getUsersIdEventsH i mToken = do
+getUsersIdEventsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+getUsersIdEventsH i mLimit mOffset mToken = do
   $logInfo $ "Request get events of user with id: " <> (pack . show) i
   runQuery $ do
     checkExistsOrThrow i
     eventEntities <- usersEvents i
     return $ map entityVal eventEntities
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
 usersEvents i = E.select
       $ E.from
@@ -350,8 +362,8 @@ usersEvents i = E.select
       E.orderBy [E.desc (event^.EventStartTime)]
       return event
 
-getUsersIdVenuesH :: IDType -> Maybe Token -> HandlerT IO [Venue]
-getUsersIdVenuesH ui mToken = do
+getUsersIdVenuesH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Venue]
+getUsersIdVenuesH ui mLimit mOffset mToken = do
   $logInfo $ "Request venues of user with id: " <> (pack . show) ui
   ui' <- tokenUser mToken
   runQuery $ do
@@ -365,6 +377,9 @@ getUsersIdVenuesH ui mToken = do
             E.&&. follower^.VenueFollowerUserID E.==. E.val ui)
       return venue
     return $ map entityVal eventEntities
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
 
 getNewFbUser :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> m User
 getNewFbUser userAT creds manager =  do
@@ -389,8 +404,8 @@ getFbVenue userAT creds manager venueId = do
   venue <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields","id,name,about,emails,cover.fields(id,source),picture.type(normal),location,category")] (Just userAT)
   return (fromFbVenue venue)
 
-getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Event]
-getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mToken = do
+getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = do
   $logInfo $ "Request suggested events of user with id: " <> (pack . show) ui <> " with lat, lon, dist: " <> (pack . show) [lat, lon, distance]
   creds' <- asks creds
   manager' <- asks manager
@@ -416,7 +431,9 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mToken = do
       return $ P.concat $ map (\(_, es) -> map fromFbEvent es) ves
 
     distance = fromMaybe 1000 distance'
-getUsersIdSuggestedH _ _ _ _ _ = throwError err400
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
+getUsersIdSuggestedH _ _ _ _ _ _ _ = throwError err400
 
 
 getUsersIdDevicesH ui mToken = do
@@ -452,7 +469,8 @@ deleteUsersIdDevicesIdH ui device@(Device t du di) mToken = do
       Just _ -> deleteBy uniqueDevice >> return device
       _ -> throwError err404
 
-getUsersIdAgendaH ui mToken = do
+getUsersIdAgendaH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token ->HandlerT IO [Event]
+getUsersIdAgendaH ui mLimit mOffset mToken = do
   $logInfo $ "Request agenda: " <> (pack.show) ui
   ui' <- tokenUser mToken
   runQuery $ do
@@ -469,3 +487,6 @@ getUsersIdAgendaH ui mToken = do
                 E.||. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Maybe))))
       return event
     return $ map entityVal eventEntities
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset

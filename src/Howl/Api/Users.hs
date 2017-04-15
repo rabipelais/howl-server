@@ -78,6 +78,8 @@ type UsersIdDelete = "users" :> Capture "userID" IDType
 
 type UsersIdFollowsGet = "users" :> Capture "userID" IDType
                           :> "follows"
+                          :> QueryParam "limit" Int
+                          :> QueryParam "offset" Int
                           :> Header "token" Token
                           :> Get '[JSON] [ApiUser]
 
@@ -89,6 +91,8 @@ type UsersIdFollowsPost = "users" :> Capture "userID" IDType
 
 type UsersIdEventsFollowsGet = "users" :> Capture "userID" IDType
                           :> "events" :> "follows"
+                          :> QueryParam "limit" Int
+                          :> QueryParam "offset" Int
                           :> Header "token" Token
                           :> Get '[JSON] [Event]
 
@@ -118,6 +122,8 @@ type UsersIdFollowsIdDelete = "users" :> Capture "userID" IDType
 
 type UsersIdBlockedGet = "users" :> Capture "userID" IDType
                          :> "blocked"
+                         :> QueryParam "limit" Int
+                         :> QueryParam "offset" Int
                          :> Header "token" Token
                          :> Get '[JSON] [ApiUser]
 
@@ -135,11 +141,15 @@ type UsersIdBlockedFollowsIdDelete = "users" :> Capture "userID" IDType
 
 type UsersIdEventsGet = "users" :> Capture "userID" IDType
                         :> "events"
+                        :> QueryParam "limit" Int
+                        :> QueryParam "offset" Int
                         :> Header "token" Token
                         :> Get '[JSON] [Event]
 
 type UsersIdVenuesGet = "users" :> Capture "userID" IDType
                         :> "venues"
+                        :> QueryParam "limit" Int
+                        :> QueryParam "offset" Int
                         :> Header "token" Token
                         :> Get '[JSON] [Venue]
 
@@ -148,6 +158,8 @@ type UsersIdSuggestedGet = "users" :> Capture "userID" IDType
                            :> QueryParam "lat" Double
                            :> QueryParam "lon" Double
                            :> QueryParam "distance" Double
+                           :> QueryParam "limit" Int
+                           :> QueryParam "offset" Int
                            :> Header "token" Token
                            :> Get '[JSON] [Event]
 
@@ -170,5 +182,7 @@ type UsersIdDevicesIdDelete = "users" :> Capture "userID" IDType
 
 type UsersIdAgendaGet = "users" :> Capture "userID" IDType
                         :> "agenda"
+                        :> QueryParam "limit" Int
+                        :> QueryParam "offset" Int
                         :> Header "token" Token
                         :> Get '[JSON] [Event]
