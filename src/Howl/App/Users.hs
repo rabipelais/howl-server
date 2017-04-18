@@ -61,6 +61,7 @@ usersHandlers =
   :<|> deleteUsersIdH
   :<|> getUsersIdConnectH
   :<|> getUsersIdFollowsH
+  :<|> getUsersIdFollowersH
   :<|> postUsersIdFollowsH
   :<|> getUsersIdFollowsIdH
   :<|> deleteUsersIdFollowsIdH
@@ -219,6 +220,28 @@ getUsersIdFollows i = runQuery $ do
         $ \(user `E.InnerJoin` follow) -> do
         E.on (user^.UserFbID E.==. follow^.FollowshipTargetId
               E.&&. follow^.FollowshipSourceId E.==. E.val i)
+        E.where_ (follow^.FollowshipStatus E.==. E.val Accepted)
+        return user
+      return $ map (toApiUser (Just Accepted) . entityVal) userEntities
+
+getUsersIdFollowersH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [ApiUser]
+getUsersIdFollowersH i mLimit mOffset mToken = do
+  $logInfo $ "Request followed by user with id: " <> (pack . show) i
+  getUsersIdFollowers i
+  where
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
+
+getUsersIdFollowers :: IDType -> HandlerT IO [ApiUser]
+getUsersIdFollowers i = runQuery $ do
+  selectFirst [UserFbID ==. i] [] >>= \case
+    Nothing -> throwError err404
+    Just _ -> do
+      userEntities <- E.select
+        $ E.from
+        $ \(user `E.InnerJoin` follow) -> do
+        E.on (E.val i E.==. follow^.FollowshipTargetId
+              E.&&. follow^.FollowshipSourceId E.==. user^.UserFbID)
         E.where_ (follow^.FollowshipStatus E.==. E.val Accepted)
         return user
       return $ map (toApiUser (Just Accepted) . entityVal) userEntities

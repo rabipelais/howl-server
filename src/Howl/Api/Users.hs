@@ -30,6 +30,7 @@ type UsersAPI =
   :<|> UsersIdDelete
   :<|> UsersIdConnectGet
   :<|> UsersIdFollowsGet
+  :<|> UsersIdFollowersGet
   :<|> UsersIdFollowsPost
   :<|> UsersIdFollowsIdGet
   :<|> UsersIdFollowsIdDelete
@@ -78,6 +79,13 @@ type UsersIdDelete = "users" :> Capture "userID" IDType
 
 type UsersIdFollowsGet = "users" :> Capture "userID" IDType
                           :> "follows"
+                          :> QueryParam "limit" Int
+                          :> QueryParam "offset" Int
+                          :> Header "token" Token
+                          :> Get '[JSON] [ApiUser]
+
+type UsersIdFollowersGet = "users" :> Capture "userID" IDType
+                          :> "followers"
                           :> QueryParam "limit" Int
                           :> QueryParam "offset" Int
                           :> Header "token" Token
