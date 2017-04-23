@@ -15,8 +15,8 @@ import           GHC.Generics
 import           Database.Persist
 import qualified Howl.Facebook              as FB
 
-import           Howl.Api.Common
-import           Howl.Models
+import           Howl.Api.Common            as Api
+import           Howl.Models                as Model
 import           Howl.Types
 
 import           Servant.API
@@ -102,7 +102,7 @@ type UsersIdEventsFollowsGet = "users" :> Capture "userID" IDType
                           :> QueryParam "limit" Int
                           :> QueryParam "offset" Int
                           :> Header "token" Token
-                          :> Get '[JSON] [Event]
+                          :> Get '[JSON] [Api.Event]
 
 type UsersIdFollowsIdGet = "users" :> Capture "userID" IDType
                            :> "follows"
@@ -152,7 +152,7 @@ type UsersIdEventsGet = "users" :> Capture "userID" IDType
                         :> QueryParam "limit" Int
                         :> QueryParam "offset" Int
                         :> Header "token" Token
-                        :> Get '[JSON] [Event]
+                        :> Get '[JSON] [Api.Event]
 
 type UsersIdVenuesGet = "users" :> Capture "userID" IDType
                         :> "venues"
@@ -169,7 +169,7 @@ type UsersIdSuggestedGet = "users" :> Capture "userID" IDType
                            :> QueryParam "limit" Int
                            :> QueryParam "offset" Int
                            :> Header "token" Token
-                           :> Get '[JSON] [Event]
+                           :> Get '[JSON] [Api.Event]
 
 type UsersIdDevicesGet = "users" :> Capture "userID" IDType
                         :> "devices"
@@ -193,4 +193,4 @@ type UsersIdAgendaGet = "users" :> Capture "userID" IDType
                         :> QueryParam "limit" Int
                         :> QueryParam "offset" Int
                         :> Header "token" Token
-                        :> Get '[JSON] [Event]
+                        :> Get '[JSON] [Api.Event]

@@ -75,7 +75,7 @@ type VenuesIdFollowersIdDelete = Prefix :> Capture "venueID" IDType
 type VenuesIdEventsGet = Prefix :> Capture "venueID" IDType
                          :> "events"
                          :> Header "token" Token
-                         :> Get '[JSON] [Event]
+                         :> Get '[JSON] [Api.Event]
 
 type VenuesNearbyGet = Prefix :> "nearby"
                      :> QueryParam "lat" Double

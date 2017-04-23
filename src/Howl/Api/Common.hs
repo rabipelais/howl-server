@@ -13,7 +13,8 @@ import           GHC.Generics
 import           Servant.Swagger hiding (Header)
 
 import qualified Howl.Facebook   as FB
-import           Howl.Models
+import           Howl.Models hiding (Event)
+import qualified Howl.Models     as M
 import           Howl.Types
 
 data ConnectCard =
@@ -49,6 +50,19 @@ toApiUser follow u = ApiUser (userFbID u) (userName u) (userUsername u) (userFir
 
 fromApiUser :: ApiUser -> User
 fromApiUser u = User (fbID u) (name u) (username u) (firstName u) (lastName u) (email u) (profilePicPath u) (private u)
+
+data Event =
+  Event { event :: M.Event
+        , rsvp :: FB.RSVP
+        , friendsGoing :: Int
+        , picsGoing :: [FilePath]
+        , friendsInterested :: Int
+        , picsInterested :: [FilePath] }
+  deriving (Eq, Read, Show, Generic)
+
+deriving instance ToJSON Event
+
+deriving instance FromJSON Event
 
 instance ToSchema ConnectCard where
   declareNamedSchema proxy =
@@ -112,12 +126,24 @@ instance ToSchema VenueFollower where
        (VenueFollower (FB.Id "10155182179270463") (FB.Id "097955182179125125"))
       & required .~ ["venueID", "userID"]
 
-instance ToSchema Event where
+mockEvent = (M.Event (FB.Id "10155182179270463") "Fun swaggy loooooong party." "All You Can Swag" 0 0 0 (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463") (Just "www.coolpic.gov"))
+
+instance ToSchema M.Event where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Event") $
       sketchSchema
-       (Event (FB.Id "10155182179270463") "Fun swaggy loooooong party." "All You Can Swag" 0 0 0 (UTCTime (fromGregorian 2015 12 31) 0) (UTCTime (fromGregorian 2515 12 31) 0) (FB.Id "901579654279270463") (Just "www.coolpic.gov"))
+      mockEvent
       & required .~ ["fbID", "description", "name", "startTime", "endTime", "venueId"]
+
+
+instance ToSchema Event where
+  declareNamedSchema proxy =
+    return $ NamedSchema (Just "Api.Event") $
+      sketchSchema
+       (Event mockEvent FB.Attending 1 ["coolurl.com"] 2 ["not-cool-url.gov", "picpath"])
+      & required .~ [ "event", "rsvp", "friendsGoing"
+                    , "picsGoing", "friendsInterested"
+                    , "picsInterested"]
 
 instance ToSchema IDType where
   declareNamedSchema proxy =

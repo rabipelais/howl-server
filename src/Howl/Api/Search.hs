@@ -15,8 +15,8 @@ import           GHC.Generics
 import           Database.Persist
 import qualified Howl.Facebook              as FB
 
-import           Howl.Api.Common
-import           Howl.Models
+import           Howl.Api.Common            as Api
+import           Howl.Models                as Model
 import           Howl.Types
 
 import           Servant.API
@@ -34,7 +34,7 @@ type SearchUsersGet = "search" :> "users"
 type SearchEventsGet = "search" :> "events"
                     :> QueryParam "q" Text
                     :> Header "token" Token
-                    :> Get '[JSON] [Event]
+                    :> Get '[JSON] [Api.Event]
 
 type SearchVenuesGet = "search" :> "venues"
                     :> QueryParam "q" Text

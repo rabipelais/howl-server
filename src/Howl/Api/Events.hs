@@ -19,8 +19,8 @@ import           Database.Persist
 import qualified Howl.Facebook              as FB
 import           Servant.Swagger            hiding (Header)
 
-import           Howl.Api.Common
-import           Howl.Models
+import           Howl.Api.Common            as Api
+import           Howl.Models                as Model
 import           Howl.Types
 
 import           Servant.API
@@ -48,15 +48,15 @@ type Prefix = "events"
 type EventsGet = Prefix :> Header "token" Token
                  :> QueryParam "limit" Int
                  :> QueryParam "offset" Int
-                 :> Get '[JSON] [Event]
+                 :> Get '[JSON] [Model.Event]
 
-type EventsPut = Prefix :> ReqBody '[JSON] Event
+type EventsPut = Prefix :> ReqBody '[JSON] Model.Event
                 :> Header "token" Token
-                :> Put '[JSON] Event
+                :> Put '[JSON] Model.Event
 
 type EventsIdGet = Prefix :> Capture "eventID" IDType
                    :> Header "token" Token
-                   :> Get '[JSON] Event
+                   :> Get '[JSON] Api.Event
 
 type EventsIdInviteGet = Prefix :> Capture "eventID" IDType
                         :> "invites"
@@ -130,4 +130,4 @@ type EventsNearbyGet = Prefix :> "nearby"
                      :> QueryParam "limit" Int
                      :> QueryParam "offset" Int
                      :> Header "token" Token
-                     :> Get '[JSON] [Event]
+                     :> Get '[JSON] [Api.Event]
