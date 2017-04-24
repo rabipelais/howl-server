@@ -42,9 +42,9 @@ import qualified Data.Time                    as TI
 import           Data.Time.Clock
 
 import           Howl.Api.Users
-import           Howl.Api.Common
+import           Howl.Api.Common as Api
 import           Howl.App.Common
-import           Howl.Models
+import           Howl.Models as Model
 import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
@@ -344,13 +344,14 @@ deleteUsersIdBlockedIdH s t mToken = do
       Just (Entity _ (Followship _ _ Blocked)) -> deleteBy (UniqueFollowshipID s t) >> return t
       _ -> throwError err404
 
-getUsersIdEventsFollowsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+getUsersIdEventsFollowsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
 getUsersIdEventsFollowsH i mLimit mOffset mToken = do
   $logInfo $ "Request events of followed by user with id: " <> (pack . show) i
   runQuery $ do
     checkExistsOrThrow i
     eventEntities <- friendsEvents i
-    return $ map entityVal eventEntities
+    let es = map entityVal eventEntities
+    mapM (intoApiEvent i) es
   where
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset
@@ -365,13 +366,14 @@ friendsEvents i =  E.select $ E.distinct
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
       return event
 
-getUsersIdEventsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+getUsersIdEventsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
 getUsersIdEventsH i mLimit mOffset mToken = do
   $logInfo $ "Request get events of user with id: " <> (pack . show) i
   runQuery $ do
     checkExistsOrThrow i
     eventEntities <- usersEvents i
-    return $ map entityVal eventEntities
+    let es = map entityVal eventEntities
+    mapM (intoApiEvent i) es
   where
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset
@@ -409,7 +411,7 @@ getNewFbUser userAT creds manager =  do
   fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name,picture.type(large){url}")] (Just userAT)
   return (fromFbUser fbUser)
 
-getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Event]
+getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Model.Event]
 getFbEvents userAT creds manager limit = do
   let url = "/v2.8/" <> (Fb.idCode $ accessTokenUserId userAT) <> "/" <> "events"
   eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner,cover.fields(id,source),attending_count,maybe_count,declined_count")] (Just userAT)
@@ -427,7 +429,7 @@ getFbVenue userAT creds manager venueId = do
   venue <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields","id,name,about,emails,cover.fields(id,source),picture.type(normal),location,category")] (Just userAT)
   return (fromFbVenue venue)
 
-getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
 getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = do
   $logInfo $ "Request suggested events of user with id: " <> (pack . show) ui <> " with lat, lon, dist: " <> (pack . show) [lat, lon, distance]
   creds' <- asks creds
@@ -441,7 +443,7 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = 
     fs <- fromFriends
     ns <- fromNearby creds' manager' token
     return $ us ++ fs ++ ns
-  return es
+  runQuery $ mapM (intoApiEvent ui) es
   where
     fromUser = map entityVal <$> usersEvents ui
     fromFriends = map entityVal <$> friendsEvents ui
@@ -492,7 +494,7 @@ deleteUsersIdDevicesIdH ui device@(Device t du di) mToken = do
       Just _ -> deleteBy uniqueDevice >> return device
       _ -> throwError err404
 
-getUsersIdAgendaH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token ->HandlerT IO [Event]
+getUsersIdAgendaH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token ->HandlerT IO [Api.Event]
 getUsersIdAgendaH ui mLimit mOffset mToken = do
   $logInfo $ "Request agenda: " <> (pack.show) ui
   ui' <- tokenUser mToken
@@ -509,7 +511,8 @@ getUsersIdAgendaH ui mLimit mOffset mToken = do
                 E.||. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Created))
                 E.||. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Maybe))))
       return event
-    return $ map entityVal eventEntities
+    let es = map entityVal eventEntities
+    mapM (intoApiEvent ui) es
   where
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset

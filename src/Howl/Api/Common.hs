@@ -53,10 +53,12 @@ fromApiUser u = User (fbID u) (name u) (username u) (firstName u) (lastName u) (
 
 data Event =
   Event { event :: M.Event
-        , rsvp :: FB.RSVP
+        , tag :: Text
         , friendsGoing :: Int
+        , namesGoing :: [Text]
         , picsGoing :: [FilePath]
         , friendsInterested :: Int
+        , namesInterested :: [Text]
         , picsInterested :: [FilePath] }
   deriving (Eq, Read, Show, Generic)
 
@@ -140,7 +142,7 @@ instance ToSchema Event where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Api.Event") $
       sketchSchema
-       (Event mockEvent FB.Attending 1 ["coolurl.com"] 2 ["not-cool-url.gov", "picpath"])
+       (Event mockEvent "Suggested" 1 ["Juan"] ["coolurl.com"] 2 ["Carmen", "Bob"] ["not-cool-url.gov", "picpath"])
       & required .~ [ "event", "rsvp", "friendsGoing"
                     , "picsGoing", "friendsInterested"
                     , "picsInterested"]

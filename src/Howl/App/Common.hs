@@ -18,6 +18,7 @@ import qualified Data.HashMap.Strict as HM
 import           Data.String.Conversions
 import           Data.List.Split as L
 import Data.List as L
+import qualified Data.Time                    as TI
 import Data.Time.Clock
 import Data.Time.Calendar
 import Data.Foldable
@@ -42,15 +43,16 @@ import           Network.HTTP.Conduit         (Manager, newManager,
 import           Network.Wai
 import           Network.Wai.Handler.Warp     as Warp
 
-import qualified Howl.Facebook                as Fb
 
 import           Servant
 
-import           Data.Text                    hiding (foldl, map)
+import           Data.Text      as T          hiding (foldl, map)
 import           Data.Text.Encoding (encodeUtf8)
 import           Data.Maybe
 
-import           Howl.Models
+import           Howl.Api.Common as Api
+import qualified Howl.Facebook                as Fb
+import           Howl.Models as Model
 import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
@@ -102,7 +104,7 @@ fromFbUser u = user
     profilePicPath = unpack <$> Fb.userPicSource u
     user = User fbID fullName username firstName lastName email profilePicPath True
 
-fromFbEvent :: Fb.Event -> Event
+fromFbEvent :: Fb.Event -> Model.Event
 fromFbEvent e = event
   where
     fbID = Fb.eventId e
@@ -115,7 +117,7 @@ fromFbEvent e = event
     endTime = fromMaybe (UTCTime (fromGregorian 2017 01 01) (secondsToDiffTime 0)) (Fb.eventEndTime e)
     venueId = fromMaybe "" (Fb.placeId =<< Fb.eventPlace e)
     coverPicPath = unpack <$> Fb.eventCoverSource e
-    event = Event fbID description name attending maybeCount declined startTime endTime venueId coverPicPath
+    event = Model.Event fbID description name attending maybeCount declined startTime endTime venueId coverPicPath
 
 fromFbVenue :: Fb.Place -> Venue
 fromFbVenue v = venue
@@ -133,3 +135,35 @@ fromFbVenue v = venue
     zip = Fb.placeLocation v >>= Fb.locationZip
     geo = Fb.placeLocation v >>= Fb.locationCoords
     venue = Venue fbID coverPicPath profilePicPath category about description name city country street zip (Fb.latitude <$> geo) (Fb.longitude <$> geo) Nothing
+
+
+intoApiEvent ui e = do
+  let i = eventFbID e
+  goingEntities <- E.select
+    $ E.from
+    $ \(friend `E.InnerJoin` user `E.InnerJoin` eventRsvp) -> do
+    E.on (user^.UserFbID E.==. eventRsvp^.EventRSVPUserID)
+    E.on (friend^.FollowshipTargetId E.==. user^.UserFbID)
+    E.where_ (
+      (friend^.FollowshipSourceId E.==. E.val ui)
+      E.&&. (friend^.FollowshipStatus E.==. E.val Accepted)
+      E.&&.(eventRsvp^.EventRSVPEventID E.==. E.val i)
+      E.&&. (eventRsvp^.EventRSVPRsvp E.==. E.val Fb.Attending))
+    return user
+  interestedEntities <- E.select
+    $ E.from
+    $ \(friend `E.InnerJoin` user `E.InnerJoin` eventRsvp) -> do
+    E.on (user^.UserFbID E.==. eventRsvp^.EventRSVPUserID)
+    E.on (friend^.FollowshipTargetId E.==. user^.UserFbID)
+    E.where_ (
+      (friend^.FollowshipSourceId E.==. E.val ui)
+      E.&&. (friend^.FollowshipStatus E.==. E.val Accepted)
+      E.&&.(eventRsvp^.EventRSVPEventID E.==. E.val i)
+      E.&&. (eventRsvp^.EventRSVPRsvp E.==. E.val Fb.Maybe))
+    return user
+  let (goingNames, goingPics) = unzip $ map (\u -> (userName u, fromMaybe "" $ userProfilePicPath u)) $ map entityVal goingEntities
+  let (interestedNames, interestedPics) = unzip $ map (\u -> (userName u, fromMaybe "" $ userProfilePicPath u)) $ map entityVal interestedEntities
+  let t = T.pack $ TI.formatTime TI.defaultTimeLocale "%b %e" (eventStartTime e)
+  return (Api.Event e t
+          (L.length goingNames) goingNames goingPics
+          (L.length interestedNames) interestedNames interestedPics)

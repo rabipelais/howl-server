@@ -43,6 +43,7 @@ import           Data.Text.Lazy.Encoding      (encodeUtf8)
 import qualified Data.Time                    as TI
 import           Data.Time.Clock
 
+import           Howl.Api.Common              as Api
 import           Howl.Api.Search
 import           Howl.App.Common
 import           Howl.Models
@@ -71,8 +72,9 @@ getSearchUsers mq _ =
         return user
       return $ map entityVal res
 
-getSearchEvents :: Maybe Text -> Maybe Token -> HandlerT IO [Event]
-getSearchEvents mq _ =
+getSearchEvents :: Maybe Text -> Maybe Token -> HandlerT IO [Api.Event]
+getSearchEvents mq mToken = do
+  ui <- tokenUser mToken
   case mq of
     Nothing -> throwError err400
     Just q -> runQuery $ do
@@ -81,7 +83,8 @@ getSearchEvents mq _ =
         $ \event -> do
         where_ (event^.EventName  `ilike` (%) ++. val q ++. (%))
         return event
-      return $ map entityVal res
+      let es = map entityVal res
+      mapM (intoApiEvent ui) es
 
 getSearchVenues :: Maybe Text -> Maybe Token -> HandlerT IO [Venue]
 getSearchVenues mq _ =

@@ -34,6 +34,7 @@ import           Servant
 import           Data.Maybe
 import           Data.Text                    hiding (foldl, map, replace)
 
+import           Howl.Api.Common              as Api
 import           Howl.Api.Venues
 import           Howl.App.Common
 import           Howl.Models
@@ -130,7 +131,7 @@ deleteVenuesIdFollowersIdH vi fi mToken = do
       Just entity -> deleteBy uFollow >> return (entityVal entity)
       Nothing -> throwError err404
 
-getVenuesIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Event]
+getVenuesIdEventsH :: IDType -> Maybe Token -> HandlerT IO [Api.Event]
 getVenuesIdEventsH vi mToken = do
   $logInfo $ "Request events in venue: " <> (pack . show) vi
   ui <- tokenUser mToken
@@ -142,7 +143,8 @@ getVenuesIdEventsH vi mToken = do
       $ from $ \event -> do
       E.where_ (event^.EventVenueId E.==. E.val vi)
       return event
-    return $ map entityVal entities
+    let es = map entityVal entities
+    mapM (intoApiEvent ui) es
 
 getVenuesNearbyH :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Token -> HandlerT IO [Venue]
 getVenuesNearbyH (Just lat) (Just lon) d mToken = do

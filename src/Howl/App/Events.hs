@@ -39,10 +39,10 @@ import qualified Data.List                    as L
 import           Data.Maybe
 import           Data.Text                    hiding (foldl, map, replace)
 
-import           Howl.Api.Common
+import           Howl.Api.Common              as Api
 import           Howl.Api.Events
 import           Howl.App.Common
-import           Howl.Models
+import           Howl.Models                  as Model
 import           Howl.Monad
 import           Howl.Types
 import           Howl.Utils
@@ -65,7 +65,7 @@ eventsHandlers =
   :<|> eventsIdRSVPUsersIdPut
   :<|> eventsIdRSVPUsersIdDelete
 
-eventsGetH :: Maybe Token -> Maybe Int -> Maybe Int -> HandlerT IO [Event]
+eventsGetH :: Maybe Token -> Maybe Int -> Maybe Int -> HandlerT IO [Model.Event]
 eventsGetH mToken mLimit mOffset = do
   $logInfo $ "Request all events"
   entities <- runQuery $ (select . from $ \es -> do
@@ -78,7 +78,7 @@ eventsGetH mToken mLimit mOffset = do
     o = maybe 0 fromIntegral mOffset
 
 
-eventsPutH :: Event -> Maybe Token -> HandlerT IO Event
+eventsPutH :: Model.Event -> Maybe Token -> HandlerT IO Model.Event
 eventsPutH event mToken = do
   $logInfo $ "Request put event: " <> (pack . show) event
   runQuery $ do
@@ -86,7 +86,7 @@ eventsPutH event mToken = do
       Just (Entity k _) -> replace k event >> return event
       Nothing -> insert event >> return event
 
-eventsNearbyGet :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Event]
+eventsNearbyGet :: Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
 eventsNearbyGet (Just lat) (Just lon) d mLimit mOffset mToken = do
   $logInfo $ "Request events nearby: lat=" <> (pack . show) lat <> ", lon=" <> (pack . show) lon <> ", dist=" <> (pack . show) d
   ui <- tokenUser mToken
@@ -99,7 +99,8 @@ eventsNearbyGet (Just lat) (Just lon) d mLimit mOffset mToken = do
         \ON event.venue_id=venue.fb_i_d \
         \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.lon - ?) * 112000) * ((venue.lon - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.lon IS NOT NULL"
         [toPersistValue lat, toPersistValue lat, toPersistValue lon, toPersistValue lon, toPersistValue d', toPersistValue d']
-  return $ map entityVal eventEntities
+  let es = map entityVal eventEntities
+  runQuery $ mapM (intoApiEvent ui) es
   where
     nearby (Just lat1, Just lon1) (lat2, lon2) = (haversine (lat1, lon1) (lat2, lon2)) <= d'
     nearby _ _ = False
@@ -108,10 +109,13 @@ eventsNearbyGet (Just lat) (Just lon) d mLimit mOffset mToken = do
     o = maybe 0 fromIntegral mOffset
 eventsNearbyGet _ _ _ _ _ _ = throwError err400
 
-eventsIdGet :: IDType -> Maybe Token -> HandlerT IO Event
-eventsIdGet i mToken = runQuery $ do
-  $logInfo $ "Request event by id: " <> (pack . show) i
-  checkEventOrThrow i
+eventsIdGet :: IDType -> Maybe Token -> HandlerT IO Api.Event
+eventsIdGet i mToken = do
+  ui <- tokenUser mToken
+  runQuery $ do
+    $logInfo $ "Request event by id: " <> (pack . show) i
+    e <- checkEventOrThrow i
+    intoApiEvent ui e
 
 eventsIdInviteGet :: IDType -> Maybe Token -> HandlerT IO [Invite]
 eventsIdInviteGet i mToken = do
