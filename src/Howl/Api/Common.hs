@@ -143,8 +143,9 @@ instance ToSchema Event where
     return $ NamedSchema (Just "Api.Event") $
       sketchSchema
        (Event mockEvent "Suggested" 1 ["Juan"] ["coolurl.com"] 2 ["Carmen", "Bob"] ["not-cool-url.gov", "picpath"])
-      & required .~ [ "event", "rsvp", "friendsGoing"
-                    , "picsGoing", "friendsInterested"
+      & required .~ [ "event", "tag"
+                    , "friendsGoing", "namesGoing", "picsGoing"
+                    , "friendsInterested", "namesInterested"
                     , "picsInterested"]
 
 instance ToSchema IDType where

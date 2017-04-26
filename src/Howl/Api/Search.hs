@@ -29,7 +29,7 @@ type SearchAPI =
 type SearchUsersGet = "search" :> "users"
                     :> QueryParam "q" Text
                     :> Header "token" Token
-                    :> Get '[JSON] [User]
+                    :> Get '[JSON] [ApiUser]
 
 type SearchEventsGet = "search" :> "events"
                     :> QueryParam "q" Text

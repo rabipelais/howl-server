@@ -57,20 +57,24 @@ searchHandlers =
   :<|> getSearchEvents
   :<|> getSearchVenues
 
-getSearchUsers :: Maybe Text -> Maybe Token -> HandlerT IO [User]
-getSearchUsers mq _ =
+getSearchUsers :: Maybe Text -> Maybe Token -> HandlerT IO [ApiUser]
+getSearchUsers mq mToken = do
+  ui <- tokenUser mToken
   case mq of
     Nothing -> throwError err400
     Just q -> runQuery $ do
       res <- select
         $ from
-        $ \user -> do
+        $ \(user `E.LeftOuterJoin` follow) -> do
+        E.on (just (user^.UserFbID) E.==. follow?.FollowshipTargetId
+           E.&&. follow?.FollowshipSourceId E.==. just (val ui))
         where_ ((user^.UserFirstName  `ilike`  (%) ++. (just $ val q) ++. (%))
                 E.||. (user^.UserLastName  `ilike`  (%) ++. (just $ val q) ++. (%))
                 E.||. (user^.UserName `ilike `(%) ++. val q ++. (%))
                 E.||. (user^.UserUsername `ilike `(%) ++. val q ++. (%)))
-        return user
-      return $ map entityVal res
+        return (user, follow)
+      let status f = fromMaybe None (followshipStatus . entityVal <$> f)
+      return $ map (\(u, f) -> toApiUser (Just (status f)) (entityVal u)) res
 
 getSearchEvents :: Maybe Text -> Maybe Token -> HandlerT IO [Api.Event]
 getSearchEvents mq mToken = do
