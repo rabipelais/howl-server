@@ -9,6 +9,7 @@ module Howl.App.Users
   ) where
 
 import Prelude as P
+import Debug.Trace
 import           Control.Exception.Lifted
 import           Control.Monad.Except
 import           Control.Monad.IO.Class
@@ -106,28 +107,30 @@ postUsers userAT = do
         insert u
         $logDebug $ "Got user from facebook: " <> (pack . show) u
 
-        es <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 10
-        mapM_ insertUnique es
+        ers <- liftIO $ runResourceT $ getFbEvents userAT creds' manager' 300
+        mapM_ (insertUnique . fst) ers
+        mapM_ (attendEvent u) ers
+        $logDebug $ "Got user from facebook (events count): " <> (pack . show . P.length) ers
         $logDebug $ "Got user from facebook (events): " <> (pack . show) u
-        let venueIds = P.filter (not . T.null) $ P.map (Fb.idCode .  eventVenueId) es
+        let venueIds = P.filter (not . T.null) $ P.map (Fb.idCode .  eventVenueId . fst) ers
         vs <- mapM (liftIO . runResourceT . getFbVenue userAT creds' manager') venueIds
         $logDebug $ "Got user from facebook (venues): " <> (pack . show) u
 
         -- $logDebug $ "Got at least this 5 events from facebook: " <> (pack . show . P.take 5) es
 
         mapM_ insertUnique vs
-        mapM_ (attendEvent u) es
         return u
       Just entity -> return (Left (userFbID $ entityVal entity))
   where
-    attendEvent u e = do
-      let rsvp = EventRSVP ui ei Fb.Unsure
+    attendEvent u (e, r) = do
+      let rsvp = EventRSVP ui ei r
           ui = userFbID u
           ei = eventFbID e
       getBy (UniqueEventRSVP ui ei) >>= \case
         Just (Entity k _) -> Sql.replace k rsvp
         Nothing -> insert_ rsvp
       return rsvp
+
 putUsersH :: User -> Maybe Token -> HandlerT IO User
 putUsersH u mToken = do
   $logInfo $ "Request putting user: " <> (pack . show) u
@@ -411,16 +414,17 @@ getNewFbUser userAT creds manager =  do
   fbUser <- Fb.runFacebookT creds manager $ Fb.getUser (accessTokenUserId userAT) [("fields", "id,name,email,first_name,last_name,picture.type(large){url}")] (Just userAT)
   return (fromFbUser fbUser)
 
-getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [Model.Event]
+getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -> Fb.Credentials -> Manager -> Int -> m [(Model.Event, Fb.RSVP)]
 getFbEvents userAT creds manager limit = do
   let url = "/v2.8/" <> (Fb.idCode $ accessTokenUserId userAT) <> "/" <> "events"
   eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner,cover.fields(id,source),attending_count,maybe_count,declined_count")] (Just userAT)
-  map fromFbEvent <$> go eventPager []
+  map (\e -> (fromFbEvent e, fromMaybe Fb.Unsure (Fb.eventRSVP e))) <$> go eventPager []
   where go pager res =
           if P.length res < limit
           then do
             (Fb.runFacebookT creds manager $ Fb.fetchNextPage pager) >>= \case
-              Just nextPager -> go nextPager (res ++ (Fb.pagerData pager))
+              Just nextPager -> go nextPager
+                (res ++ (Fb.pagerData pager))
               Nothing -> return res
           else return res
 
