@@ -79,6 +79,7 @@ usersHandlers =
   :<|> putUsersIdDevicesIdH
   :<|> deleteUsersIdDevicesIdH
   :<|> getUsersIdAgendaH
+  :<|> getUsersIdPromotionsH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -523,3 +524,14 @@ getUsersIdAgendaH ui mLimit mOffset mToken = do
   where
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset
+
+getUsersIdPromotionsH :: IDType -> Maybe Token -> HandlerT IO [Promotion]
+getUsersIdPromotionsH ui mToken = do
+  $logDebug $ "Request promotions for: " <> (pack.show) ui
+  ui' <- tokenUser mToken
+  entities <- runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    select . from $ pure
+  return $ P.map entityVal entities

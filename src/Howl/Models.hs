@@ -42,6 +42,13 @@ User json
   UniqueUsername username
   deriving Eq Read Show Generic
 
+Promotion json
+  coverPicUrl Text Maybe
+  name Text
+  venueName Text Maybe
+  venueId IDType Maybe
+  deriving Eq Read Show Generic
+
 Followship json
   sourceId IDType
   targetId IDType

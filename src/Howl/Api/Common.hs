@@ -73,6 +73,13 @@ instance ToSchema ConnectCard where
        (ConnectCard (FB.Id "23412345123") (FB.Id "109890804920") "Swaggity Spot" (Just "www.coolpix.zh") [User (FB.Id "10155182179270463") "Jean-Luc Picard" "theCaptain" (Just "Jean-Luc") (Just "Picard") (Just "make-it-so@yahoo.com") Nothing True])
       & required .~ ["userID", "eventID", "eventName", "friends"]
 
+instance ToSchema Promotion where
+  declareNamedSchema proxy =
+    return $ NamedSchema (Just "Promotion") $
+      sketchSchema
+       (Promotion (Just "fancyurl.web") "Dope Promotion" (Just "Kool Place") (Just "26357137137813541687"))
+      & required .~ ["name"]
+
 instance ToSchema Venue where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Venue") $

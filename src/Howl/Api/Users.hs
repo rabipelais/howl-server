@@ -47,6 +47,7 @@ type UsersAPI =
   :<|> UsersIdDevicesIdPut
   :<|> UsersIdDevicesIdDelete
   :<|> UsersIdAgendaGet
+  :<|> UsersIdPromotionsGet
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -194,3 +195,8 @@ type UsersIdAgendaGet = "users" :> Capture "userID" IDType
                         :> QueryParam "offset" Int
                         :> Header "token" Token
                         :> Get '[JSON] [Api.Event]
+
+type UsersIdPromotionsGet = "users" :> Capture "userID" IDType
+                        :> "promotions"
+                        :> Header "token" Token
+                        :> Get '[JSON] [Promotion]
