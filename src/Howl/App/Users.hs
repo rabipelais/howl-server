@@ -418,7 +418,10 @@ getFbEvents :: (MonadBaseControl IO m, MonadResource m) =>  Fb.UserAccessToken -
 getFbEvents userAT creds manager limit = do
   let url = "/v2.8/" <> (Fb.idCode $ accessTokenUserId userAT) <> "/" <> "events"
   eventPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner,cover.fields(id,source),attending_count,maybe_count,declined_count")] (Just userAT)
-  map (\e -> (fromFbEvent e, fromMaybe Fb.Unsure (Fb.eventRSVP e))) <$> go eventPager []
+  eventInvitedPager <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields", "id,name,category,description,start_time,end_time,place,rsvp_status,owner,cover.fields(id,source),attending_count,maybe_count,declined_count"), ("type", "not_replied")] (Just userAT)
+  es <- map (\e -> (fromFbEvent e, fromMaybe Fb.Unsure (traceShowId (Fb.eventRSVP e)))) <$> go eventPager []
+  es' <- map (\e -> (fromFbEvent e, fromMaybe Fb.Unsure (traceShowId (Fb.eventRSVP e)))) <$> go eventInvitedPager []
+  return (es ++ es')
   where go pager res =
           if P.length res < limit
           then do

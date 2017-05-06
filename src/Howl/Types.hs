@@ -8,12 +8,14 @@ module Howl.Types where
 import           Data.Aeson
 import           Data.Aeson.Types
 import           Data.Char
-import           Data.Text           hiding (toLower)
+import           Data.Text              hiding (toLower)
+import           Database.Persist.Class
 import           Database.Persist.TH
+import           Database.Persist.Types
 import           GHC.Generics
 import           Prelude
 
-import qualified Howl.Facebook       as FB
+import qualified Howl.Facebook          as FB
 import           Servant
 import           Servant.API
 
