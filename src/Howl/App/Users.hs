@@ -374,22 +374,24 @@ friendsEvents i =  E.select $ E.distinct
 getUsersIdEventsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
 getUsersIdEventsH i mLimit mOffset mToken = do
   $logInfo $ "Request get events of user with id: " <> (pack . show) i
+  now <- liftIO TI.getCurrentTime
   runQuery $ do
     checkExistsOrThrow i
-    eventEntities <- usersEvents i
+    eventEntities <- usersEvents i now
     let es = map entityVal eventEntities
     mapM (intoApiEvent i) es
   where
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset
 
-usersEvents i = E.select
+usersEvents i time = E.select
       $ E.from
       $ \(event `E.InnerJoin` rsvp) -> do
       E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPUserID E.==. E.val i
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
-      E.orderBy [E.desc (event^.EventStartTime)]
+      E.where_ (event^.EventStartTime E.>=. E.val time)
+      E.orderBy [E.asc (event^.EventStartTime)]
       return event
 
 getUsersIdVenuesH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Venue]
@@ -441,6 +443,7 @@ getFbVenue userAT creds manager venueId = do
 getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
 getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = do
   $logInfo $ "Request suggested events of user with id: " <> (pack . show) ui <> " with lat, lon, dist: " <> (pack . show) [lat, lon, distance]
+  now <- liftIO TI.getCurrentTime
   creds' <- asks creds
   manager' <- asks manager
   token <- case mToken of
@@ -448,13 +451,13 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = 
     Just t -> return t
   es <- runQuery $ do
     checkExistsOrThrow ui
-    us <- fromUser
+    us <- fromUser now
     fs <- fromFriends
     ns <- fromNearby creds' manager' token
     return $ us ++ fs ++ ns
   runQuery $ mapM (intoApiEvent ui) es
   where
-    fromUser = map entityVal <$> usersEvents ui
+    fromUser now = map entityVal <$> usersEvents ui now
     fromFriends = map entityVal <$> friendsEvents ui
     fromNearby creds' manager' token = do
       now <- liftIO TI.getCurrentTime

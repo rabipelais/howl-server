@@ -98,7 +98,8 @@ eventsNearbyGet (Just lat) (Just lon) d mLimit mOffset mToken = do
         "SELECT ?? \
         \FROM event INNER JOIN venue \
         \ON event.venue_id=venue.fb_i_d \
-        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.lon - ?) * 112000) * ((venue.lon - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.lon IS NOT NULL AND venue.start_time >= now()"
+        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.lon - ?) * 112000) * ((venue.lon - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.lon IS NOT NULL AND event.start_time >= now() \
+        \ORDER BY event.start_time ASC"
         [toPersistValue lat, toPersistValue lat, toPersistValue lon, toPersistValue lon, toPersistValue d', toPersistValue d']
   let es = map entityVal eventEntities
   runQuery $ mapM (intoApiEvent ui) es
