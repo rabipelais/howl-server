@@ -77,7 +77,7 @@ instance ToSchema Promotion where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Promotion") $
       sketchSchema
-       (Promotion (Just "fancyurl.web") "Dope Promotion" (Just "Kool Place") (Just "26357137137813541687"))
+       (Promotion (Just "fancyurl.web") "Dope Promotion" (Just "Awesome description") (Just "Kool Place") (Just "26357137137813541687"))
       & required .~ ["name"]
 
 instance ToSchema Venue where

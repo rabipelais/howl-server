@@ -45,6 +45,7 @@ User json
 Promotion json
   coverPicUrl Text Maybe
   name Text
+  description Text Maybe
   venueName Text Maybe
   venueId IDType Maybe
   deriving Eq Read Show Generic

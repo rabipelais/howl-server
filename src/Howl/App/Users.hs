@@ -41,6 +41,7 @@ import           Data.Text.Lazy               (fromStrict)
 import           Data.Text.Lazy.Encoding      (encodeUtf8)
 import qualified Data.Time                    as TI
 import           Data.Time.Clock
+import Data.Time.Clock.POSIX
 
 import           Howl.Api.Users
 import           Howl.Api.Common as Api
@@ -457,8 +458,9 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = 
     fromFriends = map entityVal <$> friendsEvents ui
     fromNearby creds' manager' token = do
       now <- liftIO TI.getCurrentTime
+      posixTime <- liftIO getPOSIXTime
       let userAT = Fb.UserAccessToken ui token now
-      ves <- liftIO $ runResourceT $ Fb.runFacebookT creds' manager' (getVenuesAndEventsNearby userAT lat lon distance 1000 (Just . utctDay $ now))
+      ves <- liftIO $ runResourceT $ Fb.runFacebookT creds' manager' (getVenuesAndEventsNearby userAT lat lon distance 1000 (Just (truncate posixTime)))
       mapM_ (\(v, _) -> insertBy v) ves
       mapM_ (\(_, es) -> mapM_ (insertBy . fromFbEvent) es) ves
       return $ P.concat $ map (\(_, es) -> map fromFbEvent es) ves

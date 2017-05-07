@@ -42,6 +42,7 @@ import           Data.Text                    hiding (foldl, map, replace)
 import           Howl.Api.Common              as Api
 import           Howl.Api.Events
 import           Howl.App.Common
+import           Howl.Downloader
 import           Howl.Models                  as Model
 import           Howl.Monad
 import           Howl.Types
@@ -97,14 +98,14 @@ eventsNearbyGet (Just lat) (Just lon) d mLimit mOffset mToken = do
         "SELECT ?? \
         \FROM event INNER JOIN venue \
         \ON event.venue_id=venue.fb_i_d \
-        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.lon - ?) * 112000) * ((venue.lon - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.lon IS NOT NULL"
+        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.lon - ?) * 112000) * ((venue.lon - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.lon IS NOT NULL AND venue.start_time >= now()"
         [toPersistValue lat, toPersistValue lat, toPersistValue lon, toPersistValue lon, toPersistValue d', toPersistValue d']
   let es = map entityVal eventEntities
   runQuery $ mapM (intoApiEvent ui) es
   where
     nearby (Just lat1, Just lon1) (lat2, lon2) = (haversine (lat1, lon1) (lat2, lon2)) <= d'
     nearby _ _ = False
-    d' = fromMaybe 1000 d
+    d' = fromMaybe 5000 d
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset
 eventsNearbyGet _ _ _ _ _ _ = throwError err400
