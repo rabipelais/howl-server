@@ -15,6 +15,7 @@ import           Data.Maybe
 
 import           Data.Time.Clock
 import           Data.Time.Calendar
+import Data.Time.Clock.POSIX
 import           Data.Conduit                 as CL
 import qualified Data.Conduit.Combinators     as CL
 import qualified Data.Conduit.List            as CL
@@ -48,7 +49,7 @@ getFbVenuesIdNearby userAT lat lon distance limit = do
                , ("distance", (B.pack . show) distance)]
   Fb.searchObjects "place" "" params (Just userAT)
 
-getEventsFromVenuesNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Fb.Pager IDType -> Maybe Day -> Fb.FacebookT anyAuth m [(Venue, Maybe (Fb.Pager Fb.Event))]
+getEventsFromVenuesNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Fb.Pager IDType -> Maybe POSIXTime -> Fb.FacebookT anyAuth m [(Venue, Maybe (Fb.Pager Fb.Event))]
 getEventsFromVenuesNearby userAT vPager mSince = do
   (L.concat . catMaybes . map (parseMaybe parseEach)) <$> sequence requests
   where
@@ -106,3 +107,13 @@ getVenuesAndEventsNearby userAT lat lon distance limit mSince = do
     es'' <- CL.runConduit $ es' CL.=$ CL.sinkList
     return $ (v, es'')
   return ves'
+
+--data FbSource = User
+--              | VenuesNearby userAT lat lon distance limit
+--              |
+
+--downloaderWorker chan queue = consumeMsgs ch queue Ack worker
+--  where
+--    worker (msg, metadata) = do
+--      let body = decode (msgBody msg)
+--      case body of
