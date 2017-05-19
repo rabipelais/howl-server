@@ -262,7 +262,7 @@ postUsersIdFollowsH s t mToken = do
     checkExistsOrThrow t
     getBy (UniqueFollowshipID t s) >>= \case
       Just (Entity _ (Followship _ _ Blocked)) -> throwError err403
-      _ -> insertBy (Followship s t Accepted) >>= \case
+      _ -> insertBy (Followship s t Pending) >>= \case
         Left _ -> throwError err409
         Right _ -> liftIO $ sendFollowTask ch s t >> return t
 
