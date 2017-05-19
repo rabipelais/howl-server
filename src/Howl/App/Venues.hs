@@ -136,12 +136,15 @@ getVenuesIdEventsH vi mToken = do
   $logInfo $ "Request events in venue: " <> (pack . show) vi
   ui <- tokenUser mToken
   $logInfo $ "-- by user: " <> (pack . show) ui
+  now <- liftIO TI.getCurrentTime
   runQuery $ do
     checkVenueOrThrow vi
     checkExistsOrThrowError ui err401
     entities <- select $ E.distinct
       $ from $ \event -> do
-      E.where_ (event^.EventVenueId E.==. E.val vi)
+      E.where_ (event^.EventVenueId E.==. E.val vi
+                 E.&&.event^.EventStartTime E.>=. E.val now)
+      E.orderBy [E.asc (event^.EventStartTime)]
       return event
     let es = map entityVal entities
     mapM (intoApiEvent ui) es

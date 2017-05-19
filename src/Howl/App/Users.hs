@@ -372,6 +372,7 @@ friendsEvents i time =  E.select $ E.distinct
       E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
       E.where_ (event^.EventStartTime E.>=. E.val time)
+      E.orderBy [E.asc (event^.EventStartTime)]
       return event
 
 getUsersIdEventsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
@@ -510,6 +511,7 @@ getUsersIdHappeningH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = 
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
       E.where_ (event^.EventStartTime E.>=. E.val now
                E.&&. (event^.EventStartTime E.<=. E.val (addUTCTime (2 * hour) now)))
+      E.orderBy [E.asc (event^.EventStartTime)]
       return event
     fromNearby now = rawSql
         "SELECT ?? \
@@ -561,6 +563,7 @@ getUsersIdAgendaH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token ->HandlerT 
 getUsersIdAgendaH ui mLimit mOffset mToken = do
   $logInfo $ "Request agenda: " <> (pack.show) ui
   ui' <- tokenUser mToken
+  now <- liftIO TI.getCurrentTime
   runQuery $ do
     checkExistsOrThrow ui
     checkExistsOrThrowError ui' err401
@@ -575,6 +578,8 @@ getUsersIdAgendaH ui mLimit mOffset mToken = do
            E.&&. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Attending)
                 E.||. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Created))
                 E.||. (rsvp^.EventRSVPRsvp E.==. (E.val Fb.Maybe))))
+      E.where_ (event^.EventStartTime E.>=. E.val now)
+      E.orderBy [E.asc (event^.EventStartTime)]
       return event
     let es = map entityVal eventEntities
     mapM (intoApiEvent ui) es
