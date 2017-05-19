@@ -76,6 +76,7 @@ usersHandlers =
   :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdVenuesH
   :<|> getUsersIdSuggestedH
+  :<|> getUsersIdHappeningH
   :<|> getUsersIdDevicesH
   :<|> putUsersIdDevicesIdH
   :<|> deleteUsersIdDevicesIdH
@@ -352,16 +353,17 @@ deleteUsersIdBlockedIdH s t mToken = do
 getUsersIdEventsFollowsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
 getUsersIdEventsFollowsH i mLimit mOffset mToken = do
   $logInfo $ "Request events of followed by user with id: " <> (pack . show) i
+  now <- liftIO TI.getCurrentTime
   runQuery $ do
     checkExistsOrThrow i
-    eventEntities <- friendsEvents i
+    eventEntities <- friendsEvents i now
     let es = map entityVal eventEntities
     mapM (intoApiEvent i) es
   where
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset
 
-friendsEvents i =  E.select $ E.distinct
+friendsEvents i time =  E.select $ E.distinct
       $ E.from
       $ \(event `E.InnerJoin` rsvp `E.InnerJoin` follows) -> do
       E.on (rsvp^.EventRSVPUserID E.==. follows^.FollowshipTargetId
@@ -369,6 +371,7 @@ friendsEvents i =  E.select $ E.distinct
          E.&&. follows^.FollowshipStatus E.==. E.val Accepted)
       E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
          E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
+      E.where_ (event^.EventStartTime E.>=. E.val time)
       return event
 
 getUsersIdEventsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
@@ -401,7 +404,9 @@ getUsersIdVenuesH ui mLimit mOffset mToken = do
   runQuery $ do
     checkExistsOrThrow ui
     checkExistsOrThrowError ui' err401
-    when (ui' /= ui) (throwError err403)
+    --when (ui' /= ui) (throwError err403)
+    forbidden <- (ui' `forbiddenBy` ui)
+    when forbidden (throwError err403)
     eventEntities <- E.select
       $ E.from
       $ \(venue `E.InnerJoin` follower) -> do
@@ -440,8 +445,8 @@ getFbVenue userAT creds manager venueId = do
   venue <- Fb.runFacebookT creds manager $ Fb.getObject url [("fields","id,name,about,emails,cover.fields(id,source),picture.type(normal),location,category")] (Just userAT)
   return (fromFbVenue venue)
 
-getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
-getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = do
+getUsersIdSuggestedH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe TI.UTCTime -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
+getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mStartDay mLimitDays mLimitPerDay mToken = do
   $logInfo $ "Request suggested events of user with id: " <> (pack . show) ui <> " with lat, lon, dist: " <> (pack . show) [lat, lon, distance]
   now <- liftIO TI.getCurrentTime
   creds' <- asks creds
@@ -452,27 +457,72 @@ getUsersIdSuggestedH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = 
   es <- runQuery $ do
     checkExistsOrThrow ui
     us <- fromUser now
-    fs <- fromFriends
+    fs <- fromFriends now
     ns <- fromNearby creds' manager' token
     return $ us ++ fs ++ ns
   runQuery $ mapM (intoApiEvent ui) es
   where
     fromUser now = map entityVal <$> usersEvents ui now
-    fromFriends = map entityVal <$> friendsEvents ui
-    fromNearby creds' manager' token = do
-      now <- liftIO TI.getCurrentTime
-      posixTime <- liftIO getPOSIXTime
-      let userAT = Fb.UserAccessToken ui token now
-      ves <- liftIO $ runResourceT $ Fb.runFacebookT creds' manager' (getVenuesAndEventsNearby userAT lat lon distance 1000 (Just (truncate posixTime)))
-      mapM_ (\(v, _) -> insertBy v) ves
-      mapM_ (\(_, es) -> mapM_ (insertBy . fromFbEvent) es) ves
-      return $ P.concat $ map (\(_, es) -> map fromFbEvent es) ves
+    fromFriends now = map entityVal <$> friendsEvents ui now
+    fromNearby creds' manager' token = return []
+    distance = fromMaybe 1000 distance'
+    limitPerDay = maybe 5 fromIntegral mLimitPerDay
+    limitDays = maybe 7 fromIntegral mLimitDays
+    l = maybe 10 fromIntegral mLimit
+    o = maybe 0 fromIntegral mOffset
+getUsersIdSuggestedH _ _ _ _ _ _ _ _ _ _= throwError err400
+
+getUsersIdHappeningH :: IDType -> Maybe Double -> Maybe Double -> Maybe Double -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Api.Event]
+getUsersIdHappeningH ui (Just lat) (Just lon) distance' mLimit mOffset mToken = do
+  $logInfo $ "Request suggested events of user with id: " <> (pack . show) ui <> " with lat, lon, dist: " <> (pack . show) [lat, lon, distance]
+  now <- liftIO TI.getCurrentTime
+  creds' <- asks creds
+  manager' <- asks manager
+  token <- case mToken of
+    Nothing -> throwError err402
+    Just t -> return t
+  es <- runQuery $ do
+    checkExistsOrThrow ui
+    us <- map entityVal <$> fromUser ui now
+    fs <- map entityVal <$> fromFriends now
+    ns <- map entityVal <$> fromNearby now
+    return $ us ++ fs ++ ns
+  runQuery $ mapM (intoApiEvent ui) es
+  where
+    hour = fromInteger (60 * 60)
+    fromUser ui now = E.select
+      $ E.from
+      $ \(event `E.InnerJoin` rsvp) -> do
+      E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
+         E.&&. rsvp^.EventRSVPUserID E.==. E.val ui
+         E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
+      E.where_ ((event^.EventStartTime E.>=. E.val now)
+               E.&&. (event^.EventStartTime E.<=. E.val (addUTCTime (2 * hour) now)))
+      E.orderBy [E.asc (event^.EventStartTime)]
+      return event
+    fromFriends now = E.select $ E.distinct
+      $ E.from
+      $ \(event `E.InnerJoin` rsvp `E.InnerJoin` follows) -> do
+      E.on (rsvp^.EventRSVPUserID E.==. follows^.FollowshipTargetId
+         E.&&. follows^.FollowshipSourceId E.==. E.val ui
+         E.&&. follows^.FollowshipStatus E.==. E.val Accepted)
+      E.on (event^.EventFbID E.==. rsvp^.EventRSVPEventID
+         E.&&. rsvp^.EventRSVPRsvp E.!=. E.val Fb.Declined)
+      E.where_ (event^.EventStartTime E.>=. E.val now
+               E.&&. (event^.EventStartTime E.<=. E.val (addUTCTime (2 * hour) now)))
+      return event
+    fromNearby now = rawSql
+        "SELECT ?? \
+        \FROM event INNER JOIN venue \
+        \ON event.venue_id=venue.fb_i_d \
+        \WHERE (((venue.lat- ?) * 112000) * ((venue.lat- ?) * 112000) + ((venue.lon - ?) * 112000) * ((venue.lon - ?) * 112000)) < (? * ?) AND venue.lat IS NOT NULL AND venue.lon IS NOT NULL AND event.start_time >= ? AND event.start_time < ? \
+        \ORDER BY event.start_time ASC"
+        [toPersistValue lat, toPersistValue lat, toPersistValue lon, toPersistValue lon, toPersistValue distance, toPersistValue distance, toPersistValue now, toPersistValue (addUTCTime (5 * hour) now)]
 
     distance = fromMaybe 1000 distance'
     l = maybe 10 fromIntegral mLimit
     o = maybe 0 fromIntegral mOffset
-getUsersIdSuggestedH _ _ _ _ _ _ _ = throwError err400
-
+getUsersIdHappeningH _ _ _ _ _ _ _ = throwError err400
 
 getUsersIdDevicesH ui mToken = do
   $logInfo $ "Request get all user devices for: " <> (pack.show) ui
@@ -514,7 +564,9 @@ getUsersIdAgendaH ui mLimit mOffset mToken = do
   runQuery $ do
     checkExistsOrThrow ui
     checkExistsOrThrowError ui' err401
-    when (ui' /= ui) (throwError err403)
+    --when (ui' /= ui) (throwError err403)
+    forbidden <- (ui' `forbiddenBy` ui)
+    when forbidden (throwError err403)
     eventEntities <- E.select $
       E.from
       $ \(event `E.InnerJoin` rsvp) -> do

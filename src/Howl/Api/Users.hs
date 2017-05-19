@@ -12,6 +12,7 @@ import           Data.Text
 import           Data.Typeable              (Typeable)
 import           GHC.Generics
 
+import qualified Data.Time.Clock            as T
 import           Database.Persist
 import qualified Howl.Facebook              as FB
 
@@ -43,6 +44,7 @@ type UsersAPI =
   :<|> UsersIdEventsFollowsGet
   :<|> UsersIdVenuesGet
   :<|> UsersIdSuggestedGet
+  :<|> UsersIdHappeningGet
   :<|> UsersIdDevicesGet
   :<|> UsersIdDevicesIdPut
   :<|> UsersIdDevicesIdDelete
@@ -164,6 +166,19 @@ type UsersIdVenuesGet = "users" :> Capture "userID" IDType
 
 type UsersIdSuggestedGet = "users" :> Capture "userID" IDType
                            :> "suggested"
+                           :> QueryParam "lat" Double
+                           :> QueryParam "lon" Double
+                           :> QueryParam "distance" Double
+                           :> QueryParam "limit" Int
+                           :> QueryParam "offset" Int
+                           :> QueryParam "startDay" T.UTCTime
+                           :> QueryParam "limitDays" Int
+                           :> QueryParam "limitPerDay" Int
+                           :> Header "token" Token
+                           :> Get '[JSON] [Api.Event]
+
+type UsersIdHappeningGet = "users" :> Capture "userID" IDType
+                           :> "happening"
                            :> QueryParam "lat" Double
                            :> QueryParam "lon" Double
                            :> QueryParam "distance" Double

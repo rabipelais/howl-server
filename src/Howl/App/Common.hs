@@ -167,3 +167,13 @@ intoApiEvent ui e = do
   return (Api.Event e t
           (L.length goingNames) goingNames goingPics
           (L.length interestedNames) interestedNames interestedPics)
+
+
+forbiddenBy viewer src = do
+  getBy (UniqueUserID src) >>= \case
+    Nothing -> return True
+    Just (Entity _ u) -> getBy (UniqueFollowshipID viewer src) >>= \case
+      Nothing -> return (userPrivate u)
+      Just (Entity _ f) -> if (userPrivate u)
+        then return (followshipStatus f /= Accepted) -- private & not accepted -> TRUE (forbidden)
+        else return False
