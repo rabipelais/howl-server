@@ -121,6 +121,14 @@ ConnectFriends json
   UniqueConnectFriends connect friendID
   deriving Eq Read Show
 
+Notification json
+  userID IDType
+  source IDType
+  target IDType
+  ~createdAt UTCTime
+  type NotificationType
+  deriving Eq Read Show
+
 Device json
   type DeviceType
   userId IDType

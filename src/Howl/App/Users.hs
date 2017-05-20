@@ -82,6 +82,7 @@ usersHandlers =
   :<|> deleteUsersIdDevicesIdH
   :<|> getUsersIdAgendaH
   :<|> getUsersIdPromotionsH
+  :<|> getUsersIdNotificationsH
 
 
 getUsersH :: Maybe Token -> HandlerT IO [User]
@@ -597,3 +598,24 @@ getUsersIdPromotionsH ui mToken = do
     when (ui' /= ui) (throwError err403)
     select . from $ pure
   return $ P.map entityVal entities
+
+getUsersIdNotificationsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [Notification]
+getUsersIdNotificationsH ui mLimit mOffset mToken = do
+  $logDebug $ "Request notifications for: " <> (pack.show) ui
+  ui' <- tokenUser mToken
+  entities <- runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    E.select
+      $ E.from
+      $ \notification -> do
+      E.where_ (notification^.NotificationUserID E.==. E.val ui)
+      E.limit l
+      E.offset o
+      E.orderBy [E.desc (notification^.NotificationCreatedAt)]
+      return notification
+  return $ P.map entityVal entities
+  where
+    l = fromIntegral $ fromMaybe 10 mLimit
+    o = fromIntegral $ fromMaybe 0 mOffset

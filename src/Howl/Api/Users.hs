@@ -50,6 +50,7 @@ type UsersAPI =
   :<|> UsersIdDevicesIdDelete
   :<|> UsersIdAgendaGet
   :<|> UsersIdPromotionsGet
+  :<|> UsersIdNotificationsGet
 
 
 type UsersGet = "users" :> Header "token" Token
@@ -215,3 +216,10 @@ type UsersIdPromotionsGet = "users" :> Capture "userID" IDType
                         :> "promotions"
                         :> Header "token" Token
                         :> Get '[JSON] [Promotion]
+
+type UsersIdNotificationsGet = "users" :> Capture "userID" IDType
+                        :> "notifications"
+                        :> QueryParam "limit" Int
+                        :> QueryParam "offset" Int
+                        :> Header "token" Token
+                        :> Get '[JSON] [Notification]

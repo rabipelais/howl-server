@@ -31,6 +31,15 @@ instance ToJSON FollowStatus where
 instance FromJSON FollowStatus
 derivePersistField "FollowStatus"
 
+data NotificationType = Invitation | Reminder | Request
+  deriving (Show, Read, Eq, Generic)
+
+instance ToJSON NotificationType where
+  toEncoding = genericToEncoding defaultOptions
+
+instance FromJSON NotificationType
+derivePersistField "NotificationType"
+
 type Token = Text
 
 type IDType = FB.Id

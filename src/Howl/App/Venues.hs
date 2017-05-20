@@ -16,6 +16,7 @@ import           Control.Monad.Trans.Resource
 
 import           Data.String.Conversions
 
+import qualified Data.Time                    as TI
 import           Database.Esqueleto           (from, select, (^.))
 import qualified Database.Esqueleto           as E
 import           Database.Persist

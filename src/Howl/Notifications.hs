@@ -39,7 +39,7 @@ import           Network.AMQP
 import           Data.Aeson
 
 import           Howl.Message
-import           Howl.Models
+import           Howl.Models hiding (Notification)
 import           Howl.Monad hiding (asks)
 import           Howl.Types
 import           Howl.Queue
