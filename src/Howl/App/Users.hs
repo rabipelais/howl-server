@@ -72,6 +72,8 @@ usersHandlers =
   :<|> getUsersIdBlockedH
   :<|> postUsersIdBlockedH
   :<|> deleteUsersIdBlockedIdH
+  :<|> postUsersIdIgnoreFriendIdH
+  :<|> postUsersIdAcceptFriendIdH
   :<|> getUsersIdEventsH
   :<|> getUsersIdEventsFollowsH
   :<|> getUsersIdVenuesH
@@ -559,6 +561,30 @@ deleteUsersIdDevicesIdH ui device@(Device t du di) mToken = do
     getBy uniqueDevice >>= \case
       Just _ -> deleteBy uniqueDevice >> return device
       _ -> throwError err404
+
+postUsersIdIgnoreFriendIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO FollowStatus
+postUsersIdIgnoreFriendIdH ui fi mToken = do
+  ui' <- tokenUser mToken
+  runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrow fi
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    getBy (UniqueFollowshipID ui fi) >>= \case
+      Just (Entity k (Followship _ _ Pending)) -> Sql.replace k (Followship ui fi Ignored) >> return Ignored
+      _ -> throwError err400
+
+postUsersIdAcceptFriendIdH :: IDType -> IDType -> Maybe Token -> HandlerT IO FollowStatus
+postUsersIdAcceptFriendIdH ui fi mToken = do
+  ui' <- tokenUser mToken
+  runQuery $ do
+    checkExistsOrThrow ui
+    checkExistsOrThrow fi
+    checkExistsOrThrowError ui' err401
+    when (ui' /= ui) (throwError err403)
+    getBy (UniqueFollowshipID ui fi) >>= \case
+      Just (Entity k (Followship _ _ Pending)) -> Sql.replace k (Followship ui fi Accepted) >> return Accepted
+      _ -> throwError err400
 
 getUsersIdAgendaH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token ->HandlerT IO [Api.Event]
 getUsersIdAgendaH ui mLimit mOffset mToken = do

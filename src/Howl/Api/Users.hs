@@ -40,6 +40,8 @@ type UsersAPI =
   :<|> UsersIdBlockedGet
   :<|> UsersIdBlockedPost
   :<|> UsersIdBlockedFollowsIdDelete
+  :<|> UsersIdIgnoreFriendIdPost
+  :<|> UsersIdAcceptFriendIdPost
   :<|> UsersIdEventsGet
   :<|> UsersIdEventsFollowsGet
   :<|> UsersIdVenuesGet
@@ -150,6 +152,18 @@ type UsersIdBlockedFollowsIdDelete = "users" :> Capture "userID" IDType
                                      :> Capture  "friendID" IDType
                                      :> Header "token" Token
                                      :> Delete '[JSON] IDType
+
+type UsersIdIgnoreFriendIdPost = "users" :> Capture "userID" IDType
+                          :> "ignore"
+                          :> Capture "friendID" IDType
+                          :> Header "token" Token
+                          :> PostCreated '[JSON] FollowStatus
+
+type UsersIdAcceptFriendIdPost = "users" :> Capture "userID" IDType
+                          :> "accept"
+                          :> Capture "friendID" IDType
+                          :> Header "token" Token
+                          :> PostCreated '[JSON] FollowStatus
 
 type UsersIdEventsGet = "users" :> Capture "userID" IDType
                         :> "events"

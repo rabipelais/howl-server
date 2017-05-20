@@ -66,6 +66,13 @@ deriving instance ToJSON Event
 
 deriving instance FromJSON Event
 
+instance ToSchema M.Notification where
+  declareNamedSchema proxy =
+    return $ NamedSchema (Just "Notification") $
+    sketchSchema
+    (Notification (FB.Id "23412345123") (FB.Id "109890804920") (FB.Id "234123455432") (UTCTime (fromGregorian 2015 12 31) 0) Invitation)
+    & required .~ ["userID", "source", "target", "createdAt", "type"]
+
 instance ToSchema ConnectCard where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "ConnectCard") $
