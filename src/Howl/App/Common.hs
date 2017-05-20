@@ -170,10 +170,12 @@ intoApiEvent ui e = do
 
 
 forbiddenBy viewer src = do
-  getBy (UniqueUserID src) >>= \case
-    Nothing -> return True
-    Just (Entity _ u) -> getBy (UniqueFollowshipID viewer src) >>= \case
-      Nothing -> return (userPrivate u)
-      Just (Entity _ f) -> if (userPrivate u)
-        then return (followshipStatus f /= Accepted) -- private & not accepted -> TRUE (forbidden)
-        else return False
+  if viewer == src
+    then return False
+    else getBy (UniqueUserID src) >>= \case
+      Nothing -> return True
+      Just (Entity _ u) -> getBy (UniqueFollowshipID viewer src) >>= \case
+        Nothing -> return (userPrivate u)
+        Just (Entity _ f) -> if (userPrivate u)
+          then return (followshipStatus f /= Accepted) -- private & not accepted -> TRUE (forbidden)
+          else return False
