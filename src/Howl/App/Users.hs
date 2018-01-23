@@ -209,7 +209,7 @@ deleteUserId i = runQuery $ do
       Sql.delete k
       return $ Right i
 
-getUsersIdConnectH _ _ = throwError err405
+getUsersIdConnectH ui mLimit mOffset mDate mToken = throwError err405
 
 getUsersIdFollowsH :: IDType -> Maybe Int -> Maybe Int -> Maybe Token -> HandlerT IO [ApiUser]
 getUsersIdFollowsH i mLimit mOffset mToken = do

@@ -25,5 +25,8 @@ type ApiV1 = "v1" :> (UsersAPI :<|> EventsAPI :<|> VenuesAPI :<|> SearchAPI)
 type Api = ApiV1
 type ApiRaw = Api :<|> StaticAPI
 
+apiNonRaw :: Proxy Api
+apiNonRaw = Proxy
+
 api :: Proxy ApiRaw
 api = Proxy

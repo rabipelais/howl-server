@@ -76,8 +76,11 @@ type UsersIdPut = "users" :> Capture "userID" IDType
 
 type UsersIdConnectGet = "users" :> Capture "userID" IDType
                        :> "connect"
+                       :> QueryParam "limit" Int
+                       :> QueryParam "offset" Int
+                       :> QueryParam "date" T.UTCTime
                        :> Header "token" Token
-                       :> Get '[JSON] [ConnectCard]
+                       :> Get '[JSON] [ConnectItem]
 
 type UsersIdDelete = "users" :> Capture "userID" IDType
                           :> Header "token" Token

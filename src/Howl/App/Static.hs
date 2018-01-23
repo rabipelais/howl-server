@@ -31,8 +31,6 @@ import           Network.Wai.Handler.Warp     as Warp
 
 import qualified Howl.Facebook                as Fb
 
-import           Servant
-
 import           Data.Maybe
 import           Data.Monoid                  ((<>))
 import           Data.Text                    hiding (foldl, map)
@@ -40,6 +38,8 @@ import           Data.Text.Lazy               (fromStrict)
 import           Data.Text.Lazy.Encoding      (encodeUtf8)
 import qualified Data.Time                    as TI
 import           Data.Time.Clock
+import           Servant                      hiding (serveDirectoryFileServer)
+import           Servant.RawM                 (serveDirectoryFileServer)
 
 import           Howl.Api.Static
 import           Howl.App.Common
@@ -52,5 +52,5 @@ staticHandlers :: ServerT StaticAPI (HandlerT IO)
 staticHandlers =
   staticFiles
 
-
-staticFiles = serveDirectory "/static-files"
+staticFiles :: ServerT StaticAPI (HandlerT IO)
+staticFiles = serveDirectoryFileServer "/static-files"

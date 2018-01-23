@@ -35,10 +35,10 @@ handlers :: ServerT Api (HandlerT IO)
 handlers = usersHandlers :<|> eventsHandlers :<|> venuesHandlers :<|> searchHandlers
 
 server :: LogEnv HandlerEnv -> Server ApiRaw
-server env = enter dienerToEither handlers :<|> staticHandlers
+server env = enter dienerToEither (handlers :<|> staticHandlers)
   where
-    dienerToEither :: HandlerT IO :~> ExceptT ServantErr IO
-    dienerToEither = Nat $ \ar ->
+    dienerToEither :: HandlerT IO :~> Handler
+    dienerToEither = NT $ \ar ->
       liftIO (runDienerT env ar) >>= \case
         Left err -> throwError err
         Right a -> return a

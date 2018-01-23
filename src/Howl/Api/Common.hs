@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+
 module Howl.Api.Common where
 
 import           Prelude as P
@@ -13,20 +15,9 @@ import           GHC.Generics
 import           Servant.Swagger hiding (Header)
 
 import qualified Howl.Facebook   as FB
-import           Howl.Models hiding (Event)
+import           Howl.Models hiding (Event, ConnectItem)
 import qualified Howl.Models     as M
 import           Howl.Types
-
-data ConnectCard =
-  ConnectCard { userID :: IDType
-              , eventID :: IDType
-              , eventName :: Text
-              , eventCoverURL :: Maybe FilePath
-              , friends :: [User]}
-  deriving (Show, Eq, Read, Generic)
-
-deriving instance ToJSON ConnectCard
-deriving instance FromJSON ConnectCard
 
 data ApiUser =
   ApiUser {
@@ -66,19 +57,29 @@ deriving instance ToJSON Event
 
 deriving instance FromJSON Event
 
+data ConnectItem =
+  ConnectItem { connectId :: IDType
+              , eventId :: IDType
+              , event :: Event
+              , friends :: [ApiUser]}
+  deriving (Eq, Read, Show, Generic)
+
+deriving instance ToJSON ConnectItem
+deriving instance FromJSON ConnectItem
+
+instance ToSchema ConnectItem where
+  declareNamedSchema proxy =
+    return $ NamedSchema (Just "ConnectItem") $
+    sketchSchema
+    (ConnectItem (FB.Id "23412345123") (FB.Id "109890804920") (Event mockEvent "Suggested" 1 ["Juan"] ["coolurl.com"] 2 ["Carmen", "Bob"] ["not-cool-url.gov", "picpath"]) [])
+    & required .~ ["connectId", "eventId", "event", "friends"]
+
 instance ToSchema M.Notification where
   declareNamedSchema proxy =
     return $ NamedSchema (Just "Notification") $
     sketchSchema
     (Notification (FB.Id "23412345123") (FB.Id "109890804920") (FB.Id "234123455432") (UTCTime (fromGregorian 2015 12 31) 0) Invitation)
     & required .~ ["userID", "source", "target", "createdAt", "type"]
-
-instance ToSchema ConnectCard where
-  declareNamedSchema proxy =
-    return $ NamedSchema (Just "ConnectCard") $
-      sketchSchema
-       (ConnectCard (FB.Id "23412345123") (FB.Id "109890804920") "Swaggity Spot" (Just "www.coolpix.zh") [User (FB.Id "10155182179270463") "Jean-Luc Picard" "theCaptain" (Just "Jean-Luc") (Just "Picard") (Just "make-it-so@yahoo.com") Nothing True])
-      & required .~ ["userID", "eventID", "eventName", "friends"]
 
 instance ToSchema Promotion where
   declareNamedSchema proxy =

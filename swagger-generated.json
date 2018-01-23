@@ -12,7 +12,10 @@
         "Event": {
             "example": {
                 "coverPicPath": "www.coolpic.gov",
+                "attendingCount": 0,
                 "startTime": "2015-12-31T00:00:00Z",
+                "declinedCount": 0,
+                "maybeCount": 0,
                 "fbID": "10155182179270463",
                 "name": "All You Can Swag",
                 "endTime": "2515-12-31T00:00:00Z",
@@ -32,8 +35,17 @@
                 "coverPicPath": {
                     "type": "string"
                 },
+                "attendingCount": {
+                    "type": "number"
+                },
                 "startTime": {
                     "type": "string"
+                },
+                "declinedCount": {
+                    "type": "number"
+                },
+                "maybeCount": {
+                    "type": "number"
                 },
                 "fbID": {
                     "type": "string"
@@ -63,12 +75,137 @@
                 "Attending"
             ]
         },
+        "Api.Event": {
+            "example": {
+                "event": {
+                    "coverPicPath": "www.coolpic.gov",
+                    "attendingCount": 0,
+                    "startTime": "2015-12-31T00:00:00Z",
+                    "declinedCount": 0,
+                    "maybeCount": 0,
+                    "fbID": "10155182179270463",
+                    "name": "All You Can Swag",
+                    "endTime": "2515-12-31T00:00:00Z",
+                    "venueId": "901579654279270463",
+                    "description": "Fun swaggy loooooong party."
+                },
+                "tag": "Suggested",
+                "namesInterested": [
+                    "Carmen",
+                    "Bob"
+                ],
+                "picsInterested": [
+                    "not-cool-url.gov",
+                    "picpath"
+                ],
+                "friendsGoing": 1,
+                "namesGoing": [
+                    "Juan"
+                ],
+                "friendsInterested": 2,
+                "picsGoing": [
+                    "coolurl.com"
+                ]
+            },
+            "required": [
+                "event",
+                "rsvp",
+                "friendsGoing",
+                "picsGoing",
+                "friendsInterested",
+                "picsInterested"
+            ],
+            "type": "object",
+            "properties": {
+                "event": {
+                    "required": [
+                        "coverPicPath",
+                        "attendingCount",
+                        "startTime",
+                        "declinedCount",
+                        "maybeCount",
+                        "fbID",
+                        "name",
+                        "endTime",
+                        "venueId",
+                        "description"
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "coverPicPath": {
+                            "type": "string"
+                        },
+                        "attendingCount": {
+                            "type": "number"
+                        },
+                        "startTime": {
+                            "type": "string"
+                        },
+                        "declinedCount": {
+                            "type": "number"
+                        },
+                        "maybeCount": {
+                            "type": "number"
+                        },
+                        "fbID": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "endTime": {
+                            "type": "string"
+                        },
+                        "venueId": {
+                            "type": "string"
+                        },
+                        "description": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "namesInterested": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "picsInterested": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "friendsGoing": {
+                    "type": "number"
+                },
+                "namesGoing": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "friendsInterested": {
+                    "type": "number"
+                },
+                "picsGoing": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                }
+            }
+        },
         "Venue": {
             "example": {
+                "profilePicPath": null,
                 "rating": 3.3,
-                "long": -70.87123,
                 "coverPicPath": null,
                 "country": "Germany",
+                "category": "Nightlife",
                 "zip": "76131",
                 "street": "Karlstraße",
                 "lat": 40.08031,
@@ -76,6 +213,7 @@
                 "name": "Swaggy House",
                 "city": "Karlsruhe",
                 "about": "Short summary",
+                "lon": -70.87123,
                 "description": "The sweetest place in town"
             },
             "required": [
@@ -85,16 +223,19 @@
             ],
             "type": "object",
             "properties": {
-                "rating": {
-                    "type": "number"
+                "profilePicPath": {
+                    "type": "null"
                 },
-                "long": {
+                "rating": {
                     "type": "number"
                 },
                 "coverPicPath": {
                     "type": "null"
                 },
                 "country": {
+                    "type": "string"
+                },
+                "category": {
                     "type": "string"
                 },
                 "zip": {
@@ -118,7 +259,34 @@
                 "about": {
                     "type": "string"
                 },
+                "lon": {
+                    "type": "number"
+                },
                 "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "Device": {
+            "example": {
+                "userId": "10155182179270463",
+                "deviceId": "ARITN01909830190-iniasortn#$#@inrtsinars",
+                "type": "android"
+            },
+            "required": [
+                "type",
+                "userId",
+                "deviceId"
+            ],
+            "type": "object",
+            "properties": {
+                "userId": {
+                    "type": "string"
+                },
+                "deviceId": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -224,9 +392,11 @@
             "example": {
                 "email": "make-it-so@yahoo.com",
                 "profilePicPath": null,
+                "private": true,
                 "lastName": "Picard",
                 "username": "theCaptain",
                 "fbID": "10155182179270463",
+                "name": "Jean-Luc Picard",
                 "firstName": "Jean-Luc"
             },
             "required": [
@@ -242,6 +412,9 @@
                 "profilePicPath": {
                     "type": "null"
                 },
+                "private": {
+                    "type": "boolean"
+                },
                 "lastName": {
                     "type": "string"
                 },
@@ -249,6 +422,9 @@
                     "type": "string"
                 },
                 "fbID": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "firstName": {
@@ -265,9 +441,11 @@
                     {
                         "email": "make-it-so@yahoo.com",
                         "profilePicPath": null,
+                        "private": true,
                         "lastName": "Picard",
                         "username": "theCaptain",
                         "fbID": "10155182179270463",
+                        "name": "Jean-Luc Picard",
                         "firstName": "Jean-Luc"
                     }
                 ],
@@ -295,9 +473,11 @@
                         "required": [
                             "email",
                             "profilePicPath",
+                            "private",
                             "lastName",
                             "username",
                             "fbID",
+                            "name",
                             "firstName"
                         ],
                         "type": "object",
@@ -308,6 +488,9 @@
                             "profilePicPath": {
                                 "type": "null"
                             },
+                            "private": {
+                                "type": "boolean"
+                            },
                             "lastName": {
                                 "type": "string"
                             },
@@ -315,6 +498,9 @@
                                 "type": "string"
                             },
                             "fbID": {
+                                "type": "string"
+                            },
+                            "name": {
                                 "type": "string"
                             },
                             "firstName": {
@@ -333,10 +519,59 @@
             "type": "string",
             "enum": [
                 "Pending",
+                "None",
                 "Ignored",
                 "Blocked",
                 "Accepted"
             ]
+        },
+        "ApiUser": {
+            "example": {
+                "email": "make-it-so@yahoo.com",
+                "profilePicPath": null,
+                "private": true,
+                "lastName": "Picard",
+                "username": "theCaptain",
+                "fbID": "10155182179270463",
+                "following": "Blocked",
+                "name": "Jean-Luc Picard",
+                "firstName": "Jean-Luc"
+            },
+            "required": [
+                "fbID",
+                "username",
+                "firstName"
+            ],
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "profilePicPath": {
+                    "type": "null"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "fbID": {
+                    "type": "string"
+                },
+                "following": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                }
+            }
         }
     },
     "paths": {
@@ -344,12 +579,12 @@
             "get": {
                 "responses": {
                     "400": {
-                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
+                        "description": "Invalid `token` or `offset` or `limit` or `distance` or `lon` or `lat`"
                     },
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/Event"
+                                "$ref": "#/definitions/Api.Event"
                             },
                             "type": "array"
                         },
@@ -377,6 +612,20 @@
                         "in": "query",
                         "name": "distance",
                         "type": "number"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
                     },
                     {
                         "in": "header",
@@ -410,6 +659,129 @@
                         "in": "query",
                         "name": "q",
                         "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/devices": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Device"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Device"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Device"
+                        },
+                        "in": "body",
+                        "name": "body"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `body`"
+                    },
+                    "200": {
+                        "schema": {
+                            "$ref": "#/definitions/Device"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Device"
+                        },
+                        "in": "body",
+                        "name": "body"
                     },
                     {
                         "in": "header",
@@ -469,12 +841,12 @@
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `token`"
+                        "description": "Invalid `token` or `offset` or `limit`"
                     },
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/User"
+                                "$ref": "#/definitions/ApiUser"
                             },
                             "type": "array"
                         },
@@ -490,6 +862,71 @@
                         "in": "path",
                         "name": "userID",
                         "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/followers": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `offset` or `limit`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/ApiUser"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
                     },
                     {
                         "in": "header",
@@ -543,12 +980,12 @@
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `token` or `distance` or `lon` or `lat`"
+                        "description": "Invalid `token` or `offset` or `limit` or `distance` or `lon` or `lat`"
                     },
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/Event"
+                                "$ref": "#/definitions/Api.Event"
                             },
                             "type": "array"
                         },
@@ -582,6 +1019,20 @@
                         "in": "query",
                         "name": "distance",
                         "type": "number"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
                     },
                     {
                         "in": "header",
@@ -644,12 +1095,12 @@
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `token`"
+                        "description": "Invalid `token` or `offset` or `limit`"
                     },
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/Event"
+                                "$ref": "#/definitions/Api.Event"
                             },
                             "type": "array"
                         },
@@ -665,6 +1116,20 @@
                         "in": "path",
                         "name": "userID",
                         "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
                     },
                     {
                         "in": "header",
@@ -675,61 +1140,18 @@
             }
         },
         "/v1/users/{userID}/follows": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "responses": {
-                    "404": {
-                        "description": "`userID` not found"
-                    },
-                    "202": {
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": ""
-                    },
-                    "400": {
-                        "description": "Invalid `token` or `body`"
-                    }
-                },
-                "produces": [
-                    "application/json"
-                ],
-                "parameters": [
-                    {
-                        "required": true,
-                        "in": "path",
-                        "name": "userID",
-                        "type": "string"
-                    },
-                    {
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        },
-                        "in": "body",
-                        "name": "body"
-                    },
-                    {
-                        "in": "header",
-                        "name": "token",
-                        "type": "string"
-                    }
-                ]
-            },
             "get": {
                 "responses": {
                     "404": {
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `token`"
+                        "description": "Invalid `token` or `offset` or `limit`"
                     },
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/User"
+                                "$ref": "#/definitions/ApiUser"
                             },
                             "type": "array"
                         },
@@ -745,6 +1167,20 @@
                         "in": "path",
                         "name": "userID",
                         "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
                     },
                     {
                         "in": "header",
@@ -1046,7 +1482,7 @@
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `token`"
+                        "description": "Invalid `token` or `offset` or `limit`"
                     },
                     "200": {
                         "schema": {
@@ -1069,6 +1505,20 @@
                         "type": "string"
                     },
                     {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
+                    },
+                    {
                         "in": "header",
                         "name": "token",
                         "type": "string"
@@ -1076,6 +1526,7 @@
                 ]
             }
         },
+        "/static": {},
         "/v1/venues/{venueID}/followers/{userID}": {
             "get": {
                 "responses": {
@@ -1178,6 +1629,195 @@
                         "name": "venueID",
                         "type": "string"
                     },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/agenda": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `offset` or `limit`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Api.Event"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/going": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `offset` or `limit`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/ApiUser"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/events/{eventID}/invited": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `offset` or `limit`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/ApiUser"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "/v1/users/{userID}/following/count": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "maximum": 9223372036854775807,
+                            "minimum": -9223372036854775808,
+                            "type": "integer"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
                     {
                         "required": true,
                         "in": "path",
@@ -1447,6 +2087,57 @@
                 ]
             }
         },
+        "/v1/events/{eventID}/interested": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`eventID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token` or `offset` or `limit`"
+                    },
+                    "200": {
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/ApiUser"
+                            },
+                            "type": "array"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "eventID",
+                        "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
         "/v1/events/{eventID}": {
             "get": {
                 "responses": {
@@ -1458,7 +2149,7 @@
                     },
                     "200": {
                         "schema": {
-                            "$ref": "#/definitions/Event"
+                            "$ref": "#/definitions/Api.Event"
                         },
                         "description": ""
                     }
@@ -1493,7 +2184,7 @@
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/Event"
+                                "$ref": "#/definitions/Api.Event"
                             },
                             "type": "array"
                         },
@@ -1525,12 +2216,12 @@
                         "description": "`userID` not found"
                     },
                     "400": {
-                        "description": "Invalid `token`"
+                        "description": "Invalid `token` or `offset` or `limit`"
                     },
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/Event"
+                                "$ref": "#/definitions/Api.Event"
                             },
                             "type": "array"
                         },
@@ -1546,6 +2237,20 @@
                         "in": "path",
                         "name": "userID",
                         "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
                     },
                     {
                         "in": "header",
@@ -1566,7 +2271,7 @@
                     },
                     "200": {
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/ApiUser"
                         },
                         "description": ""
                     }
@@ -1702,7 +2407,7 @@
             "get": {
                 "responses": {
                     "400": {
-                        "description": "Invalid `token`"
+                        "description": "Invalid `offset` or `limit` or `token`"
                     },
                     "200": {
                         "schema": {
@@ -1722,6 +2427,20 @@
                         "in": "header",
                         "name": "token",
                         "type": "string"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "limit",
+                        "type": "integer"
+                    },
+                    {
+                        "maximum": 9223372036854775807,
+                        "minimum": -9223372036854775808,
+                        "in": "query",
+                        "name": "offset",
+                        "type": "integer"
                     }
                 ]
             },
@@ -1761,6 +2480,44 @@
             }
         },
         "/v1/users/{userID}/follows/{friendID}": {
+            "post": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` or `friendID` not found"
+                    },
+                    "202": {
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "friendID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            },
             "get": {
                 "responses": {
                     "404": {
@@ -1838,6 +2595,42 @@
                 ]
             }
         },
+        "/v1/users/{userID}/followers/count": {
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "`userID` not found"
+                    },
+                    "400": {
+                        "description": "Invalid `token`"
+                    },
+                    "200": {
+                        "schema": {
+                            "maximum": 9223372036854775807,
+                            "minimum": -9223372036854775808,
+                            "type": "integer"
+                        },
+                        "description": ""
+                    }
+                },
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "required": true,
+                        "in": "path",
+                        "name": "userID",
+                        "type": "string"
+                    },
+                    {
+                        "in": "header",
+                        "name": "token",
+                        "type": "string"
+                    }
+                ]
+            }
+        },
         "/v1/search/events": {
             "get": {
                 "responses": {
@@ -1847,7 +2640,7 @@
                     "200": {
                         "schema": {
                             "items": {
-                                "$ref": "#/definitions/Event"
+                                "$ref": "#/definitions/Api.Event"
                             },
                             "type": "array"
                         },

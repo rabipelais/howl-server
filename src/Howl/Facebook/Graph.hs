@@ -30,7 +30,7 @@ import System.Locale (defaultTimeLocale)
 
 import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Aeson.Encode as AE (fromValue)
+import qualified Data.Aeson.Encode as AE (encodeToTextBuilder)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
@@ -276,7 +276,7 @@ instance SimpleType GeoCoordinates where
   encodeFbParam c =
     let obj  = A.object [ "latitude"  A..= latitude  c
                         , "longitude" A..= longitude c]
-        toBS = TE.encodeUtf8 . TL.toStrict . TLB.toLazyText . AE.fromValue
+        toBS = TE.encodeUtf8 . TL.toStrict . TLB.toLazyText . AE.encodeToTextBuilder
     in toBS obj
 
 

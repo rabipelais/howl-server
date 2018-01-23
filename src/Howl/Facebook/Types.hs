@@ -1,4 +1,8 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, GADTs, StandaloneDeriving, DeriveGeneric #-}
+{-# LANGUAGE CPP                #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE StandaloneDeriving #-}
 module Howl.Facebook.Types
     ( Credentials(..)
     , appIdBS
@@ -19,29 +23,29 @@ module Howl.Facebook.Types
     , FbUTCTime(..)
     ) where
 
-import Control.Applicative ((<$>), (<*>), pure)
-import Control.Monad (mzero)
-import Data.ByteString (ByteString)
-import Data.Int (Int64)
-import Data.Monoid (Monoid, mappend)
-import Data.String (IsString)
-import Data.Text (Text)
-import Data.Time (UTCTime, parseTime)
-import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
-import Data.Typeable (Typeable, Typeable1)
-import GHC.Generics
+import           Control.Applicative        (pure, (<$>), (<*>))
+import           Control.Monad              (mzero)
+import           Data.ByteString            (ByteString)
+import           Data.Int                   (Int64)
+import           Data.Monoid                (Monoid, mappend)
+import           Data.String                (IsString)
+import           Data.Text                  (Text)
+import           Data.Time                  (UTCTime, parseTimeM)
+import           Data.Time.Clock.POSIX      (posixSecondsToUTCTime)
+import           Data.Typeable              (Typeable, Typeable1)
+import           GHC.Generics
 #if MIN_VERSION_time(1,5,0)
-import Data.Time (defaultTimeLocale)
+import           Data.Time                  (defaultTimeLocale)
 #else
-import System.Locale (defaultTimeLocale)
+import           System.Locale              (defaultTimeLocale)
 #endif
 
-import qualified Data.Aeson as A
-import qualified Data.Aeson.Types as A
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Builder as TLB
+import qualified Data.Aeson                 as A
+import qualified Data.Aeson.Types           as A
+import qualified Data.Text                  as T
+import qualified Data.Text.Encoding         as TE
+import qualified Data.Text.Lazy             as TL
+import qualified Data.Text.Lazy.Builder     as TLB
 import qualified Data.Text.Lazy.Builder.Int as TLBI
 
 
@@ -94,7 +98,7 @@ type AppAccessToken = AccessToken AppKind
 deriving instance Eq   (AccessToken kind)
 deriving instance Ord  (AccessToken kind)
 deriving instance Show (AccessToken kind)
-deriving instance Typeable1 AccessToken
+--deriving instance Typeable1 AccessToken
 
 
 -- | The access token data that is passed to Facebook's API
@@ -223,7 +227,7 @@ newtype FbUTCTime = FbUTCTime { unFbUTCTime :: UTCTime }
 
 instance A.FromJSON FbUTCTime where
   parseJSON (A.String t) =
-    case parseTime defaultTimeLocale "%FT%T%z" (T.unpack t) of
+    case parseTimeM True defaultTimeLocale "%FT%T%z" (T.unpack t) of
       Just d -> return (FbUTCTime d)
       _      -> fail $ "could not parse FbUTCTime string " ++ show t
   parseJSON (A.Number n) =

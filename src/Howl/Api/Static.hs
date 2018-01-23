@@ -20,5 +20,6 @@ import           Howl.Models
 import           Howl.Types
 
 import           Servant.API
+import           Servant.RawM               (RawM)
 
-type StaticAPI = "static" :> Raw
+type StaticAPI = "static" :> RawM

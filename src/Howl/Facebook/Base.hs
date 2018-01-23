@@ -57,7 +57,7 @@ fbreq path mtoken query =
       let host = case tier of
                    Production -> "graph.facebook.com"
                    Beta ->  "graph.beta.facebook.com"
-      in def { H.secure        = True
+      in H.defaultRequest { H.secure        = True
              , H.host          = host
              , H.port          = 443
              , H.path          = TE.encodeUtf8 path
@@ -65,7 +65,7 @@ fbreq path mtoken query =
              , H.queryString   =
                  HT.renderSimpleQuery False $
                  maybe id tsq mtoken query
-             , H.responseTimeout = Just 120000000 -- 2 minutes
+             , H.responseTimeout = H.responseTimeoutMicro 120000000 -- 2 minutes
              }
 
 
@@ -153,7 +153,7 @@ fbhttpHelper :: (MonadBaseControl IO m, R.MonadResource m) =>
              -> H.Request
              -> m (H.Response (C.ResumableSource m ByteString))
 fbhttpHelper manager req = do
-  let req' = req { H.checkStatus = \_ _ _ -> Nothing }
+  let req' = req
 #if DEBUG
   _ <- liftIO $ printf "fbhttp doing request\n\tmethod: %s\n\tsecure: %s\n\thost: %s\n\tport: %s\n\tpath: %s\n\tqueryString: %s\n\trequestHeaders: %s\n" (show $ H.method req') (show $ H.secure req') (show $ H.host req') (show $ H.port req') (show $ H.path req') (show $ H.queryString req') (show $ H.requestHeaders req')
 #endif
@@ -167,15 +167,14 @@ fbhttpHelper manager req = do
   if isOkay status
     then return response
     else do
-      let statusexc = H.StatusCodeException status headers cookies
       val <- E.try $ asJsonHelper response
       case val :: Either E.SomeException FacebookException of
         Right fbexc -> E.throw fbexc
-        Left _ ->
+        Left exc ->
           case AT.parse wwwAuthenticateParser <$>
                lookup "WWW-Authenticate" headers of
             Just (AT.Done _ fbexc) -> E.throwIO fbexc
-            _                      -> E.throwIO statusexc
+            _                      -> E.throwIO exc
 
 
 -- | Try to parse the @WWW-Authenticate@ header of a Facebook
@@ -199,8 +198,7 @@ httpCheck :: (MonadBaseControl IO m, R.MonadResource m) =>
 
 httpCheck req = runResourceInFb $ do
   manager <- getManager
-  let req' = req { H.method      = HT.methodHead
-                 , H.checkStatus = \_ _ _ -> Nothing }
+  let req' = req { H.method      = HT.methodHead }
   isOkay . H.responseStatus <$> lift (H.httpLbs req' manager)
   -- Yes, we use httpLbs above so that we don't have to worry
   -- about consuming the responseBody.  Note that the

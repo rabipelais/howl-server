@@ -49,7 +49,7 @@ getFbVenuesIdNearby userAT lat lon distance limit = do
                , ("distance", (B.pack . show) distance)]
   Fb.searchObjects "place" "" params (Just userAT)
 
-getEventsFromVenuesNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Fb.Pager IDType -> Maybe POSIXTime -> Fb.FacebookT anyAuth m [(Venue, Maybe (Fb.Pager Fb.Event))]
+getEventsFromVenuesNearby :: (MonadResource m, MonadBaseControl IO m) => Fb.UserAccessToken -> Fb.Pager IDType -> Maybe Int -> Fb.FacebookT anyAuth m [(Venue, Maybe (Fb.Pager Fb.Event))]
 getEventsFromVenuesNearby userAT vPager mSince = do
   (L.concat . catMaybes . map (parseMaybe parseEach)) <$> sequence requests
   where
@@ -107,6 +107,17 @@ getVenuesAndEventsNearby userAT lat lon distance limit mSince = do
     es'' <- CL.runConduit $ es' CL.=$ CL.sinkList
     return $ (v, es'')
   return ves'
+
+-- USAGE
+
+    -- fromNearby creds' manager' token = do
+    --   now <- liftIO TI.getCurrentTime
+    --   posixTime <- liftIO getPOSIXTime
+    --   let userAT = Fb.UserAccessToken ui token now
+    --   ves <- liftIO $ runResourceT $ Fb.runFacebookT creds' manager' (getVenuesAndEventsNearby userAT lat lon distance 1000 (Just (truncate posixTime)))
+    --   mapM_ (\(v, _) -> insertBy v) ves
+    --   mapM_ (\(_, es) -> mapM_ (insertBy . fromFbEvent) es) ves
+    --   return $ P.concat $ map (\(_, es) -> map fromFbEvent es) ves
 
 --data FbSource = User
 --              | VenuesNearby userAT lat lon distance limit
