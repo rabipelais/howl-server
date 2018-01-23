@@ -14,7 +14,11 @@ import           Data.Aeson
 import           Data.Aeson.Encode.Pretty   (encodePretty)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import           Data.Swagger
+import           Servant.RawM               (RawM)
 import           Servant.Swagger
+
+instance HasSwagger RawM where
+  toSwagger _ = mempty & paths . at "/" ?~ mempty
 
 howlSwagger = toSwagger api
   & info.title   .~ "Howl Server API"
