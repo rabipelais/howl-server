@@ -33,7 +33,7 @@ import           Network.Wai.Handler.Warp    as Warp
 main :: IO ()
 main = do
   putStrLn "Reading config..."
-  (dbName, dbHost, dbUser, dbPassword, dbPort, poolSize, mqHost, mqVHost, mqUser, mqPassword, creds) <- getConfig
+  (dbName, dbHost, dbUser, dbPassword, dbPort, poolSize, mqHost, mqVHost, mqUser, mqPassword, creds, port') <- getConfig
   let logSettings = Logger.Settings
         { Logger.filePath = "webserver.log"
         , Logger.logLevel = LevelDebug
@@ -45,7 +45,7 @@ main = do
   putStrLn "Starting server"
   Logger.withLogger logSettings $ \logFn -> do
     liftIO $ Q.withConnection queueSetting queues $ \(conn, chan) -> do
-      let port = 3000 :: Int
+      let port = port'
       liftIO $ putStrLn $ "Listening on port " ++ show port ++ " ..."
       runStderrLoggingT $ withPostgresqlPool connString poolSize $ \pool -> do
         runSqlPool (runMigration migrateAll) pool
@@ -56,8 +56,8 @@ main = do
 getConfig = tryToGet `E.catch` showHelp
   where
     tryToGet = do
-      [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, appName, appId, appSecret, mqHost, mqVHost, mqUser, mqPassword] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "APP_NAME", "APP_ID", "APP_SECRET", "AMQP_HOST", "AMQP_VHOST", "AMQP_USER", "AMQP_PASSWORD"]
-      return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, T.pack mqVHost, T.pack mqUser, T.pack mqPassword, Fb.Credentials (T.pack appName) (T.pack appId)  (T.pack appSecret))
+      [dbName, dbHost, dbUser, dbPassword, dbPort, poolsize, appName, appId, appSecret, mqHost, mqVHost, mqUser, mqPassword, port] <- mapM getEnv ["DB_NAME", "DB_HOST", "DB_USER", "DB_PASSWORD", "DB_PORT", "DB_POOLSIZE", "APP_NAME", "APP_ID", "APP_SECRET", "AMQP_HOST", "AMQP_VHOST", "AMQP_USER", "AMQP_PASSWORD", "PORT"] -- $PORT is for Heroku
+      return (dbName, dbHost, dbUser, dbPassword, dbPort, read poolsize, mqHost, T.pack mqVHost, T.pack mqUser, T.pack mqPassword, Fb.Credentials (T.pack appName) (T.pack appId)  (T.pack appSecret), read port)
     showHelp exc | not (isDoesNotExistError exc) = E.throw exc
     showHelp _ = do
       putStrLn $ unlines
