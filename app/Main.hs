@@ -42,8 +42,9 @@ main = do
       connString = pack $ "host=" <> dbHost <> " dbname=" <> dbName <> " user=" <> dbUser <> " password=" <> dbPassword <> " port=" <> dbPort
       queueSetting = Q.Settings mqHost mqVHost mqUser mqPassword
       queues = [Q.newQueue{Q.queueName = T.pack $ show Q.NotificationsTask, Q.queueAutoDelete = False, Q.queueDurable = True}]
-  putStrLn "Starting server"
+  putStrLn "Starting server....."
   Logger.withLogger logSettings $ \logFn -> do
+    liftIO $ putStrLn $ "Starting logging..."
     liftIO $ Q.withConnection queueSetting queues $ \(conn, chan) -> do
       let port = port'
       liftIO $ putStrLn $ "Listening on port " ++ show port ++ " ..."
