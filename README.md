@@ -2,7 +2,6 @@
 
 Services for the backend serving the Howl API.
 
-[![Build Status](https://gitlab.com/smendez/howl-backend/badges/master/build.svg)](https://gitlab.com/smendez/howl-backend/commits/master) [![coverage report](https://gitlab.com/smendez/howl-backend/badges/master/coverage.svg)](https://gitlab.com/smendez/howl-backend/commits/master)
 
 ## Building
 
